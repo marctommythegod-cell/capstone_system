@@ -11,6 +11,7 @@ return [
     'admin_email' => 'fmarctommy@gmail.com',
     'username' => 'fmarctommy@gmail.com',
     'password' => 'ijsd xjwq paub civm', // Gmail App Password
+    'no_reply_email' => 'noreply@philcst.edu.ph'
 ];
 ?>
 
