@@ -148,7 +148,7 @@ $message = getMessage();
                         
                         <div class="form-row">
                             <div class="form-group full-width">
-                                <label for="remarks">Remarks ng mga students</label>
+                                <label for="remarks">Remarks</label>
                                 <textarea id="remarks" name="remarks" rows="4" placeholder="Enter reason for dropping class card..."></textarea>
                             </div>
                         </div>

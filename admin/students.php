@@ -26,12 +26,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         // Check for empty fields
         if (empty($student_id)) {
             $errors[] = 'Student ID is required.';
-        } elseif (strlen($student_id) < 2) {
-            $errors[] = 'Student ID must be at least 2 characters.';
-        } elseif (strlen($student_id) > 20) {
-            $errors[] = 'Student ID must not exceed 20 characters.';
-        } elseif (!preg_match('/^[a-zA-Z0-9-]+$/', $student_id)) {
-            $errors[] = 'Student ID can only contain letters, numbers, and hyphens.';
+        } elseif (strlen($student_id) !== 8) {
+            $errors[] = 'Student ID must be exactly 8 digits.';
+        } elseif (!preg_match('/^[0-9]{8}$/', $student_id)) {
+            $errors[] = 'Student ID can only contain numbers (0-9).';
         }
         
         if (empty($name)) {
@@ -184,7 +182,7 @@ $message = getMessage();
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="student_id">Student ID</label>
-                                <input type="text" id="student_id" name="student_id" required placeholder="e.g., 2021-0001">
+                                <input type="text" id="student_id" name="student_id" required placeholder="ex: 000*****" maxlength="8" inputmode="numeric">
                             </div>
                             
                             <div class="form-group">
@@ -194,12 +192,34 @@ $message = getMessage();
                             
                             <div class="form-group">
                                 <label for="email">Email Address</label>
-                                <input type="email" id="email" name="email" placeholder="student@example.com" required>
+                                <input type="email" id="email" name="email" placeholder="example@gmail.com" required>
                             </div>
                             
                             <div class="form-group">
                                 <label for="course">Course</label>
-                                <input type="text" id="course" name="course" placeholder="e.g., BS Computer Science" required>
+                                <select id="course" name="course" required>
+                                    <option value="">-- Select Course --</option>
+                                    <optgroup label="College of Engineering and Architecture">
+                                        <option value="BS in Civil Engineering (BSCE)">BS in Civil Engineering (BSCE)</option>
+                                        <option value="BS in Electrical Engineering (BSEE)">BS in Electrical Engineering (BSEE)</option>
+                                        <option value="BS in Mechanical Engineering (BSME)">BS in Mechanical Engineering (BSME)</option>
+                                    </optgroup>
+                                    <optgroup label="College of Criminology">
+                                        <option value="BS in Criminology (BSCrim)">BS in Criminology (BSCrim)</option>
+                                    </optgroup>
+                                    <optgroup label="College of Information Technology">
+                                        <option value="BS in Information Technology (BSIT)">BS in Information Technology (BSIT)</option>
+                                        <option value="BS in Computer Science (BSCS)">BS in Computer Science (BSCS)</option>
+                                    </optgroup>
+                                    <optgroup label="College of Education">
+                                        <option value="Bachelor of Elementary Education (BEEd)">Bachelor of Elementary Education (BEEd)</option>
+                                        <option value="Bachelor of Secondary Education (BSEd)">Bachelor of Secondary Education (BSEd)</option>
+                                    </optgroup>
+                                    <optgroup label="College of Business and Management">
+                                        <option value="BS in Business Administration (BSBA)">BS in Business Administration (BSBA)</option>
+                                        <option value="BS in Hospitality Management (BSHM)">BS in Hospitality Management (BSHM)</option>
+                                    </optgroup>
+                                </select>
                             </div>
                             
                             <div class="form-group">

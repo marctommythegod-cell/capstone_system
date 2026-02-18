@@ -17,6 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $name = trim($_POST['name'] ?? '');
         $email = trim($_POST['email'] ?? '');
         $password = trim($_POST['password'] ?? '');
+        $confirm_password = trim($_POST['confirm_password'] ?? '');
         
         // Validation checks
         $errors = [];
@@ -38,6 +39,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $errors[] = 'Email must be a Gmail account (@gmail.com only).';
         } elseif (strlen($email) > 100) {
             $errors[] = 'Email address must not exceed 100 characters.';;
+        }
+        
+        // Confirm password match
+        if (empty($confirm_password)) {
+            $errors[] = 'Password confirmation is required.';
+        } elseif ($password !== $confirm_password) {
+            $errors[] = 'Passwords do not match. Please ensure both password fields are identical.';
         }
         
         // Strong password validation
@@ -184,17 +192,17 @@ $message = getMessage();
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="name">Full Name</label>
-                                <input type="text" id="name" name="name" required>
+                                <input type="text" id="name" name="name" required placeholder="Enter Your Full Name">
                             </div>
                             
                             <div class="form-group">
                                 <label for="email">Email Address</label>
-                                <input type="email" id="email" name="email" required>
+                                <input type="email" id="email" name="email" required placeholder="example@gmail.com">
                             </div>
                             
                             <div class="form-group">
                                 <label for="password">Password</label>
-                                <input type="password" id="password" name="password" required placeholder="Min 12 chars: Uppercase, lowercase, numbers, symbols">
+                                <input type="password" id="password" name="password" required placeholder="Put a strong password here">
                                 <small style="display: block; margin-top: 5px; color: #666;">
                                     <strong>Password Requirements:</strong><br>
                                     • Minimum 12 characters<br>
@@ -203,6 +211,11 @@ $message = getMessage();
                                     • At least one number (0-9)<br>
                                     • At least one symbol (!@#$%^&* etc)
                                 </small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="confirm_password">Confirm Password</label>
+                                <input type="password" id="confirm_password" name="confirm_password" required placeholder="Re-enter your password">
                             </div>
                             
                             <div class="form-group">

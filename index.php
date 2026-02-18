@@ -82,11 +82,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <button type="submit" class="btn btn-primary btn-block">Login</button>
             </form>
 
-            <div class="login-footer">
-                <p><small>Demo Credentials:</small></p>
-                <p><small><strong>Admin:</strong> admin@test.com / 123456</small></p>
-                <p><small><strong>Teacher:</strong> teacher@test.com / 123456</small></p>
-            </div>
         </div>
     </div>
 </body>
