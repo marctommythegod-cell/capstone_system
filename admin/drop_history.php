@@ -11,6 +11,10 @@ if ($_SESSION['user_role'] !== 'admin') {
 
 $admin_name = getUserName($pdo, $_SESSION['user_id']);
 
+// Pagination settings
+$items_per_page = 10;
+$current_page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+
 // Get search filter
 $search = $_GET['search'] ?? '';
 
@@ -32,10 +36,30 @@ $students = $stmt->fetchAll();
 
 // Get all history for the filtered students
 $all_history = [];
+$total_records = 0;
+$total_pages = 0;
 
 if ($students) {
     $student_ids = array_column($students, 'id');
     $placeholders = implode(',', array_fill(0, count($student_ids), '?'));
+    
+    // Get total count
+    $count_stmt = $pdo->prepare("
+        SELECT COUNT(*) as total
+        FROM class_card_drops ccd
+        WHERE ccd.student_id IN ($placeholders)
+    ");
+    $count_stmt->execute($student_ids);
+    $total_records = $count_stmt->fetch()['total'];
+    $total_pages = ceil($total_records / $items_per_page);
+    
+    // Ensure current page is within range
+    if ($current_page > $total_pages && $total_pages > 0) {
+        $current_page = $total_pages;
+    }
+    
+    // Calculate offset
+    $offset = ($current_page - 1) * $items_per_page;
     
     $stmt = $pdo->prepare("
         SELECT ccd.*, s.student_id, s.name as student_name, u.name as teacher_name
@@ -44,6 +68,7 @@ if ($students) {
         JOIN users u ON ccd.teacher_id = u.id
         WHERE ccd.student_id IN ($placeholders)
         ORDER BY s.name, ccd.drop_date DESC
+        LIMIT " . intval($items_per_page) . " OFFSET " . intval($offset) . "
     ");
     $stmt->execute($student_ids);
     $all_history = $stmt->fetchAll();
@@ -165,6 +190,36 @@ $message = getMessage();
                                     </tbody>
                                 </table>
                             </div>
+                            
+                            <!-- Pagination -->
+                            <?php if ($total_pages > 1): ?>
+                            <div class="pagination-container">
+                                <ul class="pagination">
+                                    <?php if ($current_page > 1): ?>
+                                        <li><a href="?page=1&search=<?php echo htmlspecialchars($search); ?>" class="pagination-link">First</a></li>
+                                        <li><a href="?page=<?php echo $current_page - 1; ?>&search=<?php echo htmlspecialchars($search); ?>" class="pagination-link">Previous</a></li>
+                                    <?php endif; ?>
+                                    
+                                    <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                                        <?php if ($i >= $current_page - 2 && $i <= $current_page + 2): ?>
+                                            <?php if ($i == $current_page): ?>
+                                                <li class="pagination-item active"><?php echo $i; ?></li>
+                                            <?php else: ?>
+                                                <li><a href="?page=<?php echo $i; ?>&search=<?php echo htmlspecialchars($search); ?>" class="pagination-link"><?php echo $i; ?></a></li>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
+                                    <?php endfor; ?>
+                                    
+                                    <?php if ($current_page < $total_pages): ?>
+                                        <li><a href="?page=<?php echo $current_page + 1; ?>&search=<?php echo htmlspecialchars($search); ?>" class="pagination-link">Next</a></li>
+                                        <li><a href="?page=<?php echo $total_pages; ?>&search=<?php echo htmlspecialchars($search); ?>" class="pagination-link">Last</a></li>
+                                    <?php endif; ?>
+                                </ul>
+                                <div class="pagination-info">
+                                    Page <?php echo $current_page; ?> of <?php echo $total_pages; ?> | Showing <?php echo count($all_history); ?> of <?php echo $total_records; ?> records
+                                </div>
+                            </div>
+                            <?php endif; ?>
                             
                             <div class="history-summary">
                                 <p><strong>Total Drops:</strong> <?php echo count($all_history); ?> class card(s) from <?php echo count($students); ?> student(s)</p>

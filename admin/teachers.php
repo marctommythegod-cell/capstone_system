@@ -48,34 +48,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $errors[] = 'Passwords do not match. Please ensure both password fields are identical.';
         }
         
-        // Strong password validation
+        // Password validation
         if (empty($password)) {
             $errors[] = 'Password is required.';
-        } else {
-            $password_length = strlen($password);
-            $has_uppercase = preg_match('/[A-Z]/', $password);
-            $has_lowercase = preg_match('/[a-z]/', $password);
-            $has_numbers = preg_match('/[0-9]/', $password);
-            $has_symbols = preg_match('/[!@#$%^&*()_+\-=\[\]{};:\'"<>,.?/\\|`~]/', $password);
-            
-            if ($password_length < 12) {
-                $errors[] = 'Password must be at least 12 characters long.';
-            } elseif ($password_length > 255) {
-                $errors[] = 'Password must not exceed 255 characters.';
-            }
-            
-            if (!$has_uppercase) {
-                $errors[] = 'Password must contain at least one uppercase letter (A-Z).';
-            }
-            if (!$has_lowercase) {
-                $errors[] = 'Password must contain at least one lowercase letter (a-z).';
-            }
-            if (!$has_numbers) {
-                $errors[] = 'Password must contain at least one number (0-9).';
-            }
-            if (!$has_symbols) {
-                $errors[] = 'Password must contain at least one symbol (!@#$%^&* etc).';
-            }
+        } elseif (strlen($password) > 255) {
+            $errors[] = 'Password must not exceed 255 characters.';
         }
         
         // Check for duplicate email
@@ -202,20 +179,22 @@ $message = getMessage();
                             
                             <div class="form-group">
                                 <label for="password">Password</label>
-                                <input type="password" id="password" name="password" required placeholder="Put a strong password here">
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="password" name="password" required placeholder="Put a strong password here">
+                                    <button type="button" class="password-toggle" onclick="togglePassword('password')">👁️</button>
+                                </div>
                                 <small style="display: block; margin-top: 5px; color: #666;">
                                     <strong>Password Requirements:</strong><br>
-                                    • Minimum 12 characters<br>
-                                    • At least one UPPERCASE letter<br>
-                                    • At least one lowercase letter<br>
-                                    • At least one number (0-9)<br>
-                                    • At least one symbol (!@#$%^&* etc)
+                                    • No specific requirements
                                 </small>
                             </div>
                             
                             <div class="form-group">
                                 <label for="confirm_password">Confirm Password</label>
-                                <input type="password" id="confirm_password" name="confirm_password" required placeholder="Re-enter your password">
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="confirm_password" name="confirm_password" required placeholder="Re-enter your password">
+                                    <button type="button" class="password-toggle" onclick="togglePassword('confirm_password')">👁️</button>
+                                </div>
                             </div>
                             
                             <div class="form-group">
@@ -265,5 +244,16 @@ $message = getMessage();
             </div>
         </main>
     </div>
+
+    <script>
+        function togglePassword(fieldId) {
+            const passwordField = document.getElementById(fieldId);
+            const toggleButton = passwordField.nextElementSibling;
+            const isPassword = passwordField.type === 'password';
+            passwordField.type = isPassword ? 'text' : 'password';
+            toggleButton.textContent = isPassword ? '👁️‍🗨️' : '👁️';
+            toggleButton.classList.toggle('active', isPassword);
+        }
+    </script>
 </body>
 </html>

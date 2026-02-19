@@ -15,11 +15,11 @@ $admin_name = getUserName($pdo, $_SESSION['user_id']);
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'undrop') {
     $drop_id = intval($_POST['drop_id']);
     try {
-        $stmt = $pdo->prepare('UPDATE class_card_drops SET status = ?, retrieve_date = NOW() WHERE id = ?');
-        $stmt->execute(['Retrieve', $drop_id]);
-        setMessage('success', 'Class card retrieved successfully.');
+        $stmt = $pdo->prepare('UPDATE class_card_drops SET status = ? WHERE id = ?');
+        $stmt->execute(['Cancelled', $drop_id]);
+        setMessage('success', 'Class card drop has been cancelled. The record remains in drop history.');
     } catch (Exception $e) {
-        setMessage('error', 'Error retrieving class card: ' . $e->getMessage());
+        setMessage('error', 'Error cancelling class card: ' . $e->getMessage());
     }
     redirect('/SYSTEM/admin/dropped_cards.php');
 }
@@ -33,7 +33,7 @@ $query = '
     FROM class_card_drops ccd
     JOIN students s ON ccd.student_id = s.id
     JOIN users u ON ccd.teacher_id = u.id
-    WHERE 1=1
+    WHERE ccd.status = "Approved"
 ';
 $params = [];
 
@@ -161,7 +161,7 @@ $message = getMessage();
                                                 <form method="POST" style="display: inline;">
                                                     <input type="hidden" name="action" value="undrop">
                                                     <input type="hidden" name="drop_id" value="<?php echo $drop['id']; ?>">
-                                                    <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Are you sure you want to retrieve this class card?')">Undrop</button>
+                                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to cancel this class card drop?')">Cancel</button>
                                                 </form>
                                             </td>
                                         </tr>
