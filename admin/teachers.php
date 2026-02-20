@@ -38,21 +38,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } elseif (!preg_match('/@gmail\.com$/', $email)) {
             $errors[] = 'Email must be a Gmail account (@gmail.com only).';
         } elseif (strlen($email) > 100) {
-            $errors[] = 'Email address must not exceed 100 characters.';;
+            $errors[] = 'Email address must not exceed 100 characters.';
         }
-        
+
+        // Password validation (runs before confirm check)
+        if (empty($password)) {
+            $errors[] = 'Password is required.';
+        } else {
+            if (strlen($password) < 6) {
+                $errors[] = 'Password must be at least 6 characters long.';
+            }
+            if (strlen($password) > 255) {
+                $errors[] = 'Password must not exceed 255 characters.';
+            }
+            if (!preg_match('/[A-Z]/', $password)) {
+                $errors[] = 'Password must contain at least one uppercase letter (A–Z).';
+            }
+            if (!preg_match('/[a-z]/', $password)) {
+                $errors[] = 'Password must contain at least one lowercase letter (a–z).';
+            }
+            if (!preg_match('/[0-9]/', $password)) {
+                $errors[] = 'Password must contain at least one number (0–9).';
+            }
+            if (!preg_match('/[!@#$%]/', $password)) {
+                $errors[] = 'Password must contain at least one special character (!, @, #, $, %).';
+            }
+        }
+
         // Confirm password match
         if (empty($confirm_password)) {
             $errors[] = 'Password confirmation is required.';
         } elseif ($password !== $confirm_password) {
             $errors[] = 'Passwords do not match. Please ensure both password fields are identical.';
-        }
-        
-        // Password validation
-        if (empty($password)) {
-            $errors[] = 'Password is required.';
-        } elseif (strlen($password) > 255) {
-            $errors[] = 'Password must not exceed 255 characters.';
         }
         
         // Check for duplicate email
@@ -157,14 +174,14 @@ $message = getMessage();
             <div class="content-wrapper">
                 <?php if ($message): ?>
                     <div class="alert alert-<?php echo $message['type']; ?>">
-                        <?php echo htmlspecialchars($message['text']); ?>
+                        <?php echo $message['text']; ?>
                     </div>
                 <?php endif; ?>
                 
                 <!-- Add Teacher Form -->
                 <section class="section">
                     <h2>Register New Teacher</h2>
-                    <form method="POST" class="teacher-form">
+                    <form method="POST" class="teacher-form" id="teacherForm">
                         <input type="hidden" name="action" value="add">
                         <div class="form-row">
                             <div class="form-group">
@@ -180,13 +197,19 @@ $message = getMessage();
                             <div class="form-group">
                                 <label for="password">Password</label>
                                 <div class="password-input-wrapper">
-                                    <input type="password" id="password" name="password" required placeholder="Put a strong password here">
+                                    <input type="password" id="password" name="password" required minlength="6" placeholder="Put a strong password here" oninput="checkPasswordStrength(this.value)">
                                     <button type="button" class="password-toggle" onclick="togglePassword('password')">👁️</button>
                                 </div>
                                 <small style="display: block; margin-top: 5px; color: #666;">
                                     <strong>Password Requirements:</strong><br>
-                                    • No specific requirements
+                                    • At least 6–8 characters long<br>
+                                    • At least one uppercase letter (A–Z)<br>
+                                    • At least one lowercase letter (a–z)<br>
+                                    • At least one number (0–9)<br>
+                                    • At least one special character (!, @, #, $, %)
                                 </small>
+                                <!-- Live strength indicator -->
+                                <div id="password-strength" style="margin-top: 6px; font-size: 0.85em;"></div>
                             </div>
                             
                             <div class="form-group">
@@ -195,6 +218,7 @@ $message = getMessage();
                                     <input type="password" id="confirm_password" name="confirm_password" required placeholder="Re-enter your password">
                                     <button type="button" class="password-toggle" onclick="togglePassword('confirm_password')">👁️</button>
                                 </div>
+                                <div id="confirm-match" style="margin-top: 5px; font-size: 0.85em;"></div>
                             </div>
                             
                             <div class="form-group">
@@ -254,6 +278,55 @@ $message = getMessage();
             toggleButton.textContent = isPassword ? '👁️‍🗨️' : '👁️';
             toggleButton.classList.toggle('active', isPassword);
         }
+
+        function checkPasswordStrength(value) {
+            const strengthEl = document.getElementById('password-strength');
+            const rules = [
+                { regex: /.{6,}/, label: 'At least 6 characters' },
+                { regex: /[A-Z]/, label: 'Uppercase letter' },
+                { regex: /[a-z]/, label: 'Lowercase letter' },
+                { regex: /[0-9]/, label: 'Number' },
+                { regex: /[!@#$%]/, label: 'Special character (!, @, #, $, %)' },
+            ];
+
+            if (value.length === 0) {
+                strengthEl.innerHTML = '';
+                return;
+            }
+
+            const passed = rules.filter(r => r.regex.test(value)).length;
+            const colors = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#27ae60'];
+            const labels = ['Very Weak', 'Weak', 'Fair', 'Strong', 'Very Strong'];
+
+            strengthEl.innerHTML = `
+                <div style="display:flex; gap:4px; margin-bottom:4px;">
+                    ${rules.map((_, i) => `<div style="flex:1; height:5px; border-radius:3px; background:${i < passed ? colors[passed - 1] : '#ddd'};"></div>`).join('')}
+                </div>
+                <span style="color:${colors[passed - 1]}; font-weight:600;">${labels[passed - 1]}</span>
+            `;
+
+            // Also trigger confirm match check
+            checkConfirmMatch();
+        }
+
+        function checkConfirmMatch() {
+            const password = document.getElementById('password').value;
+            const confirm = document.getElementById('confirm_password').value;
+            const matchEl = document.getElementById('confirm-match');
+
+            if (confirm.length === 0) {
+                matchEl.innerHTML = '';
+                return;
+            }
+
+            if (password === confirm) {
+                matchEl.innerHTML = '<span style="color:#27ae60;">✔ Passwords match</span>';
+            } else {
+                matchEl.innerHTML = '<span style="color:#e74c3c;">✘ Passwords do not match</span>';
+            }
+        }
+
+        document.getElementById('confirm_password').addEventListener('input', checkConfirmMatch);
     </script>
 </body>
 </html>
