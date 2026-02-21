@@ -15,11 +15,11 @@ $admin_name = getUserName($pdo, $_SESSION['user_id']);
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'undrop') {
     $drop_id = intval($_POST['drop_id']);
     try {
-        $stmt = $pdo->prepare('UPDATE class_card_drops SET status = ? WHERE id = ?');
-        $stmt->execute(['Cancelled', $drop_id]);
-        setMessage('success', 'Class card drop has been cancelled. The record remains in drop history.');
+        $stmt = $pdo->prepare('UPDATE class_card_drops SET status = ?, retrieve_date = NOW() WHERE id = ?');
+        $stmt->execute(['Undropped', $drop_id]);
+        setMessage('success', 'Class card has been undropped. The record remains in drop history.');
     } catch (Exception $e) {
-        setMessage('error', 'Error cancelling class card: ' . $e->getMessage());
+        setMessage('error', 'Error undropping class card: ' . $e->getMessage());
     }
     redirect('/SYSTEM/admin/dropped_cards.php');
 }
@@ -33,7 +33,7 @@ $query = '
     FROM class_card_drops ccd
     JOIN students s ON ccd.student_id = s.id
     JOIN users u ON ccd.teacher_id = u.id
-    WHERE ccd.status = "Approved"
+    WHERE ccd.status IN ("Dropped", "Undropped")
 ';
 $params = [];
 
@@ -67,7 +67,7 @@ $message = getMessage();
                 <h2>PhilCST</h2>
                 <p>Admin Portal</p>
             </div>
-            
+
             <nav class="sidebar-nav">
                 <a href="/SYSTEM/admin/dashboard.php" class="nav-item">
                     <span>Dashboard</span>
@@ -88,12 +88,12 @@ $message = getMessage();
                     <span>Logout</span>
                 </a>
             </nav>
-            
+
             <div class="sidebar-footer">
                 <p>Welcome, <strong><?php echo htmlspecialchars($admin_name); ?></strong></p>
             </div>
         </aside>
-        
+
         <!-- Main Content -->
         <main class="main-content">
             <header class="top-bar">
@@ -102,14 +102,14 @@ $message = getMessage();
                     <span><?php echo htmlspecialchars($admin_name); ?> (Administrator)</span>
                 </div>
             </header>
-            
+
             <div class="content-wrapper">
                 <?php if ($message): ?>
                     <div class="alert alert-<?php echo $message['type']; ?>">
                         <?php echo htmlspecialchars($message['text']); ?>
                     </div>
                 <?php endif; ?>
-                
+
                 <!-- Filters Section -->
                 <section class="section">
                     <h2>Filter Dropped Cards</h2>
@@ -119,7 +119,6 @@ $message = getMessage();
                                 <label for="search">Search by Student Name/ID</label>
                                 <input type="text" id="search" name="search" value="<?php echo htmlspecialchars($search_student); ?>" placeholder="Student name or ID...">
                             </div>
-                            
                             <div class="form-group">
                                 <label>&nbsp;</label>
                                 <button type="submit" class="btn btn-primary">Search</button>
@@ -128,7 +127,7 @@ $message = getMessage();
                         </div>
                     </form>
                 </section>
-                
+
                 <!-- Dropped Cards Table -->
                 <section class="section">
                     <h2>All Dropped Cards (<?php echo count($drops); ?> records)</h2>
@@ -142,7 +141,7 @@ $message = getMessage();
                                         <th>Subject</th>
                                         <th>Teacher</th>
                                         <th>Remarks</th>
-                                        <th>Date & Time</th>
+                                        <th>Drop Date & Time</th>
                                         <th>Status</th>
                                         <th>Action</th>
                                     </tr>
@@ -156,13 +155,21 @@ $message = getMessage();
                                             <td><?php echo htmlspecialchars($drop['teacher_name']); ?></td>
                                             <td><?php echo htmlspecialchars(substr($drop['remarks'], 0, 30)); ?></td>
                                             <td><?php echo formatDate($drop['drop_date']); ?></td>
-                                            <td><span class="status status-<?php echo strtolower($drop['status']); ?>"><?php echo htmlspecialchars($drop['status']); ?></span></td>
                                             <td>
-                                                <form method="POST" style="display: inline;">
-                                                    <input type="hidden" name="action" value="undrop">
-                                                    <input type="hidden" name="drop_id" value="<?php echo $drop['id']; ?>">
-                                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to cancel this class card drop?')">Cancel</button>
-                                                </form>
+                                                <span class="status status-<?php echo strtolower($drop['status']); ?>">
+                                                    <?php echo htmlspecialchars($drop['status']); ?>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <?php if ($drop['status'] === 'Dropped'): ?>
+                                                    <form method="POST" style="display: inline;">
+                                                        <input type="hidden" name="action" value="undrop">
+                                                        <input type="hidden" name="drop_id" value="<?php echo $drop['id']; ?>">
+                                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to undrop this class card?')">Undrop</button>
+                                                    </form>
+                                                <?php else: ?>
+                                                    <span style="color: #aaa; font-style: italic;">—</span>
+                                                <?php endif; ?>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
