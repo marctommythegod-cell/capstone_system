@@ -11,7 +11,7 @@ if ($_SESSION['user_role'] !== 'teacher') {
 }
 
 $user_id = $_SESSION['user_id'];
-$teacher_name = getUserName($pdo, $user_id);
+$teacher_name = getUserName($pdo, user_id: $user_id);
 
 // Pagination settings
 $items_per_page = 10;

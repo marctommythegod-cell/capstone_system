@@ -134,7 +134,7 @@ if ($action === 'undo_drop') {
         $drop = $stmt->fetch();
         
         if (!$drop) {
-            setMessage('error', 'Drop record not found or you do not have permission to undo it.');
+            setMessage('error', message: 'Drop record not found or you do not have permission to undo it.');
             redirect('/SYSTEM/teacher/dashboard.php');
         }
         
