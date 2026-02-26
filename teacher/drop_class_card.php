@@ -133,9 +133,12 @@ $message = getMessage();
                         </div>
                         
                         <div class="form-row">
-                            <button type="submit" class="btn btn-primary">Drop Class Card</button>
+                            <button type="submit" class="btn btn-primary">Request Drop (Requires Admin Approval)</button>
                         </div>
                     </form>
+                    <div class="alert alert-info" style="margin-top: 20px;">
+                        <strong>Note:</strong> All class card drop requests require approval from the admin before they are officially processed. You will be notified via email once your request has been approved or rejected.
+                    </div>
                 </section>
             </div>
         </main>

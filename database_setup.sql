@@ -44,18 +44,22 @@ CREATE TABLE class_card_drops (
     subject_no VARCHAR(20) NOT NULL,
     subject_name VARCHAR(150) NOT NULL,
     remarks TEXT,
-    status VARCHAR(50) DEFAULT 'Dropped',
+    status VARCHAR(50) DEFAULT 'Pending',
     drop_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     drop_month VARCHAR(10) NOT NULL,
     drop_year INT NOT NULL,
     retrieve_date DATETIME NULL,
+    approved_by INT NULL,
+    approved_date DATETIME NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+    FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL,
     INDEX idx_teacher (teacher_id),
     INDEX idx_student (student_id),
     INDEX idx_month (drop_month),
-    INDEX idx_year (drop_year)
+    INDEX idx_year (drop_year),
+    INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Create indexes for better query performance
@@ -63,26 +67,31 @@ CREATE INDEX idx_student_id ON students(student_id);
 CREATE INDEX idx_user_email ON users(email);
 CREATE INDEX idx_user_role ON users(role);
 
--- Insert sample admin user (password: 123456)
+-- Insert sample admin user (email: PhilcstGuidance@gmail.com, password: Philcst@guidance2026)
 INSERT INTO users (name, email, password, role) VALUES 
-('Guidance Head', 'admin@test.com', '$2a$12$LSE5hfRSPocZOtdy.c8/xuCq4i1T59elPWpXffmcgrbGSmix28PI2', 'admin');
+('Guidance Head', 'PhilcstGuidance@gmail.com', '$2y$10$oerS7/dytg16lbw06ABx1u83YmhWOogJtA.prpbypfTGBco0qu7Ru', 'admin');
 
 -- Insert sample teacher (password: 123456)
 INSERT INTO users (name, email, password, role) VALUES 
 ('Juan Dela Cruz', 'teacher@test.com', '$2a$12$Lwb5bTLGrSuVqRWaB1QnhuJlypgd8P4lqVlXLDxnuXsjmFFlO6jM2', 'teacher');
 
 -- Insert sample students
-INSERT INTO students (student_id, name, course, year) VALUES 
-('2021-0001', 'Maria Santos', 'BS Computer Science', 1),
-('2021-0002', 'Jose Garcia', 'BS Computer Science', 1),
-('2021-0003', 'Ana Lopez', 'BS Computer Science', 2),
-('2021-0004', 'Carlos Mendoza', 'BS Information Technology', 1),
-('2021-0005', 'Rosa Fernandez', 'BS Information Technology', 2);
+INSERT INTO students (student_id, name, email, course, year) VALUES 
+('2021-0001', 'Maria Santos', 'maria.santos@test.com', 'BS Computer Science', 1),
+('2021-0002', 'Jose Garcia', 'jose.garcia@test.com', 'BS Computer Science', 1),
+('2021-0003', 'Ana Lopez', 'ana.lopez@test.com', 'BS Computer Science', 2),
+('2021-0004', 'Carlos Mendoza', 'carlos.mendoza@test.com', 'BS Information Technology', 1),
+('2021-0005', 'Rosa Fernandez', 'rosa.fernandez@test.com', 'BS Information Technology', 2),
+('2021-0006', 'Miguel Torres', 'miguel.torres@test.com', 'BS Computer Science', 3),
+('2021-0007', 'Diana Reyes', 'diana.reyes@test.com', 'BS Information Technology', 3);
 
 -- Insert sample subjects
 INSERT INTO subjects (subject_no, subject_name) VALUES 
 ('CS101', 'Introduction to Programming'),
 ('CS102', 'Data Structures'),
 ('CS201', 'Web Development'),
+('CS202', 'Database Design'),
+('CS301', 'Software Engineering'),
 ('IT101', 'Network Basics'),
-('IT102', 'Database Design');
+('IT102', 'System Administration'),
+('IT201', 'Cybersecurity Fundamentals');

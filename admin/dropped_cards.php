@@ -27,7 +27,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 // Get filters
 $search_student = $_GET['search'] ?? '';
 
-// Build query
+// Fetch pending drop requests
+$pending_query = '
+    SELECT ccd.*, s.name as student_name, s.student_id, u.name as teacher_name
+    FROM class_card_drops ccd
+    JOIN students s ON ccd.student_id = s.id
+    JOIN users u ON ccd.teacher_id = u.id
+    WHERE ccd.status = "Pending"
+';
+$pending_params = [];
+
+if ($search_student) {
+    $pending_query .= ' AND (s.name LIKE ? OR s.student_id LIKE ?)';
+    $pending_params[] = '%' . $search_student . '%';
+    $pending_params[] = '%' . $search_student . '%';
+}
+
+$pending_query .= ' ORDER BY ccd.drop_date ASC';
+
+$stmt = $pdo->prepare($pending_query);
+$stmt->execute($pending_params);
+$pending_drops = $stmt->fetchAll();
+
+// Build query for approved/undropped cards
 $query = '
     SELECT ccd.*, s.name as student_name, s.student_id, u.name as teacher_name
     FROM class_card_drops ccd
@@ -112,7 +134,7 @@ $message = getMessage();
 
                 <!-- Filters Section -->
                 <section class="section">
-                    <h2>Filter Dropped Cards</h2>
+                    <h2>Filter Cards</h2>
                     <form method="GET" class="filter-form">
                         <div class="form-row">
                             <div class="form-group">
@@ -128,9 +150,48 @@ $message = getMessage();
                     </form>
                 </section>
 
-                <!-- Dropped Cards Table -->
+                <!-- Pending Drop Requests Section -->
                 <section class="section">
-                    <h2>All Dropped Cards (<?php echo count($drops); ?> records)</h2>
+                    <h2>Pending Drop Requests (<?php echo count($pending_drops); ?> awaiting approval)</h2>
+                    <?php if (count($pending_drops) > 0): ?>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Student ID</th>
+                                        <th>Student Name</th>
+                                        <th>Subject</th>
+                                        <th>Teacher</th>
+                                        <th>Remarks</th>
+                                        <th>Request Date & Time</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($pending_drops as $drop): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($drop['student_id']); ?></td>
+                                            <td><?php echo htmlspecialchars($drop['student_name']); ?></td>
+                                            <td><?php echo htmlspecialchars($drop['subject_no'] . ' - ' . $drop['subject_name']); ?></td>
+                                            <td><?php echo htmlspecialchars($drop['teacher_name']); ?></td>
+                                            <td><?php echo htmlspecialchars(substr($drop['remarks'], 0, 50)); ?></td>
+                                            <td><?php echo formatDate($drop['drop_date']); ?></td>
+                                            <td>
+                                                <button type="button" class="btn btn-sm btn-success" onclick="approveDrop(<?php echo $drop['id']; ?>)">Approve</button>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php else: ?>
+                        <p class="no-data">No pending drop requests.</p>
+                    <?php endif; ?>
+                </section>
+
+                <!-- Approved/Dropped Cards Table -->
+                <section class="section">
+                    <h2>Approved Dropped Cards (<?php echo count($drops); ?> records)</h2>
                     <?php if (count($drops) > 0): ?>
                         <div class="table-responsive">
                             <table class="table">
@@ -183,5 +244,7 @@ $message = getMessage();
             </div>
         </main>
     </div>
+
+    <script src="/SYSTEM/js/functions.js"></script>
 </body>
 </html>

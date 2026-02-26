@@ -100,3 +100,63 @@ function downloadCSV(csv, filename) {
 function printPage() {
     window.print();
 }
+// Approve class card drop request
+function approveDrop(dropId) {
+    if (confirm('Are you sure you want to approve this class card drop?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/SYSTEM/includes/api.php?action=approve_drop';
+        
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'drop_id';
+        input.value = dropId;
+        
+        form.appendChild(input);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Show approval modal
+function showApprovalModal(dropId, studentName, subjectName) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'approvalModal';
+    
+    const content = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Approve Class Card Drop</h3>
+                <button type="button" class="modal-close" onclick="closeApprovalModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Student:</strong> ${studentName}</p>
+                <p><strong>Subject:</strong> ${subjectName}</p>
+                <p>Are you sure you want to approve this class card drop request?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeApprovalModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="confirmApproveDrop(${dropId})">Approve</button>
+            </div>
+        </div>
+    `;
+    
+    modal.innerHTML = content;
+    document.body.appendChild(modal);
+    modal.style.display = 'block';
+}
+
+// Close approval modal
+function closeApprovalModal() {
+    const modal = document.getElementById('approvalModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// Confirm approve drop
+function confirmApproveDrop(dropId) {
+    approveDrop(dropId);
+    closeApprovalModal();
+}
