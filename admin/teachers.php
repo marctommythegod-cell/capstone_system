@@ -14,8 +14,14 @@ $admin_name = getUserName($pdo, $_SESSION['user_id']);
 // Handle teacher registration
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] === 'add') {
-        $name = trim($_POST['name'] ?? '');
+        $teacher_id = trim($_POST['teacher_id'] ?? '');
+        $lastname = trim($_POST['lastname'] ?? '');
+        $firstname = trim($_POST['firstname'] ?? '');
+        $middlename = trim($_POST['middlename'] ?? '');
+        $name = $lastname . ', ' . $firstname . (($middlename) ? ' ' . $middlename : '');
+        $address = trim($_POST['address'] ?? '');
         $email = trim($_POST['email'] ?? '');
+        $department = trim($_POST['department'] ?? '');
         $password = trim($_POST['password'] ?? '');
         $confirm_password = trim($_POST['confirm_password'] ?? '');
         
@@ -23,12 +29,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $errors = [];
         
         // Check for empty fields
-        if (empty($name)) {
-            $errors[] = 'Full name is required.';
-        } elseif (strlen($name) < 2) {
-            $errors[] = 'Full name must be at least 2 characters.';
-        } elseif (strlen($name) > 100) {
-            $errors[] = 'Full name must not exceed 100 characters.';
+        if (empty($teacher_id)) {
+            $errors[] = 'Teacher ID is required.';
+        } elseif (strlen($teacher_id) < 2) {
+            $errors[] = 'Teacher ID must be at least 2 characters.';
+        } elseif (strlen($teacher_id) > 50) {
+            $errors[] = 'Teacher ID must not exceed 50 characters.';
+        }
+        
+        if (empty($lastname)) {
+            $errors[] = 'Last name is required.';
+        } elseif (strlen($lastname) < 2) {
+            $errors[] = 'Last name must be at least 2 characters.';
+        } elseif (strlen($lastname) > 100) {
+            $errors[] = 'Last name must not exceed 100 characters.';
+        }
+        
+        if (empty($firstname)) {
+            $errors[] = 'First name is required.';
+        } elseif (strlen($firstname) < 2) {
+            $errors[] = 'First name must be at least 2 characters.';
+        } elseif (strlen($firstname) > 100) {
+            $errors[] = 'First name must not exceed 100 characters.';
+        }
+        
+        if (empty($middlename)) {
+            $errors[] = 'Middle name is required.';
+        } elseif (strlen($middlename) < 2) {
+            $errors[] = 'Middle name must be at least 2 characters.';
+        } elseif (strlen($middlename) > 100) {
+            $errors[] = 'Middle name must not exceed 100 characters.';
+        }
+        
+        if (empty($address)) {
+            $errors[] = 'Complete address is required.';
+        } elseif (strlen($address) < 5) {
+            $errors[] = 'Complete address must be at least 5 characters.';
+        } elseif (strlen($address) > 255) {
+            $errors[] = 'Complete address must not exceed 255 characters.';
+        }
+        
+        if (empty($department)) {
+            $errors[] = 'Department is required.';
+        } elseif (strlen($department) < 2) {
+            $errors[] = 'Department must be at least 2 characters.';
+        } elseif (strlen($department) > 100) {
+            $errors[] = 'Department must not exceed 100 characters.';
         }
         
         if (empty($email)) {
@@ -86,26 +132,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } else {
             try {
                 $hashed_password = securePassword($password);
-                $stmt = $pdo->prepare('INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)');
-                $stmt->execute([$name, $email, $hashed_password, 'teacher']);
+                $stmt = $pdo->prepare('INSERT INTO users (name, email, password, role, teacher_id, address, department) VALUES (?, ?, ?, ?, ?, ?, ?)');
+                $stmt->execute([$name, $email, $hashed_password, 'teacher', $teacher_id, $address, $department]);
                 setMessage('success', 'Teacher added successfully.');
             } catch (Exception $e) {
                 setMessage('error', 'Error adding teacher: ' . $e->getMessage());
             }
         }
         redirect('/SYSTEM/admin/teachers.php');
-    } elseif ($_POST['action'] === 'delete') {
+    } elseif ($_POST['action'] === 'update_status') {
         $teacher_id = intval($_POST['teacher_id'] ?? 0);
+        $status = trim($_POST['status'] ?? '');
         
         if (!$teacher_id) {
             setMessage('error', 'Invalid teacher ID.');
+        } elseif (!in_array($status, ['active', 'inactive'])) {
+            setMessage('error', 'Invalid status.');
         } else {
             try {
-                $stmt = $pdo->prepare('DELETE FROM users WHERE id = ? AND role = "teacher"');
-                $stmt->execute([$teacher_id]);
-                setMessage('success', 'Teacher deleted successfully.');
+                $stmt = $pdo->prepare('UPDATE users SET status = ? WHERE id = ? AND role = "teacher"');
+                $stmt->execute([$status, $teacher_id]);
+                setMessage('success', 'Teacher status updated successfully.');
             } catch (Exception $e) {
-                setMessage('error', 'Error deleting teacher: ' . $e->getMessage());
+                setMessage('error', 'Error updating teacher: ' . $e->getMessage());
             }
         }
         redirect('/SYSTEM/admin/teachers.php');
@@ -113,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 }
 
 // Fetch all teachers
-$stmt = $pdo->prepare('SELECT id, name, email, created_at FROM users WHERE role = "teacher" ORDER BY name');
+$stmt = $pdo->prepare('SELECT id, teacher_id, name, email, address, department, status, created_at FROM users WHERE role = "teacher" ORDER BY name');
 $stmt->execute();
 $teachers = $stmt->fetchAll();
 
@@ -178,56 +227,196 @@ $message = getMessage();
                     </div>
                 <?php endif; ?>
                 
-                <!-- Add Teacher Form -->
-                <section class="section">
-                    <h2>Register New Teacher</h2>
-                    <form method="POST" class="teacher-form" id="teacherForm">
-                        <input type="hidden" name="action" value="add">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="name">Full Name</label>
-                                <input type="text" id="name" name="name" required placeholder="Enter Your Full Name">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="email">Email Address</label>
-                                <input type="email" id="email" name="email" required placeholder="example@gmail.com">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="password">Password</label>
-                                <div class="password-input-wrapper">
-                                    <input type="password" id="password" name="password" required minlength="6" placeholder="Put a strong password here" oninput="checkPasswordStrength(this.value)">
-                                    <button type="button" class="password-toggle" onclick="togglePassword('password')">👁️</button>
-                                </div>
-                                <small style="display: block; margin-top: 5px; color: #666;">
-                                    <strong>Password Requirements:</strong><br>
-                                    • At least 6–8 characters long<br>
-                                    • At least one uppercase letter (A–Z)<br>
-                                    • At least one lowercase letter (a–z)<br>
-                                    • At least one number (0–9)<br>
-                                    • At least one special character (!, @, #, $, %)
-                                </small>
-                                <!-- Live strength indicator -->
-                                <div id="password-strength" style="margin-top: 6px; font-size: 0.85em;"></div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="confirm_password">Confirm Password</label>
-                                <div class="password-input-wrapper">
-                                    <input type="password" id="confirm_password" name="confirm_password" required placeholder="Re-enter your password">
-                                    <button type="button" class="password-toggle" onclick="togglePassword('confirm_password')">👁️</button>
-                                </div>
-                                <div id="confirm-match" style="margin-top: 5px; font-size: 0.85em;"></div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>&nbsp;</label>
-                                <button type="submit" class="btn btn-primary">Add Teacher</button>
-                            </div>
+                <!-- Register Button -->
+                <div style="margin-bottom: 20px;">
+                    <button type="button" class="btn btn-primary" onclick="openRegisterModal()">Register Teacher</button>
+                </div>
+                
+                <!-- Register Modal -->
+                <div id="registerModal" class="modal" style="display: none;">
+                    <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+                        <div class="modal-header">
+                            <h2>Register New Teacher</h2>
+                            <button type="button" class="modal-close" onclick="closeRegisterModal()">&times;</button>
                         </div>
-                    </form>
-                </section>
+                        <form method="POST" class="teacher-form" id="teacherForm">
+                            <input type="hidden" name="action" value="add">
+                            <div class="modal-body" style="padding: 20px;">
+                                <div class="form-group">
+                                    <label for="teacher_id">Teacher ID</label>
+                                    <input type="text" id="teacher_id" name="teacher_id" required placeholder="Enter teacher ID">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="lastname">Last Name</label>
+                                    <input type="text" id="lastname" name="lastname" required placeholder="Enter last name">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="firstname">First Name</label>
+                                    <input type="text" id="firstname" name="firstname" required placeholder="Enter first name">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="middlename">Middle Name</label>
+                                    <input type="text" id="middlename" name="middlename" required placeholder="Enter middle name">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="address">Complete Address</label>
+                                    <textarea id="address" name="address" required placeholder="Enter complete address" rows="3"></textarea>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="email">Email Address</label>
+                                    <input type="email" id="email" name="email" required placeholder="example@gmail.com">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="department">Department</label>
+                                    <input type="text" id="department" name="department" required placeholder="Enter department">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="password">Password</label>
+                                    <div class="password-input-wrapper">
+                                        <input type="password" id="password" name="password" required minlength="6" placeholder="Put a strong password here" oninput="checkPasswordStrength(this.value)">
+                                        <button type="button" class="password-toggle" onclick="togglePassword('password')">👁️</button>
+                                    </div>
+                                    <small id="password-requirements" style="display: none; display: block; margin-top: 5px; color: #666;">
+                                        <strong>Password Requirements:</strong><br>
+                                        • At least 6–8 characters long<br>
+                                        • At least one uppercase letter (A–Z)<br>
+                                        • At least one lowercase letter (a–z)<br>
+                                        • At least one number (0–9)<br>
+                                        • At least one special character (!, @, #, $, %)
+                                    </small>
+                                    <!-- Live strength indicator -->
+                                    <div id="password-strength" style="margin-top: 6px; font-size: 0.85em;"></div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="confirm_password">Confirm Password</label>
+                                    <div class="password-input-wrapper">
+                                        <input type="password" id="confirm_password" name="confirm_password" required placeholder="Re-enter your password">
+                                        <button type="button" class="password-toggle" onclick="togglePassword('confirm_password')">👁️</button>
+                                    </div>
+                                    <div id="confirm-match" style="margin-top: 5px; font-size: 0.85em; display: none;"></div>
+                                </div>
+                            </div>
+                            <div class="modal-footer" style="padding: 15px 20px; border-top: 1px solid #ddd; display: flex; gap: 10px; justify-content: flex-end;">
+                                <button type="button" class="btn btn-secondary" onclick="closeRegisterModal()">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Register Teacher</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <style>
+                    .modal {
+                        position: fixed;
+                        z-index: 1000;
+                        left: 0;
+                        top: 0;
+                        width: 100%;
+                        height: 100%;
+                        background-color: rgba(0,0,0,0.5);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    }
+                    .modal-content {
+                        background-color: white;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                    }
+                    .modal-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        padding: 20px;
+                        border-bottom: 1px solid #ddd;
+                    }
+                    .modal-header h2 {
+                        margin: 0;
+                    }
+                    .modal-close {
+                        background: none;
+                        border: none;
+                        font-size: 28px;
+                        cursor: pointer;
+                        color: #999;
+                    }
+                    .modal-close:hover {
+                        color: #333;
+                    }
+                </style>
+                
+                <script>
+                    function openRegisterModal() {
+                        document.getElementById('registerModal').style.display = 'flex';
+                    }
+                    
+                    function closeRegisterModal() {
+                        document.getElementById('registerModal').style.display = 'none';
+                    }
+                    
+                    // Close modal when clicking outside of it
+                    window.onclick = function(event) {
+                        var modal = document.getElementById('registerModal');
+                        if (event.target == modal) {
+                            modal.style.display = 'none';
+                        }
+                    }
+                </script>
+                
+                <!-- Update Status Modal -->
+                <div id="updateModal" class="modal" style="display: none;">
+                    <div class="modal-content" style="max-width: 400px;">
+                        <div class="modal-header">
+                            <h2>Update Teacher Status</h2>
+                            <button type="button" class="modal-close" onclick="closeUpdateModal()">&times;</button>
+                        </div>
+                        <form method="POST" id="updateForm">
+                            <input type="hidden" name="action" value="update_status">
+                            <input type="hidden" name="teacher_id" id="updateTeacherId" value="">
+                            <div class="modal-body" style="padding: 20px;">
+                                <div class="form-group">
+                                    <label for="updateStatus">Status</label>
+                                    <select id="updateStatus" name="status" required>
+                                        <option value="">-- Select Status --</option>
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="modal-footer" style="padding: 15px 20px; border-top: 1px solid #ddd; display: flex; gap: 10px; justify-content: flex-end;">
+                                <button type="button" class="btn btn-secondary" onclick="closeUpdateModal()">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Update</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <script>
+                    function openUpdateModal(teacherId, currentStatus) {
+                        document.getElementById('updateTeacherId').value = teacherId;
+                        document.getElementById('updateStatus').value = currentStatus;
+                        document.getElementById('updateModal').style.display = 'flex';
+                    }
+                    
+                    function closeUpdateModal() {
+                        document.getElementById('updateModal').style.display = 'none';
+                    }
+                    
+                    // Close modal when clicking outside of it
+                    window.onclick = function(event) {
+                        var modal = document.getElementById('updateModal');
+                        if (event.target == modal) {
+                            modal.style.display = 'none';
+                        }
+                    }
+                </script>
                 
                 <!-- Teachers List -->
                 <section class="section">
@@ -237,8 +426,14 @@ $message = getMessage();
                             <table class="table">
                                 <thead>
                                     <tr>
-                                        <th>Name</th>
+                                        <th>Teacher ID</th>
+                                        <th>Last Name</th>
+                                        <th>First Name</th>
+                                        <th>Middle Name</th>
                                         <th>Email</th>
+                                        <th>Address</th>
+                                        <th>Department</th>
+                                        <th>Status</th>
                                         <th>Registered</th>
                                         <th>Action</th>
                                     </tr>
@@ -246,15 +441,28 @@ $message = getMessage();
                                 <tbody>
                                     <?php foreach ($teachers as $teacher): ?>
                                         <tr>
-                                            <td><?php echo htmlspecialchars($teacher['name']); ?></td>
+                                            <td><?php echo htmlspecialchars($teacher['teacher_id'] ?? ''); ?></td>
+                                            <td><?php 
+                                                $names = explode(', ', $teacher['name'] ?? '');
+                                                echo htmlspecialchars($names[0] ?? '');
+                                            ?></td>
+                                            <td><?php 
+                                                $names = explode(', ', $teacher['name'] ?? '');
+                                                $firstMiddle = isset($names[1]) ? explode(' ', $names[1]) : [];
+                                                echo htmlspecialchars($firstMiddle[0] ?? '');
+                                            ?></td>
+                                            <td><?php 
+                                                $names = explode(', ', $teacher['name'] ?? '');
+                                                $firstMiddle = isset($names[1]) ? explode(' ', $names[1], 2) : [];
+                                                echo htmlspecialchars($firstMiddle[1] ?? '');
+                                            ?></td>
                                             <td><?php echo htmlspecialchars($teacher['email']); ?></td>
+                                            <td><?php echo htmlspecialchars($teacher['address'] ?? ''); ?></td>
+                                            <td><?php echo htmlspecialchars($teacher['department'] ?? ''); ?></td>
+                                            <td><span class="badge badge-<?php echo ($teacher['status'] === 'active') ? 'success' : 'danger'; ?>"><?php echo ucfirst($teacher['status'] ?? 'inactive'); ?></span></td>
                                             <td><?php echo formatDate($teacher['created_at']); ?></td>
                                             <td>
-                                                <form method="POST" style="display: inline;">
-                                                    <input type="hidden" name="action" value="delete">
-                                                    <input type="hidden" name="teacher_id" value="<?php echo $teacher['id']; ?>">
-                                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
-                                                </form>
+                                                <button type="button" class="btn btn-sm btn-primary" onclick="openUpdateModal(<?php echo $teacher['id']; ?>, '<?php echo htmlspecialchars($teacher['status'] ?? 'inactive'); ?>')">Update</button>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -281,6 +489,7 @@ $message = getMessage();
 
         function checkPasswordStrength(value) {
             const strengthEl = document.getElementById('password-strength');
+            const requirementsEl = document.getElementById('password-requirements');
             const rules = [
                 { regex: /.{6,}/, label: 'At least 6 characters' },
                 { regex: /[A-Z]/, label: 'Uppercase letter' },
@@ -291,8 +500,12 @@ $message = getMessage();
 
             if (value.length === 0) {
                 strengthEl.innerHTML = '';
+                requirementsEl.style.display = 'none';
                 return;
             }
+            
+            // Show requirements when user starts typing
+            requirementsEl.style.display = 'block';
 
             const passed = rules.filter(r => r.regex.test(value)).length;
             const colors = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#27ae60'];
@@ -316,8 +529,12 @@ $message = getMessage();
 
             if (confirm.length === 0) {
                 matchEl.innerHTML = '';
+                matchEl.style.display = 'none';
                 return;
             }
+            
+            // Show match status when user types in confirm field
+            matchEl.style.display = 'block';
 
             if (password === confirm) {
                 matchEl.innerHTML = '<span style="color:#27ae60;">✔ Passwords match</span>';

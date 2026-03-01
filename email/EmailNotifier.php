@@ -200,7 +200,3 @@ class EmailNotifier {
         return $html;
     }
 }
-
-
-
-

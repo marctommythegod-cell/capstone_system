@@ -31,7 +31,7 @@ function getSubjectName($pdo, $subject_no) {
 }
 
 function formatDate($date) {
-    return date('F d, Y H:i', strtotime($date));
+    return date('F d, Y h:i A', strtotime($date));
 }
 
 function getMonthYear($date) {
