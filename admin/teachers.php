@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $lastname = trim($_POST['lastname'] ?? '');
         $firstname = trim($_POST['firstname'] ?? '');
         $middlename = trim($_POST['middlename'] ?? '');
-        $name = $lastname . ', ' . $firstname . (($middlename) ? ' ' . $middlename : '');
+        $name = $lastname . ', ' . $firstname . ', ' . $middlename;
         $address = trim($_POST['address'] ?? '');
         $email = trim($_POST['email'] ?? '');
         $department = trim($_POST['department'] ?? '');
@@ -140,19 +140,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
         }
         redirect('/SYSTEM/admin/teachers.php');
-    } elseif ($_POST['action'] === 'update_status') {
-        $teacher_id = intval($_POST['teacher_id'] ?? 0);
+    } elseif ($_POST['action'] === 'update') {
+        $id = intval($_POST['id'] ?? 0);
+        $teacher_id = trim($_POST['teacher_id'] ?? '');
+        $lastname = trim($_POST['lastname'] ?? '');
+        $firstname = trim($_POST['firstname'] ?? '');
+        $middlename = trim($_POST['middlename'] ?? '');
+        $name = $lastname . ', ' . $firstname . ', ' . $middlename;
+        $address = trim($_POST['address'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $department = trim($_POST['department'] ?? '');
         $status = trim($_POST['status'] ?? '');
-        
-        if (!$teacher_id) {
-            setMessage('error', 'Invalid teacher ID.');
-        } elseif (!in_array($status, ['active', 'inactive'])) {
-            setMessage('error', 'Invalid status.');
+
+        $errors = [];
+
+        if (!$id) {
+            $errors[] = 'Invalid teacher record.';
+        }
+        if (empty($teacher_id)) {
+            $errors[] = 'Teacher ID is required.';
+        }
+        if (empty($lastname)) {
+            $errors[] = 'Last name is required.';
+        }
+        if (empty($firstname)) {
+            $errors[] = 'First name is required.';
+        }
+        if (empty($email)) {
+            $errors[] = 'Email address is required.';
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = 'Please enter a valid email address.';
+        }
+        if (!in_array($status, ['active', 'inactive'])) {
+            $errors[] = 'Invalid status.';
+        }
+
+        // Check for duplicate email (excluding current teacher)
+        if (empty($errors)) {
+            $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ? AND id != ?');
+            $stmt->execute([$email, $id]);
+            if ($stmt->fetch()) {
+                $errors[] = 'This email is already registered to another user.';
+            }
+        }
+
+        if (!empty($errors)) {
+            setMessage('error', implode('<br>', $errors));
         } else {
             try {
-                $stmt = $pdo->prepare('UPDATE users SET status = ? WHERE id = ? AND role = "teacher"');
-                $stmt->execute([$status, $teacher_id]);
-                setMessage('success', 'Teacher status updated successfully.');
+                $stmt = $pdo->prepare('UPDATE users SET teacher_id = ?, name = ?, email = ?, address = ?, department = ?, status = ? WHERE id = ? AND role = "teacher"');
+                $stmt->execute([$teacher_id, $name, $email, $address, $department, $status, $id]);
+                setMessage('success', 'Teacher updated successfully.');
             } catch (Exception $e) {
                 setMessage('error', 'Error updating teacher: ' . $e->getMessage());
             }
@@ -360,31 +398,50 @@ $message = getMessage();
                     function closeRegisterModal() {
                         document.getElementById('registerModal').style.display = 'none';
                     }
-                    
-                    // Close modal when clicking outside of it
-                    window.onclick = function(event) {
-                        var modal = document.getElementById('registerModal');
-                        if (event.target == modal) {
-                            modal.style.display = 'none';
-                        }
-                    }
                 </script>
                 
-                <!-- Update Status Modal -->
+                <!-- Update Teacher Modal -->
                 <div id="updateModal" class="modal" style="display: none;">
-                    <div class="modal-content" style="max-width: 400px;">
+                    <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
                         <div class="modal-header">
-                            <h2>Update Teacher Status</h2>
+                            <h2>Update Teacher</h2>
                             <button type="button" class="modal-close" onclick="closeUpdateModal()">&times;</button>
                         </div>
                         <form method="POST" id="updateForm">
-                            <input type="hidden" name="action" value="update_status">
-                            <input type="hidden" name="teacher_id" id="updateTeacherId" value="">
+                            <input type="hidden" name="action" value="update">
+                            <input type="hidden" name="id" id="updateId" value="">
                             <div class="modal-body" style="padding: 20px;">
+                                <div class="form-group">
+                                    <label for="updateTeacherId">Teacher ID</label>
+                                    <input type="text" id="updateTeacherId" name="teacher_id" required placeholder="Enter teacher ID">
+                                </div>
+                                <div class="form-group">
+                                    <label for="updateLastname">Last Name</label>
+                                    <input type="text" id="updateLastname" name="lastname" required placeholder="Enter last name">
+                                </div>
+                                <div class="form-group">
+                                    <label for="updateFirstname">First Name</label>
+                                    <input type="text" id="updateFirstname" name="firstname" required placeholder="Enter first name">
+                                </div>
+                                <div class="form-group">
+                                    <label for="updateMiddlename">Middle Name</label>
+                                    <input type="text" id="updateMiddlename" name="middlename" placeholder="Enter middle name">
+                                </div>
+                                <div class="form-group">
+                                    <label for="updateAddress">Complete Address</label>
+                                    <textarea id="updateAddress" name="address" required placeholder="Enter complete address" rows="3"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="updateEmail">Email Address</label>
+                                    <input type="email" id="updateEmail" name="email" required placeholder="example@gmail.com">
+                                </div>
+                                <div class="form-group">
+                                    <label for="updateDepartment">Department</label>
+                                    <input type="text" id="updateDepartment" name="department" required placeholder="Enter department">
+                                </div>
                                 <div class="form-group">
                                     <label for="updateStatus">Status</label>
                                     <select id="updateStatus" name="status" required>
-                                        <option value="">-- Select Status --</option>
                                         <option value="active">Active</option>
                                         <option value="inactive">Inactive</option>
                                     </select>
@@ -392,16 +449,23 @@ $message = getMessage();
                             </div>
                             <div class="modal-footer" style="padding: 15px 20px; border-top: 1px solid #ddd; display: flex; gap: 10px; justify-content: flex-end;">
                                 <button type="button" class="btn btn-secondary" onclick="closeUpdateModal()">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Update</button>
+                                <button type="submit" class="btn btn-primary">Update Teacher</button>
                             </div>
                         </form>
                     </div>
                 </div>
                 
                 <script>
-                    function openUpdateModal(teacherId, currentStatus) {
+                    function openUpdateModal(id, teacherId, lastName, firstName, middleName, address, email, department, status) {
+                        document.getElementById('updateId').value = id;
                         document.getElementById('updateTeacherId').value = teacherId;
-                        document.getElementById('updateStatus').value = currentStatus;
+                        document.getElementById('updateLastname').value = lastName;
+                        document.getElementById('updateFirstname').value = firstName;
+                        document.getElementById('updateMiddlename').value = middleName;
+                        document.getElementById('updateAddress').value = address;
+                        document.getElementById('updateEmail').value = email;
+                        document.getElementById('updateDepartment').value = department;
+                        document.getElementById('updateStatus').value = status;
                         document.getElementById('updateModal').style.display = 'flex';
                     }
                     
@@ -411,9 +475,13 @@ $message = getMessage();
                     
                     // Close modal when clicking outside of it
                     window.onclick = function(event) {
-                        var modal = document.getElementById('updateModal');
-                        if (event.target == modal) {
-                            modal.style.display = 'none';
+                        var registerModal = document.getElementById('registerModal');
+                        var updateModal = document.getElementById('updateModal');
+                        if (event.target == registerModal) {
+                            registerModal.style.display = 'none';
+                        }
+                        if (event.target == updateModal) {
+                            updateModal.style.display = 'none';
                         }
                     }
                 </script>
@@ -443,18 +511,16 @@ $message = getMessage();
                                         <tr>
                                             <td><?php echo htmlspecialchars($teacher['teacher_id'] ?? ''); ?></td>
                                             <td><?php 
-                                                $names = explode(', ', $teacher['name'] ?? '');
-                                                echo htmlspecialchars($names[0] ?? '');
+                                                $nameParts = explode(', ', $teacher['name'] ?? '');
+                                                echo htmlspecialchars(trim($nameParts[0] ?? ''));
                                             ?></td>
                                             <td><?php 
-                                                $names = explode(', ', $teacher['name'] ?? '');
-                                                $firstMiddle = isset($names[1]) ? explode(' ', $names[1]) : [];
-                                                echo htmlspecialchars($firstMiddle[0] ?? '');
+                                                $nameParts = explode(', ', $teacher['name'] ?? '');
+                                                echo htmlspecialchars(trim($nameParts[1] ?? ''));
                                             ?></td>
                                             <td><?php 
-                                                $names = explode(', ', $teacher['name'] ?? '');
-                                                $firstMiddle = isset($names[1]) ? explode(' ', $names[1], 2) : [];
-                                                echo htmlspecialchars($firstMiddle[1] ?? '');
+                                                $nameParts = explode(', ', $teacher['name'] ?? '');
+                                                echo htmlspecialchars(trim($nameParts[2] ?? ''));
                                             ?></td>
                                             <td><?php echo htmlspecialchars($teacher['email']); ?></td>
                                             <td><?php echo htmlspecialchars($teacher['address'] ?? ''); ?></td>
@@ -462,7 +528,17 @@ $message = getMessage();
                                             <td><span class="badge badge-<?php echo ($teacher['status'] === 'active') ? 'success' : 'danger'; ?>"><?php echo ucfirst($teacher['status'] ?? 'inactive'); ?></span></td>
                                             <td><?php echo formatDate($teacher['created_at']); ?></td>
                                             <td>
-                                                <button type="button" class="btn btn-sm btn-primary" onclick="openUpdateModal(<?php echo $teacher['id']; ?>, '<?php echo htmlspecialchars($teacher['status'] ?? 'inactive'); ?>')">Update</button>
+                                                <button type="button" class="btn btn-sm btn-primary" onclick="openUpdateModal(
+                                                    <?php echo $teacher['id']; ?>,
+                                                    '<?php echo htmlspecialchars($teacher['teacher_id'] ?? ''); ?>',
+                                                    '<?php $nameParts = explode(', ', $teacher['name'] ?? ''); echo htmlspecialchars(trim($nameParts[0] ?? '')); ?>',
+                                                    '<?php echo htmlspecialchars(trim($nameParts[1] ?? '')); ?>',
+                                                    '<?php echo htmlspecialchars(trim($nameParts[2] ?? '')); ?>',
+                                                    '<?php echo htmlspecialchars($teacher['address'] ?? ''); ?>',
+                                                    '<?php echo htmlspecialchars($teacher['email'] ?? ''); ?>',
+                                                    '<?php echo htmlspecialchars($teacher['department'] ?? ''); ?>',
+                                                    '<?php echo htmlspecialchars($teacher['status'] ?? 'inactive'); ?>'
+                                                )">Update</button>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>

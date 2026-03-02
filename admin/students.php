@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $lastname = trim($_POST['lastname'] ?? '');
         $firstname = trim($_POST['firstname'] ?? '');
         $middlename = trim($_POST['middlename'] ?? '');
-        $name = $lastname . ', ' . $firstname . (($middlename) ? ' ' . $middlename : '');
+        $name = $lastname . ', ' . $firstname . ', ' . $middlename;
         $address = trim($_POST['address'] ?? '');
         $email = trim($_POST['email'] ?? '');
         $guardian_name = trim($_POST['guardian_name'] ?? '');
@@ -142,13 +142,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $lastname = trim($_POST['lastname'] ?? '');
         $firstname = trim($_POST['firstname'] ?? '');
         $middlename = trim($_POST['middlename'] ?? '');
-        $name = $lastname . ', ' . $firstname . (($middlename) ? ' ' . $middlename : '');
+        $name = $lastname . ', ' . $firstname . ', ' . $middlename;
         $address = trim($_POST['address'] ?? '');
         $email = trim($_POST['email'] ?? '');
         $guardian_name = trim($_POST['guardian_name'] ?? '');
         $guardian_email = trim($_POST['guardian_email'] ?? '');
         $course = trim($_POST['course'] ?? '');
         $year = intval($_POST['year'] ?? 0);
+        $status = trim($_POST['status'] ?? '');
 
         // Validation checks
         $errors = [];
@@ -233,12 +234,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $errors[] = 'Year level must be between 1 and 4.';
         }
 
+        if (!in_array($status, ['active', 'inactive'])) {
+            $errors[] = 'Invalid status.';
+        }
+
         if (!empty($errors)) {
             setMessage('error', implode('<br>', $errors));
         } else {
             try {
-                $stmt = $pdo->prepare('UPDATE students SET student_id = ?, name = ?, email = ?, address = ?, guardian_name = ?, guardian_email = ?, course = ?, year = ? WHERE id = ?');
-                $stmt->execute([$student_id, $name, $email, $address, $guardian_name, $guardian_email, $course, $year, $id]);
+                $stmt = $pdo->prepare('UPDATE students SET student_id = ?, name = ?, email = ?, address = ?, guardian_name = ?, guardian_email = ?, course = ?, year = ?, status = ? WHERE id = ?');
+                $stmt->execute([$student_id, $name, $email, $address, $guardian_name, $guardian_email, $course, $year, $status, $id]);
                 setMessage('success', 'Student updated successfully.');
             } catch (Exception $e) {
                 setMessage('error', 'Error updating student: ' . $e->getMessage());
@@ -703,18 +708,16 @@ $message = getMessage();
                                         <tr>
                                             <td><?php echo htmlspecialchars($student['student_id'] ?? ''); ?></td>
                                             <td><?php
-                                            $names = explode(', ', $student['name'] ?? '');
-                                            echo htmlspecialchars($names[0] ?? '');
+                                            $nameParts = explode(', ', $student['name'] ?? '');
+                                            echo htmlspecialchars(trim($nameParts[0] ?? ''));
                                             ?></td>
                                             <td><?php
-                                            $names = explode(', ', $student['name'] ?? '');
-                                            $firstMiddle = isset($names[1]) ? explode(' ', $names[1]) : [];
-                                            echo htmlspecialchars($firstMiddle[0] ?? '');
+                                            $nameParts = explode(', ', $student['name'] ?? '');
+                                            echo htmlspecialchars(trim($nameParts[1] ?? ''));
                                             ?></td>
                                             <td><?php
-                                            $names = explode(', ', $student['name'] ?? '');
-                                            $firstMiddle = isset($names[1]) ? explode(' ', $names[1], 2) : [];
-                                            echo htmlspecialchars($firstMiddle[1] ?? '');
+                                            $nameParts = explode(', ', $student['name'] ?? '');
+                                            echo htmlspecialchars(trim($nameParts[2] ?? ''));
                                             ?></td>
                                             <td><?php echo htmlspecialchars($student['email'] ?? ''); ?></td>
                                             <td><?php echo htmlspecialchars($student['address'] ?? ''); ?></td>
@@ -728,12 +731,8 @@ $message = getMessage();
                                             <td><?php echo formatDate($student['created_at'] ?? ''); ?></td>
                                             <td>
                                                 <button type="button" class="btn btn-sm btn-primary"
-                                                    onclick="openUpdateModal(<?php echo $student['id']; ?>, '<?php echo htmlspecialchars($student['student_id']); ?>', '<?php $names = explode(', ', $student['name']);
-                                                          echo htmlspecialchars($names[0]); ?>', '<?php $names = explode(', ', $student['name']);
-                                                            $firstMiddle = isset($names[1]) ? explode(' ', $names[1]) : [];
-                                                            echo htmlspecialchars($firstMiddle[0]); ?>', '<?php $names = explode(', ', $student['name']);
-                                                              $firstMiddle = isset($names[1]) ? explode(' ', $names[1], 2) : [];
-                                                              echo htmlspecialchars($firstMiddle[1] ?? ''); ?>', '<?php echo htmlspecialchars($student['address'] ?? ''); ?>', '<?php echo htmlspecialchars($student['email']); ?>', '<?php echo htmlspecialchars($student['guardian_name'] ?? ''); ?>', '<?php echo htmlspecialchars($student['guardian_email'] ?? ''); ?>', '<?php echo htmlspecialchars($student['course']); ?>', <?php echo $student['year']; ?>, '<?php echo htmlspecialchars($student['status'] ?? 'inactive'); ?>')">Update</button>
+                                                    onclick="openUpdateModal(<?php echo $student['id']; ?>, '<?php echo htmlspecialchars($student['student_id']); ?>', '<?php $nameParts = explode(', ', $student['name']);
+                                                          echo htmlspecialchars(trim($nameParts[0] ?? '')); ?>', '<?php echo htmlspecialchars(trim($nameParts[1] ?? '')); ?>', '<?php echo htmlspecialchars(trim($nameParts[2] ?? '')); ?>', '<?php echo htmlspecialchars($student['address'] ?? ''); ?>', '<?php echo htmlspecialchars($student['email']); ?>', '<?php echo htmlspecialchars($student['guardian_name'] ?? ''); ?>', '<?php echo htmlspecialchars($student['guardian_email'] ?? ''); ?>', '<?php echo htmlspecialchars($student['course']); ?>', <?php echo $student['year']; ?>, '<?php echo htmlspecialchars($student['status'] ?? 'inactive'); ?>')">Update</button>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
