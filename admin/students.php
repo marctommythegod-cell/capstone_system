@@ -25,10 +25,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $guardian_email = trim($_POST['guardian_email'] ?? '');
         $course = trim($_POST['course'] ?? '');
         $year = intval($_POST['year'] ?? 0);
-        
+
         // Validation checks
         $errors = [];
-        
+
         // Check for empty fields
         if (empty($student_id)) {
             $errors[] = 'Student ID is required.';
@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } elseif (!preg_match('/^[0-9]{8}$/', $student_id)) {
             $errors[] = 'Student ID can only contain numbers (0-9).';
         }
-        
+
         if (empty($lastname)) {
             $errors[] = 'Last name is required.';
         } elseif (strlen($lastname) < 2) {
@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } elseif (strlen($lastname) > 100) {
             $errors[] = 'Last name must not exceed 100 characters.';
         }
-        
+
         if (empty($firstname)) {
             $errors[] = 'First name is required.';
         } elseif (strlen($firstname) < 2) {
@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } elseif (strlen($firstname) > 100) {
             $errors[] = 'First name must not exceed 100 characters.';
         }
-        
+
         if (empty($middlename)) {
             $errors[] = 'Middle name is required.';
         } elseif (strlen($middlename) < 2) {
@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } elseif (strlen($middlename) > 100) {
             $errors[] = 'Middle name must not exceed 100 characters.';
         }
-        
+
         if (empty($email)) {
             $errors[] = 'Email address is required.';
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } elseif (strlen($email) > 100) {
             $errors[] = 'Email address must not exceed 100 characters.';
         }
-        
+
         if (empty($address)) {
             $errors[] = 'Complete address is required.';
         } elseif (strlen($address) < 5) {
@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } elseif (strlen($address) > 255) {
             $errors[] = 'Complete address must not exceed 255 characters.';
         }
-        
+
         if (empty($guardian_name)) {
             $errors[] = 'Guardian name is required.';
         } elseif (strlen($guardian_name) < 2) {
@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } elseif (strlen($guardian_name) > 100) {
             $errors[] = 'Guardian name must not exceed 100 characters.';
         }
-        
+
         if (empty($guardian_email)) {
             $errors[] = 'Guardian email is required.';
         } elseif (!filter_var($guardian_email, FILTER_VALIDATE_EMAIL)) {
@@ -93,19 +93,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } elseif (strlen($guardian_email) > 100) {
             $errors[] = 'Guardian email must not exceed 100 characters.';
         }
-        
+
         if (empty($course)) {
             $errors[] = 'Course is required.';
         } elseif (strlen($course) > 100) {
             $errors[] = 'Course must not exceed 100 characters.';
         }
-        
+
         if ($year === 0) {
             $errors[] = 'Year level is required.';
         } elseif ($year < 1 || $year > 4) {
             $errors[] = 'Year level must be between 1 and 4.';
         }
-        
+
         // Check for duplicate student ID
         if (empty($errors)) {
             $stmt = $pdo->prepare('SELECT id FROM students WHERE student_id = ?');
@@ -114,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $errors[] = 'This student ID is already registered. Please use a different ID.';
             }
         }
-        
+
         // Check for duplicate email
         if (empty($errors)) {
             $stmt = $pdo->prepare('SELECT id FROM students WHERE email = ?');
@@ -123,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $errors[] = 'This email is already registered. Please use a different email.';
             }
         }
-        
+
         if (!empty($errors)) {
             setMessage('error', implode('<br>', $errors));
         } else {
@@ -149,14 +149,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $guardian_email = trim($_POST['guardian_email'] ?? '');
         $course = trim($_POST['course'] ?? '');
         $year = intval($_POST['year'] ?? 0);
-        
+
         // Validation checks
         $errors = [];
-        
+
         if (!$id) {
             $errors[] = 'Invalid student ID.';
         }
-        
+
         if (empty($student_id)) {
             $errors[] = 'Student ID is required.';
         } elseif (strlen($student_id) !== 8) {
@@ -164,7 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } elseif (!preg_match('/^[0-9]{8}$/', $student_id)) {
             $errors[] = 'Student ID can only contain numbers (0-9).';
         }
-        
+
         if (empty($lastname)) {
             $errors[] = 'Last name is required.';
         } elseif (strlen($lastname) < 2) {
@@ -172,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } elseif (strlen($lastname) > 100) {
             $errors[] = 'Last name must not exceed 100 characters.';
         }
-        
+
         if (empty($firstname)) {
             $errors[] = 'First name is required.';
         } elseif (strlen($firstname) < 2) {
@@ -180,7 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } elseif (strlen($firstname) > 100) {
             $errors[] = 'First name must not exceed 100 characters.';
         }
-        
+
         if (empty($middlename)) {
             $errors[] = 'Middle name is required.';
         } elseif (strlen($middlename) < 2) {
@@ -188,7 +188,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } elseif (strlen($middlename) > 100) {
             $errors[] = 'Middle name must not exceed 100 characters.';
         }
-        
+
         if (empty($address)) {
             $errors[] = 'Complete address is required.';
         } elseif (strlen($address) < 5) {
@@ -196,7 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } elseif (strlen($address) > 255) {
             $errors[] = 'Complete address must not exceed 255 characters.';
         }
-        
+
         if (empty($email)) {
             $errors[] = 'Email address is required.';
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -204,7 +204,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } elseif (strlen($email) > 100) {
             $errors[] = 'Email address must not exceed 100 characters.';
         }
-        
+
         if (empty($guardian_name)) {
             $errors[] = 'Guardian name is required.';
         } elseif (strlen($guardian_name) < 2) {
@@ -212,7 +212,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } elseif (strlen($guardian_name) > 100) {
             $errors[] = 'Guardian name must not exceed 100 characters.';
         }
-        
+
         if (empty($guardian_email)) {
             $errors[] = 'Guardian email is required.';
         } elseif (!filter_var($guardian_email, FILTER_VALIDATE_EMAIL)) {
@@ -220,19 +220,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } elseif (strlen($guardian_email) > 100) {
             $errors[] = 'Guardian email must not exceed 100 characters.';
         }
-        
+
         if (empty($course)) {
             $errors[] = 'Course is required.';
         } elseif (strlen($course) > 100) {
             $errors[] = 'Course must not exceed 100 characters.';
         }
-        
+
         if ($year === 0) {
             $errors[] = 'Year level is required.';
         } elseif ($year < 1 || $year > 4) {
             $errors[] = 'Year level must be between 1 and 4.';
         }
-        
+
         if (!empty($errors)) {
             setMessage('error', implode('<br>', $errors));
         } else {
@@ -248,7 +248,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     } elseif ($_POST['action'] === 'update_status') {
         $student_id = intval($_POST['student_id'] ?? 0);
         $status = trim($_POST['status'] ?? '');
-        
+
         if (!$student_id) {
             setMessage('error', 'Invalid student ID.');
         } elseif (!in_array($status, ['active', 'inactive'])) {
@@ -275,12 +275,14 @@ $message = getMessage();
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Students - PhilCST</title>
     <link rel="stylesheet" href="/SYSTEM/css/style.css">
 </head>
+
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
@@ -289,7 +291,7 @@ $message = getMessage();
                 <h2>PhilCST</h2>
                 <p>Admin Portal</p>
             </div>
-            
+
             <nav class="sidebar-nav">
                 <a href="/SYSTEM/admin/dashboard.php" class="nav-item">
                     <span>Dashboard</span>
@@ -310,12 +312,12 @@ $message = getMessage();
                     <span>Logout</span>
                 </a>
             </nav>
-            
+
             <div class="sidebar-footer">
                 <p>Welcome, <strong><?php echo htmlspecialchars($admin_name); ?></strong></p>
             </div>
         </aside>
-        
+
         <!-- Main Content -->
         <main class="main-content">
             <header class="top-bar">
@@ -324,19 +326,20 @@ $message = getMessage();
                     <span><?php echo htmlspecialchars($admin_name); ?> (Administrator)</span>
                 </div>
             </header>
-            
+
             <div class="content-wrapper">
                 <?php if ($message): ?>
                     <div class="alert alert-<?php echo $message['type']; ?>">
                         <?php echo htmlspecialchars($message['text']); ?>
                     </div>
                 <?php endif; ?>
-                
+
                 <!-- Register Button -->
                 <div style="margin-bottom: 20px;">
-                    <button type="button" class="btn btn-primary" onclick="openRegisterModal()">Register Student</button>
+                    <button type="button" class="btn btn-primary" onclick="openRegisterModal()">Register
+                        Student</button>
                 </div>
-                
+
                 <!-- Register Modal -->
                 <div id="registerModal" class="modal" style="display: none;">
                     <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
@@ -349,71 +352,89 @@ $message = getMessage();
                             <div class="modal-body" style="padding: 20px;">
                                 <div class="form-group">
                                     <label for="student_id">Student ID</label>
-                                    <input type="text" id="student_id" name="student_id" required placeholder="ex: 000*****" maxlength="8" inputmode="numeric">
+                                    <input type="text" id="student_id" name="student_id" required
+                                        placeholder="ex: 000*****" maxlength="8" inputmode="numeric">
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <label for="lastname">Last Name</label>
-                                    <input type="text" id="lastname" name="lastname" required placeholder="Enter last name">
+                                    <input type="text" id="lastname" name="lastname" required
+                                        placeholder="Enter last name">
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <label for="firstname">First Name</label>
-                                    <input type="text" id="firstname" name="firstname" required placeholder="Enter first name">
+                                    <input type="text" id="firstname" name="firstname" required
+                                        placeholder="Enter first name">
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <label for="middlename">Middle Name</label>
-                                    <input type="text" id="middlename" name="middlename" required placeholder="Enter middle name">
+                                    <input type="text" id="middlename" name="middlename" required
+                                        placeholder="Enter middle name">
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <label for="address">Complete Address</label>
-                                    <textarea id="address" name="address" required placeholder="Enter complete address" rows="3"></textarea>
+                                    <textarea id="address" name="address" required placeholder="Enter complete address"
+                                        rows="3"></textarea>
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <label for="email">Email Address</label>
-                                    <input type="email" id="email" name="email" placeholder="example@gmail.com" required>
+                                    <input type="email" id="email" name="email" placeholder="example@gmail.com"
+                                        required>
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <label for="guardian_name">Guardian Name</label>
-                                    <input type="text" id="guardian_name" name="guardian_name" required placeholder="Enter guardian name">
+                                    <input type="text" id="guardian_name" name="guardian_name" required
+                                        placeholder="Enter guardian name">
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <label for="guardian_email">Guardian Email</label>
-                                    <input type="email" id="guardian_email" name="guardian_email" required placeholder="example@gmail.com">
+                                    <input type="email" id="guardian_email" name="guardian_email" required
+                                        placeholder="example@gmail.com">
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <label for="course">Course</label>
                                     <select id="course" name="course" required>
                                         <option value="">-- Select Course --</option>
                                         <optgroup label="College of Engineering and Architecture">
-                                            <option value="BS in Civil Engineering (BSCE)">BS in Civil Engineering (BSCE)</option>
-                                            <option value="BS in Electrical Engineering (BSEE)">BS in Electrical Engineering (BSEE)</option>
-                                            <option value="BS in Mechanical Engineering (BSME)">BS in Mechanical Engineering (BSME)</option>
+                                            <option value="BS in Civil Engineering (BSCE)">BS in Civil Engineering
+                                                (BSCE)</option>
+                                            <option value="BS in Electrical Engineering (BSEE)">BS in Electrical
+                                                Engineering (BSEE)</option>
+                                            <option value="BS in Mechanical Engineering (BSME)">BS in Mechanical
+                                                Engineering (BSME)</option>
                                         </optgroup>
                                         <optgroup label="College of Criminology">
-                                            <option value="BS in Criminology (BSCrim)">BS in Criminology (BSCrim)</option>
+                                            <option value="BS in Criminology (BSCrim)">BS in Criminology (BSCrim)
+                                            </option>
                                         </optgroup>
                                         <optgroup label="College of Information Technology">
-                                            <option value="BS in Information Technology (BSIT)">BS in Information Technology (BSIT)</option>
-                                            <option value="BS in Computer Science (BSCS)">BS in Computer Science (BSCS)</option>
+                                            <option value="BS in Information Technology (BSIT)">BS in Information
+                                                Technology (BSIT)</option>
+                                            <option value="BS in Computer Science (BSCS)">BS in Computer Science (BSCS)
+                                            </option>
                                         </optgroup>
                                         <optgroup label="College of Education">
-                                            <option value="Bachelor of Elementary Education (BEEd)">Bachelor of Elementary Education (BEEd)</option>
-                                            <option value="Bachelor of Secondary Education (BSEd)">Bachelor of Secondary Education (BSEd)</option>
+                                            <option value="Bachelor of Elementary Education (BEEd)">Bachelor of
+                                                Elementary Education (BEEd)</option>
+                                            <option value="Bachelor of Secondary Education (BSEd)">Bachelor of Secondary
+                                                Education (BSEd)</option>
                                         </optgroup>
                                         <optgroup label="College of Business and Management">
-                                            <option value="BS in Business Administration (BSBA)">BS in Business Administration (BSBA)</option>
-                                            <option value="BS in Hospitality Management (BSHM)">BS in Hospitality Management (BSHM)</option>
+                                            <option value="BS in Business Administration (BSBA)">BS in Business
+                                                Administration (BSBA)</option>
+                                            <option value="BS in Hospitality Management (BSHM)">BS in Hospitality
+                                                Management (BSHM)</option>
                                         </optgroup>
                                     </select>
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <label for="year">Year Level</label>
                                     <select id="year" name="year" required>
@@ -425,14 +446,16 @@ $message = getMessage();
                                     </select>
                                 </div>
                             </div>
-                            <div class="modal-footer" style="padding: 15px 20px; border-top: 1px solid #ddd; display: flex; gap: 10px; justify-content: flex-end;">
-                                <button type="button" class="btn btn-secondary" onclick="closeRegisterModal()">Cancel</button>
+                            <div class="modal-footer"
+                                style="padding: 15px 20px; border-top: 1px solid #ddd; display: flex; gap: 10px; justify-content: flex-end;">
+                                <button type="button" class="btn btn-secondary"
+                                    onclick="closeRegisterModal()">Cancel</button>
                                 <button type="submit" class="btn btn-primary">Register Student</button>
                             </div>
                         </form>
                     </div>
                 </div>
-                
+
                 <style>
                     .modal {
                         position: fixed;
@@ -441,16 +464,18 @@ $message = getMessage();
                         top: 0;
                         width: 100%;
                         height: 100%;
-                        background-color: rgba(0,0,0,0.5);
+                        background-color: rgba(0, 0, 0, 0.5);
                         display: flex;
                         align-items: center;
                         justify-content: center;
                     }
+
                     .modal-content {
                         background-color: white;
                         border-radius: 8px;
-                        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
                     }
+
                     .modal-header {
                         display: flex;
                         justify-content: space-between;
@@ -458,9 +483,11 @@ $message = getMessage();
                         padding: 20px;
                         border-bottom: 1px solid #ddd;
                     }
+
                     .modal-header h2 {
                         margin: 0;
                     }
+
                     .modal-close {
                         background: none;
                         border: none;
@@ -468,29 +495,30 @@ $message = getMessage();
                         cursor: pointer;
                         color: #999;
                     }
+
                     .modal-close:hover {
                         color: #333;
                     }
                 </style>
-                
+
                 <script>
                     function openRegisterModal() {
                         document.getElementById('registerModal').style.display = 'flex';
                     }
-                    
+
                     function closeRegisterModal() {
                         document.getElementById('registerModal').style.display = 'none';
                     }
-                    
+
                     // Close modal when clicking outside of it
-                    window.onclick = function(event) {
+                    window.onclick = function (event) {
                         var modal = document.getElementById('registerModal');
                         if (event.target == modal) {
                             modal.style.display = 'none';
                         }
                     }
                 </script>
-                
+
                 <!-- Update Modal -->
                 <div id="updateModal" class="modal" style="display: none;">
                     <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
@@ -504,71 +532,89 @@ $message = getMessage();
                             <div class="modal-body" style="padding: 20px;">
                                 <div class="form-group">
                                     <label for="updateStudentIdField">Student ID</label>
-                                    <input type="text" id="updateStudentIdField" name="student_id" required placeholder="ex: 000*****" maxlength="8" inputmode="numeric">
+                                    <input type="text" id="updateStudentIdField" name="student_id" required
+                                        placeholder="ex: 000*****" maxlength="8" inputmode="numeric">
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <label for="updateLastName">Last Name</label>
-                                    <input type="text" id="updateLastName" name="lastname" required placeholder="Enter last name">
+                                    <input type="text" id="updateLastName" name="lastname" required
+                                        placeholder="Enter last name">
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <label for="updateFirstName">First Name</label>
-                                    <input type="text" id="updateFirstName" name="firstname" required placeholder="Enter first name">
+                                    <input type="text" id="updateFirstName" name="firstname" required
+                                        placeholder="Enter first name">
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <label for="updateMiddleName">Middle Name</label>
-                                    <input type="text" id="updateMiddleName" name="middlename" required placeholder="Enter middle name">
+                                    <input type="text" id="updateMiddleName" name="middlename" required
+                                        placeholder="Enter middle name">
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <label for="updateAddress">Complete Address</label>
-                                    <textarea id="updateAddress" name="address" required placeholder="Enter complete address" rows="3"></textarea>
+                                    <textarea id="updateAddress" name="address" required
+                                        placeholder="Enter complete address" rows="3"></textarea>
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <label for="updateEmail">Email Address</label>
-                                    <input type="email" id="updateEmail" name="email" required placeholder="example@gmail.com">
+                                    <input type="email" id="updateEmail" name="email" required
+                                        placeholder="example@gmail.com">
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <label for="updateGuardianName">Guardian Name</label>
-                                    <input type="text" id="updateGuardianName" name="guardian_name" required placeholder="Enter guardian name">
+                                    <input type="text" id="updateGuardianName" name="guardian_name" required
+                                        placeholder="Enter guardian name">
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <label for="updateGuardianEmail">Guardian Email</label>
-                                    <input type="email" id="updateGuardianEmail" name="guardian_email" required placeholder="example@gmail.com">
+                                    <input type="email" id="updateGuardianEmail" name="guardian_email" required
+                                        placeholder="example@gmail.com">
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <label for="updateCourse">Course</label>
                                     <select id="updateCourse" name="course" required>
                                         <option value="">-- Select Course --</option>
                                         <optgroup label="College of Engineering and Architecture">
-                                            <option value="BS in Civil Engineering (BSCE)">BS in Civil Engineering (BSCE)</option>
-                                            <option value="BS in Electrical Engineering (BSEE)">BS in Electrical Engineering (BSEE)</option>
-                                            <option value="BS in Mechanical Engineering (BSME)">BS in Mechanical Engineering (BSME)</option>
+                                            <option value="BS in Civil Engineering (BSCE)">BS in Civil Engineering
+                                                (BSCE)</option>
+                                            <option value="BS in Electrical Engineering (BSEE)">BS in Electrical
+                                                Engineering (BSEE)</option>
+                                            <option value="BS in Mechanical Engineering (BSME)">BS in Mechanical
+                                                Engineering (BSME)</option>
                                         </optgroup>
                                         <optgroup label="College of Criminology">
-                                            <option value="BS in Criminology (BSCrim)">BS in Criminology (BSCrim)</option>
+                                            <option value="BS in Criminology (BSCrim)">BS in Criminology (BSCrim)
+                                            </option>
                                         </optgroup>
                                         <optgroup label="College of Information Technology">
-                                            <option value="BS in Information Technology (BSIT)">BS in Information Technology (BSIT)</option>
-                                            <option value="BS in Computer Science (BSCS)">BS in Computer Science (BSCS)</option>
+                                            <option value="BS in Information Technology (BSIT)">BS in Information
+                                                Technology (BSIT)</option>
+                                            <option value="BS in Computer Science (BSCS)">BS in Computer Science (BSCS)
+                                            </option>
                                         </optgroup>
                                         <optgroup label="College of Education">
-                                            <option value="Bachelor of Elementary Education (BEEd)">Bachelor of Elementary Education (BEEd)</option>
-                                            <option value="Bachelor of Secondary Education (BSEd)">Bachelor of Secondary Education (BSEd)</option>
+                                            <option value="Bachelor of Elementary Education (BEEd)">Bachelor of
+                                                Elementary Education (BEEd)</option>
+                                            <option value="Bachelor of Secondary Education (BSEd)">Bachelor of Secondary
+                                                Education (BSEd)</option>
                                         </optgroup>
                                         <optgroup label="College of Business and Management">
-                                            <option value="BS in Business Administration (BSBA)">BS in Business Administration (BSBA)</option>
-                                            <option value="BS in Hospitality Management (BSHM)">BS in Hospitality Management (BSHM)</option>
+                                            <option value="BS in Business Administration (BSBA)">BS in Business
+                                                Administration (BSBA)</option>
+                                            <option value="BS in Hospitality Management (BSHM)">BS in Hospitality
+                                                Management (BSHM)</option>
                                         </optgroup>
                                     </select>
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <label for="updateYear">Year Level</label>
                                     <select id="updateYear" name="year" required>
@@ -579,7 +625,7 @@ $message = getMessage();
                                         <option value="4">4th Year</option>
                                     </select>
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <label for="updateStatus">Status</label>
                                     <select id="updateStatus" name="status" required>
@@ -589,14 +635,16 @@ $message = getMessage();
                                     </select>
                                 </div>
                             </div>
-                            <div class="modal-footer" style="padding: 15px 20px; border-top: 1px solid #ddd; display: flex; gap: 10px; justify-content: flex-end;">
-                                <button type="button" class="btn btn-secondary" onclick="closeUpdateModal()">Cancel</button>
+                            <div class="modal-footer"
+                                style="padding: 15px 20px; border-top: 1px solid #ddd; display: flex; gap: 10px; justify-content: flex-end;">
+                                <button type="button" class="btn btn-secondary"
+                                    onclick="closeUpdateModal()">Cancel</button>
                                 <button type="submit" class="btn btn-primary">Update</button>
                             </div>
                         </form>
                     </div>
                 </div>
-                
+
                 <script>
                     function openUpdateModal(id, studentId, lastName, firstName, middleName, address, email, guardianName, guardianEmail, course, year, status) {
                         document.getElementById('updateStudentId').value = id;
@@ -613,20 +661,20 @@ $message = getMessage();
                         document.getElementById('updateStatus').value = status;
                         document.getElementById('updateModal').style.display = 'flex';
                     }
-                    
+
                     function closeUpdateModal() {
                         document.getElementById('updateModal').style.display = 'none';
                     }
-                    
+
                     // Close modal when clicking outside of it
-                    window.onclick = function(event) {
+                    window.onclick = function (event) {
                         var updateModal = document.getElementById('updateModal');
                         if (event.target == updateModal) {
                             updateModal.style.display = 'none';
                         }
                     }
                 </script>
-                
+
                 <!-- Students List -->
                 <section class="section">
                     <h2>All Students (<?php echo count($students); ?>)</h2>
@@ -654,19 +702,19 @@ $message = getMessage();
                                     <?php foreach ($students as $student): ?>
                                         <tr>
                                             <td><?php echo htmlspecialchars($student['student_id'] ?? ''); ?></td>
-                                            <td><?php 
-                                                $names = explode(', ', $student['name'] ?? '');
-                                                echo htmlspecialchars($names[0] ?? '');
+                                            <td><?php
+                                            $names = explode(', ', $student['name'] ?? '');
+                                            echo htmlspecialchars($names[0] ?? '');
                                             ?></td>
-                                            <td><?php 
-                                                $names = explode(', ', $student['name'] ?? '');
-                                                $firstMiddle = isset($names[1]) ? explode(' ', $names[1]) : [];
-                                                echo htmlspecialchars($firstMiddle[0] ?? '');
+                                            <td><?php
+                                            $names = explode(', ', $student['name'] ?? '');
+                                            $firstMiddle = isset($names[1]) ? explode(' ', $names[1]) : [];
+                                            echo htmlspecialchars($firstMiddle[0] ?? '');
                                             ?></td>
-                                            <td><?php 
-                                                $names = explode(', ', $student['name'] ?? '');
-                                                $firstMiddle = isset($names[1]) ? explode(' ', $names[1], 2) : [];
-                                                echo htmlspecialchars($firstMiddle[1] ?? '');
+                                            <td><?php
+                                            $names = explode(', ', $student['name'] ?? '');
+                                            $firstMiddle = isset($names[1]) ? explode(' ', $names[1], 2) : [];
+                                            echo htmlspecialchars($firstMiddle[1] ?? '');
                                             ?></td>
                                             <td><?php echo htmlspecialchars($student['email'] ?? ''); ?></td>
                                             <td><?php echo htmlspecialchars($student['address'] ?? ''); ?></td>
@@ -674,10 +722,18 @@ $message = getMessage();
                                             <td><?php echo htmlspecialchars($student['guardian_email'] ?? ''); ?></td>
                                             <td><?php echo htmlspecialchars($student['course'] ?? ''); ?></td>
                                             <td><?php echo $student['year'] ?? ''; ?></td>
-                                            <td><span class="badge badge-<?php echo ($student['status'] === 'active') ? 'success' : 'danger'; ?>"><?php echo ucfirst($student['status'] ?? 'inactive'); ?></span></td>
+                                            <td><span
+                                                    class="badge badge-<?php echo ($student['status'] === 'active') ? 'success' : 'danger'; ?>"><?php echo ucfirst($student['status'] ?? 'inactive'); ?></span>
+                                            </td>
                                             <td><?php echo formatDate($student['created_at'] ?? ''); ?></td>
                                             <td>
-                                                <button type="button" class="btn btn-sm btn-primary" onclick="openUpdateModal(<?php echo $student['id']; ?>, '<?php echo htmlspecialchars($student['student_id']); ?>', '<?php $names = explode(', ', $student['name']); echo htmlspecialchars($names[0]); ?>', '<?php $names = explode(', ', $student['name']); $firstMiddle = isset($names[1]) ? explode(' ', $names[1]) : []; echo htmlspecialchars($firstMiddle[0]); ?>', '<?php $names = explode(', ', $student['name']); $firstMiddle = isset($names[1]) ? explode(' ', $names[1], 2) : []; echo htmlspecialchars($firstMiddle[1] ?? ''); ?>', '<?php echo htmlspecialchars($student['address'] ?? ''); ?>', '<?php echo htmlspecialchars($student['email']); ?>', '<?php echo htmlspecialchars($student['guardian_name'] ?? ''); ?>', '<?php echo htmlspecialchars($student['guardian_email'] ?? ''); ?>', '<?php echo htmlspecialchars($student['course']); ?>', <?php echo $student['year']; ?>, '<?php echo htmlspecialchars($student['status'] ?? 'inactive'); ?>')">Update</button>
+                                                <button type="button" class="btn btn-sm btn-primary"
+                                                    onclick="openUpdateModal(<?php echo $student['id']; ?>, '<?php echo htmlspecialchars($student['student_id']); ?>', '<?php $names = explode(', ', $student['name']);
+                                                          echo htmlspecialchars($names[0]); ?>', '<?php $names = explode(', ', $student['name']);
+                                                            $firstMiddle = isset($names[1]) ? explode(' ', $names[1]) : [];
+                                                            echo htmlspecialchars($firstMiddle[0]); ?>', '<?php $names = explode(', ', $student['name']);
+                                                              $firstMiddle = isset($names[1]) ? explode(' ', $names[1], 2) : [];
+                                                              echo htmlspecialchars($firstMiddle[1] ?? ''); ?>', '<?php echo htmlspecialchars($student['address'] ?? ''); ?>', '<?php echo htmlspecialchars($student['email']); ?>', '<?php echo htmlspecialchars($student['guardian_name'] ?? ''); ?>', '<?php echo htmlspecialchars($student['guardian_email'] ?? ''); ?>', '<?php echo htmlspecialchars($student['course']); ?>', <?php echo $student['year']; ?>, '<?php echo htmlspecialchars($student['status'] ?? 'inactive'); ?>')">Update</button>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -692,4 +748,5 @@ $message = getMessage();
         </main>
     </div>
 </body>
+
 </html>
