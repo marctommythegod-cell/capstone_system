@@ -24,9 +24,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     redirect('/SYSTEM/admin/dropped_cards.php');
 }
 
-// Get filters
-$search_student = $_GET['search'] ?? '';
-
 // Fetch pending drop requests
 $pending_query = '
     SELECT ccd.*, s.name as student_name, s.student_id, u.name as teacher_name
@@ -34,41 +31,25 @@ $pending_query = '
     JOIN students s ON ccd.student_id = s.id
     JOIN users u ON ccd.teacher_id = u.id
     WHERE ccd.status = "Pending"
+    ORDER BY ccd.drop_date ASC
 ';
-$pending_params = [];
-
-if ($search_student) {
-    $pending_query .= ' AND (s.name LIKE ? OR s.student_id LIKE ?)';
-    $pending_params[] = '%' . $search_student . '%';
-    $pending_params[] = '%' . $search_student . '%';
-}
-
-$pending_query .= ' ORDER BY ccd.drop_date ASC';
 
 $stmt = $pdo->prepare($pending_query);
-$stmt->execute($pending_params);
+$stmt->execute();
 $pending_drops = $stmt->fetchAll();
 
-// Build query for approved/undropped cards
+// Fetch approved/undropped cards
 $query = '
     SELECT ccd.*, s.name as student_name, s.student_id, u.name as teacher_name
     FROM class_card_drops ccd
     JOIN students s ON ccd.student_id = s.id
     JOIN users u ON ccd.teacher_id = u.id
     WHERE ccd.status IN ("Dropped", "Undropped")
+    ORDER BY ccd.drop_date DESC
 ';
-$params = [];
-
-if ($search_student) {
-    $query .= ' AND (s.name LIKE ? OR s.student_id LIKE ?)';
-    $params[] = '%' . $search_student . '%';
-    $params[] = '%' . $search_student . '%';
-}
-
-$query .= ' ORDER BY ccd.drop_date DESC';
 
 $stmt = $pdo->prepare($query);
-$stmt->execute($params);
+$stmt->execute();
 $drops = $stmt->fetchAll();
 
 $message = getMessage();
@@ -86,6 +67,7 @@ $message = getMessage();
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
+                <img src="/SYSTEM/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
                 <h2>PhilCST</h2>
                 <p>Admin Portal</p>
             </div>
@@ -106,7 +88,7 @@ $message = getMessage();
                 <a href="/SYSTEM/admin/drop_history.php" class="nav-item">
                     <span>Drop History</span>
                 </a>
-                <a href="/SYSTEM/includes/logout.php" class="nav-item">
+                <a href="#" class="nav-item logout-item" onclick="showLogoutModal(); return false;">
                     <span>Logout</span>
                 </a>
             </nav>
@@ -132,30 +114,20 @@ $message = getMessage();
                     </div>
                 <?php endif; ?>
 
-                <!-- Filters Section -->
+                <!-- Live Search -->
                 <section class="section">
-                    <h2>Filter Cards</h2>
-                    <form method="GET" class="filter-form">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="search">Search by Student Name/ID</label>
-                                <input type="text" id="search" name="search" value="<?php echo htmlspecialchars($search_student); ?>" placeholder="Student name or ID...">
-                            </div>
-                            <div class="form-group">
-                                <label>&nbsp;</label>
-                                <button type="submit" class="btn btn-primary">Search</button>
-                                <a href="/SYSTEM/admin/dropped_cards.php" class="btn btn-secondary">Clear</a>
-                            </div>
-                        </div>
-                    </form>
+                    <div class="form-group" style="max-width: 400px; margin-bottom: 0;">
+                        <label for="liveSearch">Search by Student Name, ID, Subject, or Teacher</label>
+                        <input type="text" id="liveSearch" data-live-filter="pendingTable" placeholder="Type to filter..." style="width: 100%;">
+                    </div>
                 </section>
 
                 <!-- Pending Drop Requests Section -->
                 <section class="section">
-                    <h2>Pending Drop Requests (<?php echo count($pending_drops); ?> awaiting approval)</h2>
+                    <h2>Pending Drop Requests (<span id="pendingTable-count"><?php echo count($pending_drops); ?></span> awaiting approval)</h2>
                     <?php if (count($pending_drops) > 0): ?>
                         <div class="table-responsive">
-                            <table class="table">
+                            <table class="table" id="pendingTable">
                                 <thead>
                                     <tr>
                                         <th>Student ID</th>
@@ -164,6 +136,7 @@ $message = getMessage();
                                         <th>Teacher</th>
                                         <th>Remarks</th>
                                         <th>Request Date & Time</th>
+                                        <th>Status</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -176,6 +149,7 @@ $message = getMessage();
                                             <td><?php echo htmlspecialchars($drop['teacher_name']); ?></td>
                                             <td><?php echo htmlspecialchars(substr($drop['remarks'], 0, 50)); ?></td>
                                             <td><?php echo formatDate($drop['drop_date']); ?></td>
+                                            <td><span class="status status-pending"><?php echo htmlspecialchars($drop['status']); ?></span></td>
                                             <td>
                                                 <button type="button" class="btn btn-sm btn-success" onclick="approveDrop(<?php echo $drop['id']; ?>)">Approve</button>
                                             </td>
@@ -191,10 +165,10 @@ $message = getMessage();
 
                 <!-- Approved/Dropped Cards Table -->
                 <section class="section">
-                    <h2>Approved Dropped Cards (<?php echo count($drops); ?> records)</h2>
+                    <h2>Approved Dropped Cards (<span id="approvedTable-count"><?php echo count($drops); ?></span> records)</h2>
                     <?php if (count($drops) > 0): ?>
                         <div class="table-responsive">
-                            <table class="table">
+                            <table class="table" id="approvedTable">
                                 <thead>
                                     <tr>
                                         <th>Student ID</th>
@@ -223,10 +197,10 @@ $message = getMessage();
                                             </td>
                                             <td>
                                                 <?php if ($drop['status'] === 'Dropped'): ?>
-                                                    <form method="POST" style="display: inline;">
+                                                    <form method="POST" style="display: inline;" id="undropForm<?php echo $drop['id']; ?>">
                                                         <input type="hidden" name="action" value="undrop">
                                                         <input type="hidden" name="drop_id" value="<?php echo $drop['id']; ?>">
-                                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to undrop this class card?')">Undrop</button>
+                                                        <button type="button" class="btn btn-sm btn-danger" onclick="showConfirmModal('Are you sure you want to undrop this class card?', function(){ document.getElementById('undropForm<?php echo $drop['id']; ?>').submit(); })">Undrop</button>
                                                     </form>
                                                 <?php else: ?>
                                                     <span style="color: #aaa; font-style: italic;">—</span>
@@ -246,5 +220,10 @@ $message = getMessage();
     </div>
 
     <script src="/SYSTEM/js/functions.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            liveTableFilter('liveSearch', 'approvedTable');
+        });
+    </script>
 </body>
 </html>

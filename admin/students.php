@@ -293,6 +293,7 @@ $message = getMessage();
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
+                <img src="/SYSTEM/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
                 <h2>PhilCST</h2>
                 <p>Admin Portal</p>
             </div>
@@ -313,7 +314,7 @@ $message = getMessage();
                 <a href="/SYSTEM/admin/drop_history.php" class="nav-item">
                     <span>Drop History</span>
                 </a>
-                <a href="/SYSTEM/includes/logout.php" class="nav-item">
+                <a href="#" class="nav-item logout-item" onclick="showLogoutModal(); return false;">
                     <span>Logout</span>
                 </a>
             </nav>
@@ -682,10 +683,13 @@ $message = getMessage();
 
                 <!-- Students List -->
                 <section class="section">
-                    <h2>All Students (<?php echo count($students); ?>)</h2>
+                    <h2>All Students (<span id="studentsTable-count"><?php echo count($students); ?></span>)</h2>
+                    <div class="form-group" style="max-width: 400px; margin-bottom: 15px;">
+                        <input type="text" id="liveSearchStudents" data-live-filter="studentsTable" placeholder="Search by ID, name, email, course..." style="width: 100%;">
+                    </div>
                     <?php if (count($students) > 0): ?>
                         <div class="table-responsive">
-                            <table class="table">
+                            <table class="table" id="studentsTable">
                                 <thead>
                                     <tr>
                                         <th>Student ID</th>
@@ -746,6 +750,8 @@ $message = getMessage();
             </div>
         </main>
     </div>
+
+    <script src="/SYSTEM/js/functions.js"></script>
 </body>
 
 </html>

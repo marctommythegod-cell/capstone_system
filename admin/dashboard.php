@@ -52,6 +52,7 @@ $message = getMessage();
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
+                <img src="/SYSTEM/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
                 <h2>PhilCST</h2>
                 <p>Admin Portal</p>
             </div>
@@ -72,7 +73,7 @@ $message = getMessage();
                 <a href="/SYSTEM/admin/drop_history.php" class="nav-item">
                     <span>Drop History</span>
                 </a>
-                <a href="/SYSTEM/includes/logout.php" class="nav-item">
+                <a href="#" class="nav-item logout-item" onclick="showLogoutModal(); return false;">
                     <span>Logout</span>
                 </a>
             </nav>
@@ -141,7 +142,7 @@ $message = getMessage();
                                             <td><?php echo htmlspecialchars($drop['subject_no'] . ' - ' . $drop['subject_name']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['teacher_name']); ?></td>
                                             <td><?php echo formatDate($drop['drop_date']); ?></td>
-                                            <td><span class="status status-dropped"><?php echo htmlspecialchars($drop['status']); ?></span></td>
+                                            <td><span class="status status-<?php echo strtolower($drop['status']); ?>"><?php echo htmlspecialchars($drop['status']); ?></span></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
@@ -154,5 +155,6 @@ $message = getMessage();
             </div>
         </main>
     </div>
+    <script src="/SYSTEM/js/functions.js"></script>
 </body>
 </html>

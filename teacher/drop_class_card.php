@@ -38,6 +38,7 @@ $message = getMessage();
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
+                <img src="/SYSTEM/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
                 <h2>PhilCST</h2>
                 <p>Teacher Portal</p>
             </div>
@@ -52,14 +53,10 @@ $message = getMessage();
                 <a href="/SYSTEM/teacher/drop_history.php" class="nav-item">
                     <span>Drop History</span>
                 </a>
-                <a href="/SYSTEM/includes/logout.php" class="nav-item">
+                <a href="#" class="nav-item logout-item" onclick="showLogoutModal(); return false;">
                     <span>Logout</span>
                 </a>
             </nav>
-            
-            <div class="sidebar-footer">
-                <p>Welcome, <strong><?php echo htmlspecialchars($teacher_name); ?></strong></p>
-            </div>
         </aside>
         
         <!-- Main Content -->
@@ -137,7 +134,7 @@ $message = getMessage();
                         </div>
                     </form>
                     <div class="alert alert-info" style="margin-top: 20px;">
-                        <strong>Note:</strong> All class card drop requests require approval from the admin before they are officially processed. You will be notified via email once your request has been approved or rejected.
+                        <strong>Note:</strong> All class card drop requests require approval from the admin before they are officially processed. You will be notified via email once your request has been approved.
                     </div>
                 </section>
             </div>

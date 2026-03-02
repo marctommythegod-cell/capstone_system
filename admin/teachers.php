@@ -219,6 +219,7 @@ $message = getMessage();
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
+                <img src="/SYSTEM/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
                 <h2>PhilCST</h2>
                 <p>Admin Portal</p>
             </div>
@@ -239,7 +240,7 @@ $message = getMessage();
                 <a href="/SYSTEM/admin/drop_history.php" class="nav-item">
                     <span>Drop History</span>
                 </a>
-                <a href="/SYSTEM/includes/logout.php" class="nav-item">
+                <a href="#" class="nav-item logout-item" onclick="showLogoutModal(); return false;">
                     <span>Logout</span>
                 </a>
             </nav>
@@ -488,10 +489,13 @@ $message = getMessage();
                 
                 <!-- Teachers List -->
                 <section class="section">
-                    <h2>All Teachers (<?php echo count($teachers); ?>)</h2>
+                    <h2>All Teachers (<span id="teachersTable-count"><?php echo count($teachers); ?></span>)</h2>
+                    <div class="form-group" style="max-width: 400px; margin-bottom: 15px;">
+                        <input type="text" id="liveSearchTeachers" data-live-filter="teachersTable" placeholder="Search by ID, name, email, department..." style="width: 100%;">
+                    </div>
                     <?php if (count($teachers) > 0): ?>
                         <div class="table-responsive">
-                            <table class="table">
+                            <table class="table" id="teachersTable">
                                 <thead>
                                     <tr>
                                         <th>Teacher ID</th>
@@ -621,5 +625,7 @@ $message = getMessage();
 
         document.getElementById('confirm_password').addEventListener('input', checkConfirmMatch);
     </script>
+
+    <script src="/SYSTEM/js/functions.js"></script>
 </body>
 </html>

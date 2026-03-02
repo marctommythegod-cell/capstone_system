@@ -31,7 +31,9 @@ function getSubjectName($pdo, $subject_no) {
 }
 
 function formatDate($date) {
-    return date('F d, Y h:i A', strtotime($date));
+    $tz = new DateTimeZone('Asia/Manila');
+    $dt = new DateTime($date, $tz);
+    return $dt->format('F d, Y h:i A');
 }
 
 function getMonthYear($date) {

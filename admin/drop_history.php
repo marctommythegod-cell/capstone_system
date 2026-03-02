@@ -11,68 +11,16 @@ if ($_SESSION['user_role'] !== 'admin') {
 
 $admin_name = getUserName($pdo, $_SESSION['user_id']);
 
-// Pagination settings
-$items_per_page = 10;
-$current_page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
-
-// Get search filter
-$search = $_GET['search'] ?? '';
-
-// Build query for students
-$query = 'SELECT id, student_id, name FROM students WHERE 1=1';
-$params = [];
-
-if ($search) {
-    $query .= ' AND (student_id LIKE ? OR name LIKE ?)';
-    $params[] = '%' . $search . '%';
-    $params[] = '%' . $search . '%';
-}
-
-$query .= ' ORDER BY name';
-
-$stmt = $pdo->prepare($query);
-$stmt->execute($params);
-$students = $stmt->fetchAll();
-
-// Get all history for the filtered students
-$all_history = [];
-$total_records = 0;
-$total_pages = 0;
-
-if ($students) {
-    $student_ids = array_column($students, 'id');
-    $placeholders = implode(',', array_fill(0, count($student_ids), '?'));
-    
-    // Get total count
-    $count_stmt = $pdo->prepare("
-        SELECT COUNT(*) as total
-        FROM class_card_drops ccd
-        WHERE ccd.student_id IN ($placeholders)
-    ");
-    $count_stmt->execute($student_ids);
-    $total_records = $count_stmt->fetch()['total'];
-    $total_pages = ceil($total_records / $items_per_page);
-    
-    // Ensure current page is within range
-    if ($current_page > $total_pages && $total_pages > 0) {
-        $current_page = $total_pages;
-    }
-    
-    // Calculate offset
-    $offset = ($current_page - 1) * $items_per_page;
-    
-    $stmt = $pdo->prepare("
-        SELECT ccd.*, s.student_id, s.name as student_name, u.name as teacher_name
-        FROM class_card_drops ccd
-        JOIN students s ON ccd.student_id = s.id
-        JOIN users u ON ccd.teacher_id = u.id
-        WHERE ccd.student_id IN ($placeholders)
-        ORDER BY s.name, ccd.drop_date DESC
-        LIMIT " . intval($items_per_page) . " OFFSET " . intval($offset) . "
-    ");
-    $stmt->execute($student_ids);
-    $all_history = $stmt->fetchAll();
-}
+// Fetch all drop history
+$stmt = $pdo->prepare('
+    SELECT ccd.*, s.student_id, s.name as student_name, u.name as teacher_name
+    FROM class_card_drops ccd
+    JOIN students s ON ccd.student_id = s.id
+    JOIN users u ON ccd.teacher_id = u.id
+    ORDER BY s.name, ccd.drop_date DESC
+');
+$stmt->execute();
+$all_history = $stmt->fetchAll();
 
 $message = getMessage();
 ?>
@@ -89,6 +37,7 @@ $message = getMessage();
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
+                <img src="/SYSTEM/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
                 <h2>PhilCST</h2>
                 <p>Admin Portal</p>
             </div>
@@ -109,7 +58,7 @@ $message = getMessage();
                 <a href="/SYSTEM/admin/drop_history.php" class="nav-item active">
                     <span>Drop History</span>
                 </a>
-                <a href="/SYSTEM/includes/logout.php" class="nav-item">
+                <a href="#" class="nav-item logout-item" onclick="showLogoutModal(); return false;">
                     <span>Logout</span>
                 </a>
             </nav>
@@ -135,33 +84,21 @@ $message = getMessage();
                     </div>
                 <?php endif; ?>
                 
-                <!-- Search Section -->
+                <!-- Live Search -->
                 <section class="section">
-                    <h2>Search Students</h2>
-                    <form method="GET" class="filter-form">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="search">Search by Student ID or Name</label>
-                                <input type="text" id="search" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Student ID or name...">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>&nbsp;</label>
-                                <button type="submit" class="btn btn-primary">Search</button>
-                                <a href="/SYSTEM/admin/drop_history.php" class="btn btn-secondary">Clear</a>
-                            </div>
-                        </div>
-                    </form>
+                    <div class="form-group" style="max-width: 400px; margin-bottom: 0;">
+                        <label for="liveSearch">Search by Student ID, Name, Subject, or Teacher</label>
+                        <input type="text" id="liveSearch" data-live-filter="historyTable" placeholder="Type to filter..." style="width: 100%;">
+                    </div>
                 </section>
                 
                 <!-- History Display -->
-                <?php if ($students): ?>
-                    <section class="section">
-                        <h2>Drop History Results</h2>
-                        
-                        <?php if (count($all_history) > 0): ?>
-                            <div class="table-responsive">
-                                <table class="table">
+                <section class="section">
+                    <h2>Drop History (<span id="historyTable-count"><?php echo count($all_history); ?></span> records)</h2>
+                    
+                    <?php if (count($all_history) > 0): ?>
+                        <div class="table-responsive">
+                                <table class="table" id="historyTable">
                                     <thead>
                                         <tr>
                                             <th>Student ID</th>
@@ -189,52 +126,15 @@ $message = getMessage();
                                         <?php endforeach; ?>
                                     </tbody>
                                 </table>
-                            </div>
-                            
-                            <!-- Pagination -->
-                            <?php if ($total_pages > 1): ?>
-                            <div class="pagination-container">
-                                <ul class="pagination">
-                                    <?php if ($current_page > 1): ?>
-                                        <li><a href="?page=1&search=<?php echo htmlspecialchars($search); ?>" class="pagination-link">First</a></li>
-                                        <li><a href="?page=<?php echo $current_page - 1; ?>&search=<?php echo htmlspecialchars($search); ?>" class="pagination-link">Previous</a></li>
-                                    <?php endif; ?>
-                                    
-                                    <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                                        <?php if ($i >= $current_page - 2 && $i <= $current_page + 2): ?>
-                                            <?php if ($i == $current_page): ?>
-                                                <li class="pagination-item active"><?php echo $i; ?></li>
-                                            <?php else: ?>
-                                                <li><a href="?page=<?php echo $i; ?>&search=<?php echo htmlspecialchars($search); ?>" class="pagination-link"><?php echo $i; ?></a></li>
-                                            <?php endif; ?>
-                                        <?php endif; ?>
-                                    <?php endfor; ?>
-                                    
-                                    <?php if ($current_page < $total_pages): ?>
-                                        <li><a href="?page=<?php echo $current_page + 1; ?>&search=<?php echo htmlspecialchars($search); ?>" class="pagination-link">Next</a></li>
-                                        <li><a href="?page=<?php echo $total_pages; ?>&search=<?php echo htmlspecialchars($search); ?>" class="pagination-link">Last</a></li>
-                                    <?php endif; ?>
-                                </ul>
-                                <div class="pagination-info">
-                                    Page <?php echo $current_page; ?> of <?php echo $total_pages; ?> | Showing <?php echo count($all_history); ?> of <?php echo $total_records; ?> records
-                                </div>
-                            </div>
-                            <?php endif; ?>
-                            
-                            <div class="history-summary">
-                                <p><strong>Total Drops:</strong> <?php echo count($all_history); ?> class card(s) from <?php echo count($students); ?> student(s)</p>
-                            </div>
-                        <?php else: ?>
-                            <p class="no-data">No drop history found for the selected students.</p>
-                        <?php endif; ?>
-                    </section>
-                <?php else: ?>
-                    <section class="section">
-                        <p class="no-data">No students found. Please refine your search.</p>
-                    </section>
-                <?php endif; ?>
+                        </div>
+                    <?php else: ?>
+                        <p class="no-data">No drop history found.</p>
+                    <?php endif; ?>
+                </section>
             </div>
         </main>
     </div>
+
+    <script src="/SYSTEM/js/functions.js"></script>
 </body>
 </html>

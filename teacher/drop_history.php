@@ -13,62 +13,18 @@ if ($_SESSION['user_role'] !== 'teacher') {
 $user_id = $_SESSION['user_id'];
 $teacher_name = getUserName($pdo, user_id: $user_id);
 
-// Pagination settings
-$items_per_page = 10;
-$current_page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
-
-// Get date filter parameters
-$filter_from_date = $_GET['from_date'] ?? '';
-$filter_to_date = $_GET['to_date'] ?? '';
-
-// Build query with optional date filtering
+// Fetch all teacher's drops
 $query = '
-    SELECT ccd.*, s.name as student_name, u.name as teacher_name
+    SELECT ccd.*, s.name as student_name, s.student_id as student_id_number, u.name as teacher_name
     FROM class_card_drops ccd
     JOIN students s ON ccd.student_id = s.id
     JOIN users u ON ccd.teacher_id = u.id
     WHERE ccd.teacher_id = ?
+    ORDER BY ccd.drop_date DESC
 ';
-$params = [$user_id];
 
-// Add date range filter if provided
-if (!empty($filter_from_date)) {
-    $query .= ' AND DATE(ccd.drop_date) >= ?';
-    $params[] = $filter_from_date;
-}
-
-if (!empty($filter_to_date)) {
-    $query .= ' AND DATE(ccd.drop_date) <= ?';
-    $params[] = $filter_to_date;
-}
-
-// Get total count for pagination
-$count_query = 'SELECT COUNT(*) as total FROM class_card_drops ccd WHERE ccd.teacher_id = ?';
-if (!empty($filter_from_date)) {
-    $count_query .= ' AND DATE(ccd.drop_date) >= ?';
-}
-if (!empty($filter_to_date)) {
-    $count_query .= ' AND DATE(ccd.drop_date) <= ?';
-}
-
-$stmt = $pdo->prepare($count_query);
-$stmt->execute($params);
-$total_records = $stmt->fetch()['total'];
-$total_pages = ceil($total_records / $items_per_page);
-
-// Ensure current page is within range
-if ($current_page > $total_pages && $total_pages > 0) {
-    $current_page = $total_pages;
-}
-
-// Calculate offset
-$offset = ($current_page - 1) * $items_per_page;
-
-$query .= ' ORDER BY ccd.drop_date DESC LIMIT ' . intval($items_per_page) . ' OFFSET ' . intval($offset);
-
-// Fetch teacher's drops
 $stmt = $pdo->prepare($query);
-$stmt->execute($params);
+$stmt->execute([$user_id]);
 $drops = $stmt->fetchAll();
 
 // Get statistics
@@ -92,6 +48,7 @@ $message = getMessage();
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
+                <img src="/SYSTEM/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
                 <h2>PhilCST</h2>
                 <p>Teacher Portal</p>
             </div>
@@ -106,14 +63,10 @@ $message = getMessage();
                 <a href="/SYSTEM/teacher/drop_history.php" class="nav-item active">
                     <span>Drop History</span>
                 </a>
-                <a href="/SYSTEM/includes/logout.php" class="nav-item">
+                <a href="#" class="nav-item logout-item" onclick="showLogoutModal(); return false;">
                     <span>Logout</span>
                 </a>
             </nav>
-            
-            <div class="sidebar-footer">
-                <p>Welcome, <strong><?php echo htmlspecialchars($teacher_name); ?></strong></p>
-            </div>
         </aside>
         
         <!-- Main Content -->
@@ -132,42 +85,33 @@ $message = getMessage();
                     </div>
                 <?php endif; ?>
                 
-                <!-- Date Filter Section -->
+                <!-- Live Search -->
                 <section class="section">
-                    <h2>Filter Class Card Drops by Date</h2>
-                    <form method="GET" class="filter-form">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="from_date">From Date</label>
-                                <input type="date" id="from_date" name="from_date" value="<?php echo htmlspecialchars($filter_from_date); ?>">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="to_date">To Date</label>
-                                <input type="date" id="to_date" name="to_date" value="<?php echo htmlspecialchars($filter_to_date); ?>">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>&nbsp;</label>
-                                <button type="submit" class="btn btn-primary">Filter</button>
-                                <a href="/SYSTEM/teacher/drop_history.php" class="btn btn-secondary">Clear</a>
-                            </div>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;">
+                        <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
+                            <label for="liveSearch">Search by Student ID, Name, or Subject</label>
+                            <input type="text" id="liveSearch" data-live-filter="dropHistoryTable" placeholder="Type to filter..." style="width: 100%;">
                         </div>
-                    </form>
+                        <div class="form-group" style="min-width: 160px; margin-bottom: 0;">
+                            <label for="filterFromDate">From Date</label>
+                            <input type="date" id="filterFromDate" style="width: 100%;">
+                        </div>
+                        <div class="form-group" style="min-width: 160px; margin-bottom: 0;">
+                            <label for="filterToDate">To Date</label>
+                            <input type="date" id="filterToDate" style="width: 100%;">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <button type="button" class="btn btn-secondary" onclick="document.getElementById('liveSearch').value=''; document.getElementById('filterFromDate').value=''; document.getElementById('filterToDate').value=''; filterDropHistoryTable();">Clear</button>
+                        </div>
+                    </div>
                 </section>
                 
                 <!-- Drop History Section -->
                 <section class="section">
-                    <h2>My Class Card Drops
-                        <?php if ($filter_from_date || $filter_to_date): ?>
-                            <span style="font-size: 14px; color: #666;">
-                                (Filtered: <?php echo !empty($filter_from_date) ? $filter_from_date : 'any'; ?> to <?php echo !empty($filter_to_date) ? $filter_to_date : 'any'; ?>)
-                            </span>
-                        <?php endif; ?>
-                    </h2>
+                    <h2>My Class Card Drops</h2>
                     <?php if (count($drops) > 0): ?>
                         <div class="table-responsive">
-                            <table class="table">
+                            <table class="table" id="dropHistoryTable">
                                 <thead>
                                     <tr>
                                         <th>Student ID</th>
@@ -182,16 +126,16 @@ $message = getMessage();
                                 <tbody>
                                     <?php foreach ($drops as $drop): ?>
                                         <tr>
-                                            <td><?php echo htmlspecialchars($drop['student_id']); ?></td>
+                                            <td><?php echo htmlspecialchars($drop['student_id_number']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['student_name']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['subject_no'] . ' - ' . $drop['subject_name']); ?></td>
                                             <td><?php echo formatDate($drop['drop_date']); ?></td>
                                             <td><span class="status status-<?php echo strtolower($drop['status']); ?>"><?php echo htmlspecialchars($drop['status']); ?></span></td>
                                             <td><?php echo htmlspecialchars(substr($drop['remarks'], 0, 50)); ?></td>
                                             <td>
-                                                <form method="POST" action="/SYSTEM/includes/api.php?action=undo_drop" style="display: inline;">
+                                                <form method="POST" action="/SYSTEM/includes/api.php?action=undo_drop" style="display: inline;" id="cancelDropForm<?php echo $drop['id']; ?>">
                                                     <input type="hidden" name="drop_id" value="<?php echo $drop['id']; ?>">
-                                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to cancel this drop? The student will not be notified.')">Cancel</button>
+                                                    <button type="button" class="btn btn-sm btn-danger" onclick="showConfirmModal('Are you sure you want to cancel this drop? The student will not be notified.', function(){ document.getElementById('cancelDropForm<?php echo $drop['id']; ?>').submit(); })">Cancel</button>
                                                 </form>
                                             </td>
                                         </tr>
@@ -199,36 +143,6 @@ $message = getMessage();
                                 </tbody>
                             </table>
                         </div>
-                        
-                        <!-- Pagination -->
-                        <?php if ($total_pages > 1): ?>
-                        <div class="pagination-container">
-                            <ul class="pagination">
-                                <?php if ($current_page > 1): ?>
-                                    <li><a href="?page=1&from_date=<?php echo htmlspecialchars($filter_from_date); ?>&to_date=<?php echo htmlspecialchars($filter_to_date); ?>" class="pagination-link">First</a></li>
-                                    <li><a href="?page=<?php echo $current_page - 1; ?>&from_date=<?php echo htmlspecialchars($filter_from_date); ?>&to_date=<?php echo htmlspecialchars($filter_to_date); ?>" class="pagination-link">Previous</a></li>
-                                <?php endif; ?>
-                                
-                                <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                                    <?php if ($i >= $current_page - 2 && $i <= $current_page + 2): ?>
-                                        <?php if ($i == $current_page): ?>
-                                            <li class="pagination-item active"><?php echo $i; ?></li>
-                                        <?php else: ?>
-                                            <li><a href="?page=<?php echo $i; ?>&from_date=<?php echo htmlspecialchars($filter_from_date); ?>&to_date=<?php echo htmlspecialchars($filter_to_date); ?>" class="pagination-link"><?php echo $i; ?></a></li>
-                                        <?php endif; ?>
-                                    <?php endif; ?>
-                                <?php endfor; ?>
-                                
-                                <?php if ($current_page < $total_pages): ?>
-                                    <li><a href="?page=<?php echo $current_page + 1; ?>&from_date=<?php echo htmlspecialchars($filter_from_date); ?>&to_date=<?php echo htmlspecialchars($filter_to_date); ?>" class="pagination-link">Next</a></li>
-                                    <li><a href="?page=<?php echo $total_pages; ?>&from_date=<?php echo htmlspecialchars($filter_from_date); ?>&to_date=<?php echo htmlspecialchars($filter_to_date); ?>" class="pagination-link">Last</a></li>
-                                <?php endif; ?>
-                            </ul>
-                            <div class="pagination-info">
-                                Page <?php echo $current_page; ?> of <?php echo $total_pages; ?> | Showing <?php echo count($drops); ?> of <?php echo $total_records; ?> records
-                            </div>
-                        </div>
-                        <?php endif; ?>
                     <?php else: ?>
                         <p class="no-data">No class cards dropped yet.</p>
                     <?php endif; ?>
@@ -238,5 +152,45 @@ $message = getMessage();
     </div>
 
     <script src="/SYSTEM/js/functions.js"></script>
+    <script>
+        function filterDropHistoryTable() {
+            var search = document.getElementById('liveSearch').value.toLowerCase().trim();
+            var fromDate = document.getElementById('filterFromDate').value;
+            var toDate = document.getElementById('filterToDate').value;
+            var table = document.getElementById('dropHistoryTable');
+            if (!table) return;
+            var rows = table.querySelector('tbody').querySelectorAll('tr');
+
+            rows.forEach(function(row) {
+                var cells = row.querySelectorAll('td');
+                var textMatch = false;
+                cells.forEach(function(cell) {
+                    if (cell.textContent.toLowerCase().includes(search)) textMatch = true;
+                });
+
+                // Date filter: column index 3 is "Drop Date & Time"
+                var dateMatch = true;
+                if (fromDate || toDate) {
+                    var dateCell = cells[3] ? cells[3].textContent.trim() : '';
+                    var rowDate = new Date(dateCell);
+                    if (isNaN(rowDate.getTime())) {
+                        dateMatch = false;
+                    } else {
+                        var rowDateStr = rowDate.toISOString().split('T')[0];
+                        if (fromDate && rowDateStr < fromDate) dateMatch = false;
+                        if (toDate && rowDateStr > toDate) dateMatch = false;
+                    }
+                }
+
+                row.style.display = (textMatch && dateMatch) ? '' : 'none';
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('liveSearch').addEventListener('input', filterDropHistoryTable);
+            document.getElementById('filterFromDate').addEventListener('input', filterDropHistoryTable);
+            document.getElementById('filterToDate').addEventListener('input', filterDropHistoryTable);
+        });
+    </script>
 </body>
 </html>
