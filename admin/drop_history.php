@@ -108,6 +108,7 @@ $message = getMessage();
                                             <th>Remarks</th>
                                             <th>Drop Date</th>
                                             <th>Retrieve Date</th>
+                                            <th>Undrop Remarks</th>
                                             <th>Status</th>
                                         </tr>
                                     </thead>
@@ -121,6 +122,7 @@ $message = getMessage();
                                                 <td><?php echo htmlspecialchars(substr($record['remarks'], 0, 50)); ?></td>
                                                 <td><?php echo formatDate($record['drop_date']); ?></td>
                                                 <td><?php echo $record['retrieve_date'] ? formatDate($record['retrieve_date']) : '-'; ?></td>
+                                                <td><?php echo !empty($record['undrop_remarks']) ? htmlspecialchars($record['undrop_remarks']) : '-'; ?></td>
                                                 <td><span class="status status-<?php echo strtolower($record['status']); ?>"><?php echo htmlspecialchars($record['status']); ?></span></td>
                                             </tr>
                                         <?php endforeach; ?>

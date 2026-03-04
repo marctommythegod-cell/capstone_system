@@ -149,6 +149,76 @@ function showConfirmModal(message, onConfirm) {
     });
 }
 
+// Undrop modal with remarks textarea
+function showUndropModal(dropId) {
+    const existing = document.getElementById('undropModal');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'undropModal';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
+
+    const box = document.createElement('div');
+    box.style.cssText = 'background:#fff;border-radius:8px;padding:0;min-width:400px;max-width:500px;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
+
+    box.innerHTML = `
+        <div style="padding:20px 20px 10px;border-bottom:1px solid #eee;">
+            <h3 style="margin:0;font-size:1.1em;">Undrop Class Card</h3>
+        </div>
+        <div style="padding:20px;">
+            <p style="margin:0 0 12px;color:#555;">Are you sure you want to undrop this class card?</p>
+            <label for="undropRemarks" style="display:block;margin-bottom:6px;font-weight:600;color:#333;font-size:0.95em;">Admin Remarks <span style="color:#999;font-weight:400;">(required)</span></label>
+            <textarea id="undropRemarks" rows="4" placeholder="Enter reason for undropping..." style="width:100%;padding:10px;border:1px solid #ccc;border-radius:5px;font-size:0.95em;resize:vertical;box-sizing:border-box;"></textarea>
+            <p id="undropRemarksError" style="color:#dc3545;font-size:0.85em;margin:4px 0 0;display:none;">Please enter remarks before proceeding.</p>
+        </div>
+        <div style="padding:12px 20px;border-top:1px solid #eee;display:flex;gap:10px;justify-content:flex-end;">
+            <button id="undropModalCancel" style="padding:8px 18px;border:1px solid #ccc;background:#f5f5f5;border-radius:5px;cursor:pointer;font-size:0.95em;">Cancel</button>
+            <button id="undropModalConfirm" style="padding:8px 18px;border:none;background:#dc3545;color:#fff;border-radius:5px;cursor:pointer;font-size:0.95em;">Confirm Undrop</button>
+        </div>
+    `;
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    document.getElementById('undropModalCancel').onclick = function() {
+        overlay.remove();
+    };
+
+    document.getElementById('undropModalConfirm').onclick = function() {
+        const remarks = document.getElementById('undropRemarks').value.trim();
+        const errorEl = document.getElementById('undropRemarksError');
+        if (!remarks) {
+            errorEl.style.display = 'block';
+            document.getElementById('undropRemarks').focus();
+            return;
+        }
+        // Set the remarks value in the hidden form and submit
+        const form = document.getElementById('undropForm' + dropId);
+        if (form) {
+            const remarksInput = document.createElement('input');
+            remarksInput.type = 'hidden';
+            remarksInput.name = 'undrop_remarks';
+            remarksInput.value = remarks;
+            form.appendChild(remarksInput);
+            form.submit();
+        }
+        overlay.remove();
+    };
+
+    document.getElementById('undropRemarks').addEventListener('input', function() {
+        document.getElementById('undropRemarksError').style.display = 'none';
+    });
+
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) overlay.remove();
+    });
+
+    // Focus textarea
+    setTimeout(function() {
+        document.getElementById('undropRemarks').focus();
+    }, 100);
+}
+
 // Confirm delete action
 function confirmDelete(e) {
     if (e && e.preventDefault) e.preventDefault();

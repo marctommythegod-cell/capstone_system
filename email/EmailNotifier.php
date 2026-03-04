@@ -30,6 +30,13 @@ class EmailNotifier {
         return $this->sendEmail($teacher_email, $subject, $message);
     }
     
+    public function notifyTeacherUndropped($teacher_email, $data) {
+        $subject = 'Class Card RETRIEVED (Undropped) - PhilCST';
+        $message = $this->buildTeacherUndroppedEmailBody($data);
+        
+        return $this->sendEmail($teacher_email, $subject, $message);
+    }
+    
     private function sendEmail($recipient_email, $subject, $message) {
         try {
             $mail = new PHPMailer(true);
@@ -188,6 +195,73 @@ class EmailNotifier {
             </div>
             
             <p style='margin-top: 20px;'><strong>Status:</strong> The class card drop has been officially processed and recorded in the system.</p>
+        </div>
+        <div class='footer'>
+            <p>This is an automated email from the PhilCST Class Card Dropping System</p>
+            <p>PhilCST Guidance Office - Do not reply to this email</p>
+        </div>
+    </div>
+</body>
+</html>";
+        
+        return $html;
+    }
+    
+    private function buildTeacherUndroppedEmailBody($data) {
+        $html = "<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #dc3545; color: white; padding: 20px; border-radius: 5px 5px 0 0; }
+        .content { background-color: #f9f9f9; padding: 20px; border: 1px solid #ddd; }
+        .footer { background-color: #f0f0f0; padding: 10px; border-radius: 0 0 5px 5px; text-align: center; font-size: 12px; }
+        .alert { background-color: #f8d7da; border: 1px solid #dc3545; padding: 15px; border-radius: 5px; margin: 15px 0; color: #721c24; }
+        .field { margin: 15px 0; }
+        .label { font-weight: bold; color: #dc3545; }
+        .value { margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h1>Class Card Retrieved (Undropped)</h1>
+            <p>PhilCST - Official Notification</p>
+        </div>
+        <div class='content'>
+            <p>Dear Teacher,</p>
+            
+            <div class='alert'>
+                <p><strong>A previously dropped class card has been retrieved (undropped) by admin action. The student's class card is now restored.</strong></p>
+            </div>
+            
+            <div class='field'>
+                <div class='label'>Student:</div>
+                <div class='value'>" . htmlspecialchars($data['student_name']) . " (" . htmlspecialchars($data['student_id']) . ")</div>
+            </div>
+            
+            <div class='field'>
+                <div class='label'>Subject:</div>
+                <div class='value'>" . htmlspecialchars($data['subject_no'] . ' - ' . $data['subject_name']) . "</div>
+            </div>
+            
+            <div class='field'>
+                <div class='label'>Original Drop Date:</div>
+                <div class='value'>" . htmlspecialchars($data['drop_date']) . "</div>
+            </div>
+            
+            <div class='field'>
+                <div class='label'>Retrieve Date:</div>
+                <div class='value'>" . htmlspecialchars($data['retrieve_date']) . "</div>
+            </div>
+            
+            <div class='field'>
+                <div class='label'>Admin Remarks:</div>
+                <div class='value'>" . htmlspecialchars($data['undrop_remarks']) . "</div>
+            </div>
+            
+            <p style='margin-top: 20px;'><strong>Status:</strong> The class card has been restored. The student is now re-enrolled in this subject.</p>
         </div>
         <div class='footer'>
             <p>This is an automated email from the PhilCST Class Card Dropping System</p>

@@ -4,6 +4,7 @@
 require_once '../includes/session_check.php';
 require_once '../config/db.php';
 require_once '../includes/functions.php';
+require_once '../email/EmailNotifier.php';
 
 if ($_SESSION['user_role'] !== 'admin') {
     redirect('/SYSTEM/index.php');
@@ -14,10 +15,46 @@ $admin_name = getUserName($pdo, $_SESSION['user_id']);
 // Handle undrop action
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'undrop') {
     $drop_id = intval($_POST['drop_id']);
+    $undrop_remarks = trim($_POST['undrop_remarks'] ?? '');
     try {
-        $stmt = $pdo->prepare('UPDATE class_card_drops SET status = ?, retrieve_date = NOW() WHERE id = ?');
-        $stmt->execute(['Undropped', $drop_id]);
-        setMessage('success', 'Class card has been undropped. The record remains in drop history.');
+        // Get drop details before updating
+        $stmt = $pdo->prepare('SELECT * FROM class_card_drops WHERE id = ?');
+        $stmt->execute([$drop_id]);
+        $drop = $stmt->fetch();
+
+        if (!$drop) {
+            setMessage('error', 'Drop record not found.');
+            redirect('/SYSTEM/admin/dropped_cards.php');
+        }
+
+        $stmt = $pdo->prepare('UPDATE class_card_drops SET status = ?, retrieve_date = NOW(), undrop_remarks = ? WHERE id = ?');
+        $stmt->execute(['Undropped', $undrop_remarks, $drop_id]);
+
+        // Get student and teacher info for email notification
+        $stmt = $pdo->prepare('SELECT student_id, name, email FROM students WHERE id = ?');
+        $stmt->execute([$drop['student_id']]);
+        $student = $stmt->fetch();
+
+        $stmt = $pdo->prepare('SELECT name, email FROM users WHERE id = ?');
+        $stmt->execute([$drop['teacher_id']]);
+        $teacher = $stmt->fetch();
+
+        // Send email notification to teacher
+        if ($teacher && $teacher['email']) {
+            $emailNotifier = new EmailNotifier();
+            $emailData = [
+                'student_id' => $student['student_id'],
+                'student_name' => $student['name'],
+                'subject_no' => $drop['subject_no'],
+                'subject_name' => $drop['subject_name'],
+                'drop_date' => $drop['drop_date'],
+                'retrieve_date' => date('Y-m-d H:i:s'),
+                'undrop_remarks' => $undrop_remarks
+            ];
+            $emailNotifier->notifyTeacherUndropped($teacher['email'], $emailData);
+        }
+
+        setMessage('success', 'Class card has been undropped. The teacher has been notified.');
     } catch (Exception $e) {
         setMessage('error', 'Error undropping class card: ' . $e->getMessage());
     }
@@ -200,7 +237,7 @@ $message = getMessage();
                                                     <form method="POST" style="display: inline;" id="undropForm<?php echo $drop['id']; ?>">
                                                         <input type="hidden" name="action" value="undrop">
                                                         <input type="hidden" name="drop_id" value="<?php echo $drop['id']; ?>">
-                                                        <button type="button" class="btn btn-sm btn-danger" onclick="showConfirmModal('Are you sure you want to undrop this class card?', function(){ document.getElementById('undropForm<?php echo $drop['id']; ?>').submit(); })">Undrop</button>
+                                                        <button type="button" class="btn btn-sm btn-danger" onclick="showUndropModal(<?php echo $drop['id']; ?>)">Undrop</button>
                                                     </form>
                                                 <?php else: ?>
                                                     <span style="color: #aaa; font-style: italic;">—</span>

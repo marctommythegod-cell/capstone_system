@@ -49,6 +49,7 @@ CREATE TABLE class_card_drops (
     drop_month VARCHAR(10) NOT NULL,
     drop_year INT NOT NULL,
     retrieve_date DATETIME NULL,
+    undrop_remarks TEXT NULL,
     approved_by INT NULL,
     approved_date DATETIME NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
