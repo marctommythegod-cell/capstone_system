@@ -7,7 +7,7 @@ require_once '../includes/functions.php';
 
 // Check if user is teacher
 if ($_SESSION['user_role'] !== 'teacher') {
-    redirect('/SYSTEM/index.php');
+    redirect('/CLASS_CARD_DROPPING_SYSTEM/index.php');
 }
 
 $user_id = $_SESSION['user_id'];
@@ -46,26 +46,26 @@ $message = getMessage();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teacher Dashboard - PhilCST</title>
-    <link rel="stylesheet" href="/SYSTEM/css/style.css">
+    <link rel="stylesheet" href="/CLASS_CARD_DROPPING_SYSTEM/css/style.css">
 </head>
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="/SYSTEM/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
+                <img src="/CLASS_CARD_DROPPING_SYSTEM/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
                 <h2>PhilCST</h2>
                 <p>Teacher Portal</p>
             </div>
             
             <nav class="sidebar-nav">
-                <a href="/SYSTEM/teacher/dashboard.php" class="nav-item active">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/dashboard.php" class="nav-item active">
                     <span>Overview</span>
                 </a>
-                <a href="/SYSTEM/teacher/drop_class_card.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php" class="nav-item">
                     <span>Drop Class Card</span>
                 </a>
-                <a href="/SYSTEM/teacher/drop_history.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php" class="nav-item">
                     <span>Drop History</span>
                 </a>
                 <a href="#" class="nav-item logout-item" onclick="showLogoutModal(); return false;">
@@ -113,10 +113,10 @@ $message = getMessage();
                 <section class="section">
                     <h2>Quick Actions</h2>
                     <div class="action-buttons">
-                        <a href="/SYSTEM/teacher/drop_class_card.php" class="btn btn-primary btn-large">
+                        <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php" class="btn btn-primary btn-large">
                             Drop Student Class Card
                         </a>
-                        <a href="/SYSTEM/teacher/drop_history.php" class="btn btn-secondary btn-large">
+                        <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php" class="btn btn-secondary btn-large">
                             View Drop History
                         </a>
                     </div>
@@ -149,7 +149,7 @@ $message = getMessage();
                             </table>
                         </div>
                         <div style="text-align: center; margin-top: 15px;">
-                            <a href="/SYSTEM/teacher/drop_history.php" class="btn btn-secondary">View All Drops</a>
+                            <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php" class="btn btn-secondary">View All Drops</a>
                         </div>
                     <?php else: ?>
                         <p class="no-data">No class cards dropped yet.</p>
@@ -159,6 +159,6 @@ $message = getMessage();
         </main>
     </div>
     
-    <script src="/SYSTEM/js/functions.js"></script>
+    <script src="/CLASS_CARD_DROPPING_SYSTEM/js/functions.js"></script>
 </body>
 </html>

@@ -6,7 +6,7 @@ require_once '../config/db.php';
 require_once '../includes/functions.php';
 
 if ($_SESSION['user_role'] !== 'admin') {
-    redirect('/SYSTEM/index.php');
+    redirect('/CLASS_CARD_DROPPING_SYSTEM/index.php');
 }
 
 $admin_name = getUserName($pdo, $_SESSION['user_id']);
@@ -30,32 +30,32 @@ $message = getMessage();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Drop History - PhilCST</title>
-    <link rel="stylesheet" href="/SYSTEM/css/style.css">
+    <link rel="stylesheet" href="/CLASS_CARD_DROPPING_SYSTEM/css/style.css">
 </head>
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="/SYSTEM/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
+                <img src="/CLASS_CARD_DROPPING_SYSTEM/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
                 <h2>PhilCST</h2>
                 <p>Admin Portal</p>
             </div>
             
             <nav class="sidebar-nav">
-                <a href="/SYSTEM/admin/dashboard.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/dashboard.php" class="nav-item">
                     <span>Dashboard</span>
                 </a>
-                <a href="/SYSTEM/admin/dropped_cards.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php" class="nav-item">
                     <span>Dropped Cards</span>
                 </a>
-                <a href="/SYSTEM/admin/students.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/students.php" class="nav-item">
                     <span>Manage Students</span>
                 </a>
-                <a href="/SYSTEM/admin/teachers.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/teachers.php" class="nav-item">
                     <span>Manage Teachers</span>
                 </a>
-                <a href="/SYSTEM/admin/drop_history.php" class="nav-item active">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/drop_history.php" class="nav-item active">
                     <span>Drop History</span>
                 </a>
                 <a href="#" class="nav-item logout-item" onclick="showLogoutModal(); return false;">
@@ -137,6 +137,6 @@ $message = getMessage();
         </main>
     </div>
 
-    <script src="/SYSTEM/js/functions.js"></script>
+    <script src="/CLASS_CARD_DROPPING_SYSTEM/js/functions.js"></script>
 </body>
 </html>

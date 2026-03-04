@@ -7,7 +7,7 @@ require_once '../includes/functions.php';
 
 // Check if user is teacher
 if ($_SESSION['user_role'] !== 'teacher') {
-    redirect('/SYSTEM/index.php');
+    redirect('/CLASS_CARD_DROPPING_SYSTEM/index.php');
 }
 
 $user_id = $_SESSION['user_id'];
@@ -31,26 +31,26 @@ $message = getMessage();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Drop Class Card - PhilCST</title>
-    <link rel="stylesheet" href="/SYSTEM/css/style.css">
+    <link rel="stylesheet" href="/CLASS_CARD_DROPPING_SYSTEM/css/style.css">
 </head>
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="/SYSTEM/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
+                <img src="/CLASS_CARD_DROPPING_SYSTEM/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
                 <h2>PhilCST</h2>
                 <p>Teacher Portal</p>
             </div>
             
             <nav class="sidebar-nav">
-                <a href="/SYSTEM/teacher/dashboard.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/dashboard.php" class="nav-item">
                     <span>Overview</span>
                 </a>
-                <a href="/SYSTEM/teacher/drop_class_card.php" class="nav-item active">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php" class="nav-item active">
                     <span>Drop Class Card</span>
                 </a>
-                <a href="/SYSTEM/teacher/drop_history.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php" class="nav-item">
                     <span>Drop History</span>
                 </a>
                 <a href="#" class="nav-item logout-item" onclick="showLogoutModal(); return false;">
@@ -78,7 +78,7 @@ $message = getMessage();
                 <!-- Drop Form Section -->
                 <section class="section">
                     <h2>Drop Student Class Card</h2>
-                    <form method="POST" action="/SYSTEM/includes/api.php?action=drop_class_card" class="drop-form">
+                    <form method="POST" action="/CLASS_CARD_DROPPING_SYSTEM/includes/api.php?action=drop_class_card" class="drop-form">
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="student_id">Select Student</label>
@@ -141,7 +141,7 @@ $message = getMessage();
         </main>
     </div>
 
-    <script src="/SYSTEM/js/functions.js"></script>
+    <script src="/CLASS_CARD_DROPPING_SYSTEM/js/functions.js"></script>
     <script>
         function filterSubjects() {
             const searchInput = document.getElementById('subject_search').value.toLowerCase();

@@ -9,9 +9,9 @@ require_once 'includes/functions.php';
 // If already logged in, redirect to appropriate dashboard
 if (isset($_SESSION['user_id'])) {
     if ($_SESSION['user_role'] === 'admin') {
-        header('Location: /SYSTEM/admin/dashboard.php');
+        header('Location: /CLASS_CARD_DROPPING_SYSTEM/admin/dashboard.php');
     } else {
-        header('Location: /SYSTEM/teacher/dashboard.php');
+        header('Location: /CLASS_CARD_DROPPING_SYSTEM/teacher/dashboard.php');
     }
     exit;
 }
@@ -34,9 +34,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['user_role'] = $user['role'];
 
             if ($user['role'] === 'admin') {
-                header('Location: /SYSTEM/admin/dashboard.php');
+                header('Location: /CLASS_CARD_DROPPING_SYSTEM/admin/dashboard.php');
             } else {
-                header('Location: /SYSTEM/teacher/dashboard.php');
+                header('Location: /CLASS_CARD_DROPPING_SYSTEM/teacher/dashboard.php');
             }
             exit;
         } else {
@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PhilCST - Class Card Dropping System</title>
-    <link rel="stylesheet" href="/SYSTEM/css/style.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="/CLASS_CARD_DROPPING_SYSTEM/css/style.css?v=<?php echo time(); ?>">
 </head>
 
 <body class="login-body">

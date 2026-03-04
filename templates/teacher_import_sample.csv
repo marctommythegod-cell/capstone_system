@@ -1,0 +1,6 @@
+teacher_id,lastname,firstname,middlename,address,email,department,password
+T-001,Aquino,Roberto,Santos,"123 Rizal St, Brgy. 1, Manila",roberto.aquino@gmail.com,College of Information Technology,Teacher@123
+T-002,Bautista,Carmen,Lopez,"456 Mabini Ave, Brgy. 5, Quezon City",carmen.bautista@gmail.com,College of Engineering and Architecture,Teacher@456
+T-003,Castillo,Fernando,Garcia,"789 Bonifacio Rd, Brgy. 12, Makati",fernando.castillo@gmail.com,College of Criminology,Teacher@789
+T-004,Dizon,Patricia,Rivera,"321 Aguinaldo St, Brgy. 3, Pasig",patricia.dizon@gmail.com,College of Education,Teacher@101
+T-005,Enriquez,Ramon,Torres,"654 Luna St, Brgy. 7, Taguig",ramon.enriquez@gmail.com,College of Business and Management,Teacher@202

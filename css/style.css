@@ -640,6 +640,61 @@ html, body {
     border-radius: 4px;
 }
 
+/* ===== IMPORT FEATURE ===== */
+.import-info-box {
+    background: #f0f4ff;
+    border: 1px solid #d0d9f0;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+}
+
+.import-info-box p {
+    margin: 0;
+    line-height: 1.6;
+}
+
+.import-dropzone {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 15px 0;
+    background: #fafafa;
+}
+
+.import-dropzone:hover,
+.import-dropzone.dropzone-active {
+    border-color: var(--primary-color);
+    background: #f5f0ff;
+    box-shadow: 0 0 0 3px rgba(127, 63, 198, 0.1);
+}
+
+.dropzone-icon {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+}
+
+.dropzone-content p {
+    margin: 4px 0;
+    color: #555;
+}
+
+.dropzone-hint {
+    font-size: 0.85em;
+    color: #999 !important;
+    margin-top: 5px;
+}
+
+#importPreviewStudent h3,
+#importPreviewTeacher h3 {
+    color: var(--primary-color);
+    font-size: 1.1em;
+    margin: 0;
+}
+
 /* ===== RESPONSIVE ===== */
 /* ===== STATISTICS & OVERVIEW ===== */
 .stats-grid {

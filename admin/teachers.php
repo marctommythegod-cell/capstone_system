@@ -6,7 +6,7 @@ require_once '../config/db.php';
 require_once '../includes/functions.php';
 
 if ($_SESSION['user_role'] !== 'admin') {
-    redirect('/SYSTEM/index.php');
+    redirect('/CLASS_CARD_DROPPING_SYSTEM/index.php');
 }
 
 $admin_name = getUserName($pdo, $_SESSION['user_id']);
@@ -139,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 setMessage('error', 'Error adding teacher: ' . $e->getMessage());
             }
         }
-        redirect('/SYSTEM/admin/teachers.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/teachers.php');
     } elseif ($_POST['action'] === 'update') {
         $id = intval($_POST['id'] ?? 0);
         $teacher_id = trim($_POST['teacher_id'] ?? '');
@@ -195,7 +195,95 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 setMessage('error', 'Error updating teacher: ' . $e->getMessage());
             }
         }
-        redirect('/SYSTEM/admin/teachers.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/teachers.php');
+    } elseif ($_POST['action'] === 'import_teachers') {
+        $csv_data = $_POST['csv_data'] ?? '';
+        if (empty($csv_data)) {
+            setMessage('error', 'No data to import. Please select a file first.');
+            redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/teachers.php');
+        }
+
+        $lines = array_filter(explode("\n", $csv_data), function($line) {
+            return trim($line) !== '';
+        });
+        $lines = array_values($lines);
+
+        if (count($lines) < 2) {
+            setMessage('error', 'The file contains no data rows.');
+            redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/teachers.php');
+        }
+
+        // Remove header row
+        array_shift($lines);
+
+        $imported = 0;
+        $skipped = 0;
+        $import_errors = [];
+
+        foreach ($lines as $index => $line) {
+            $row = str_getcsv($line);
+            if (count($row) < 8) {
+                $skipped++;
+                $import_errors[] = "Row " . ($index + 2) . ": Incomplete data (expected 8 columns, got " . count($row) . ").";
+                continue;
+            }
+
+            $teacher_id = trim($row[0]);
+            $lastname = trim($row[1]);
+            $firstname = trim($row[2]);
+            $middlename = trim($row[3]);
+            $name = $lastname . ', ' . $firstname . ', ' . $middlename;
+            $address = trim($row[4]);
+            $email = trim($row[5]);
+            $department = trim($row[6]);
+            $password = trim($row[7]);
+
+            // Basic validation
+            if (empty($teacher_id) || empty($lastname) || empty($firstname) || empty($email) || empty($password)) {
+                $skipped++;
+                $import_errors[] = "Row " . ($index + 2) . ": Missing required fields (teacher_id, lastname, firstname, email, or password).";
+                continue;
+            }
+
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $skipped++;
+                $import_errors[] = "Row " . ($index + 2) . ": Invalid email format '$email'.";
+                continue;
+            }
+
+            // Check duplicate email
+            $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ?');
+            $stmt->execute([$email]);
+            if ($stmt->fetch()) {
+                $skipped++;
+                $import_errors[] = "Row " . ($index + 2) . ": Email '$email' already exists.";
+                continue;
+            }
+
+            try {
+                $hashed_password = securePassword($password);
+                $stmt = $pdo->prepare('INSERT INTO users (name, email, password, role, teacher_id, address, department) VALUES (?, ?, ?, ?, ?, ?, ?)');
+                $stmt->execute([$name, $email, $hashed_password, 'teacher', $teacher_id, $address, $department]);
+                $imported++;
+            } catch (Exception $e) {
+                $skipped++;
+                $import_errors[] = "Row " . ($index + 2) . ": " . $e->getMessage();
+            }
+        }
+
+        $msg = "Import complete: <strong>$imported</strong> teacher(s) imported successfully";
+        if ($skipped > 0) {
+            $msg .= ", <strong>$skipped</strong> skipped";
+        }
+        $msg .= ".";
+        if (!empty($import_errors)) {
+            $msg .= '<br><br><strong>Details:</strong><br>' . implode('<br>', array_slice($import_errors, 0, 15));
+            if (count($import_errors) > 15) {
+                $msg .= '<br>...and ' . (count($import_errors) - 15) . ' more issues.';
+            }
+        }
+        setMessage($imported > 0 ? 'success' : 'error', $msg);
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/teachers.php');
     }
 }
 
@@ -212,32 +300,32 @@ $message = getMessage();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Teachers - PhilCST</title>
-    <link rel="stylesheet" href="/SYSTEM/css/style.css">
+    <link rel="stylesheet" href="/CLASS_CARD_DROPPING_SYSTEM/css/style.css">
 </head>
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="/SYSTEM/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
+                <img src="/CLASS_CARD_DROPPING_SYSTEM/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
                 <h2>PhilCST</h2>
                 <p>Admin Portal</p>
             </div>
             
             <nav class="sidebar-nav">
-                <a href="/SYSTEM/admin/dashboard.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/dashboard.php" class="nav-item">
                     <span>Dashboard</span>
                 </a>
-                <a href="/SYSTEM/admin/dropped_cards.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php" class="nav-item">
                     <span>Dropped Cards</span>
                 </a>
-                <a href="/SYSTEM/admin/students.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/students.php" class="nav-item">
                     <span>Manage Students</span>
                 </a>
-                <a href="/SYSTEM/admin/teachers.php" class="nav-item active">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/teachers.php" class="nav-item active">
                     <span>Manage Teachers</span>
                 </a>
-                <a href="/SYSTEM/admin/drop_history.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/drop_history.php" class="nav-item">
                     <span>Drop History</span>
                 </a>
                 <a href="#" class="nav-item logout-item" onclick="showLogoutModal(); return false;">
@@ -266,9 +354,10 @@ $message = getMessage();
                     </div>
                 <?php endif; ?>
                 
-                <!-- Register Button -->
-                <div style="margin-bottom: 20px;">
+                <!-- Action Buttons -->
+                <div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
                     <button type="button" class="btn btn-primary" onclick="openRegisterModal()">Register Teacher</button>
+                    <button type="button" class="btn btn-success" onclick="openImportModal()">📥 Import from CSV/Excel</button>
                 </div>
                 
                 <!-- Register Modal -->
@@ -478,13 +567,196 @@ $message = getMessage();
                     window.onclick = function(event) {
                         var registerModal = document.getElementById('registerModal');
                         var updateModal = document.getElementById('updateModal');
-                        if (event.target == registerModal) {
-                            registerModal.style.display = 'none';
-                        }
-                        if (event.target == updateModal) {
-                            updateModal.style.display = 'none';
-                        }
+                        var importModal = document.getElementById('importModal');
+                        if (event.target == registerModal) registerModal.style.display = 'none';
+                        if (event.target == updateModal) updateModal.style.display = 'none';
+                        if (event.target == importModal) closeImportModal();
                     }
+                </script>
+
+                <!-- Import Teachers Modal -->
+                <div id="importModal" class="modal" style="display: none;">
+                    <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+                        <div class="modal-header">
+                            <h2>📥 Import Teachers from CSV / Excel</h2>
+                            <button type="button" class="modal-close" onclick="closeImportModal()">&times;</button>
+                        </div>
+                        <div class="modal-body" style="padding: 20px;">
+                            <div class="import-info-box">
+                                <p><strong>📋 Instructions:</strong></p>
+                                <ol style="margin: 8px 0 0 20px; line-height: 1.8;">
+                                    <li>Download the CSV template and fill in the teacher data</li>
+                                    <li>Save as <strong>.csv</strong> or <strong>.xlsx</strong> format</li>
+                                    <li>Upload the file below and review the preview</li>
+                                    <li>Click <strong>Import</strong> to add the teachers</li>
+                                </ol>
+                                <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                                    <strong>Required columns:</strong> Teacher ID, Last Name, First Name, Middle Name, Address, Email, Department, Password
+                                </p>
+                                <div class="alert alert-warning" style="margin-top: 10px; padding: 10px; font-size: 0.88em;">
+                                    ⚠️ <strong>Note:</strong> Passwords in the file should meet the requirements (6+ chars, uppercase, lowercase, number, special character). Each teacher will use the password provided in the file for their initial login.
+                                </div>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="downloadTeacherTemplate()" style="margin-top: 10px;">📄 Download CSV Template</button>
+                            </div>
+
+                            <div class="import-dropzone" id="teacherDropzone" onclick="document.getElementById('importFileTeacher').click()">
+                                <div class="dropzone-content">
+                                    <div class="dropzone-icon">📁</div>
+                                    <p><strong>Click to browse</strong> or drag & drop your file here</p>
+                                    <p class="dropzone-hint">Accepts .csv, .xlsx, .xls files</p>
+                                </div>
+                                <input type="file" id="importFileTeacher" accept=".csv,.xlsx,.xls" style="display:none" onchange="handleTeacherFile(this)">
+                            </div>
+
+                            <div id="importPreviewTeacher" style="display: none;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin: 15px 0 10px;">
+                                    <h3>📊 Data Preview <span id="previewCountTeacher" style="font-weight: normal; font-size: 0.85em; color: #666;"></span></h3>
+                                    <button type="button" class="btn btn-sm btn-secondary" onclick="clearImportTeacher()">✕ Clear</button>
+                                </div>
+                                <div class="table-responsive" style="max-height: 350px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px;">
+                                    <table class="table" id="previewTableTeacher">
+                                        <thead></thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <form method="POST" id="importFormTeacher">
+                            <input type="hidden" name="action" value="import_teachers">
+                            <textarea name="csv_data" id="csvDataTeacher" style="display:none"></textarea>
+                            <div class="modal-footer" style="padding: 15px 20px; border-top: 1px solid #ddd; display: flex; gap: 10px; justify-content: flex-end;">
+                                <button type="button" class="btn btn-secondary" onclick="closeImportModal()">Cancel</button>
+                                <button type="submit" class="btn btn-success" id="importBtnTeacher" style="display: none;">📥 Import Teachers</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+                <script>
+                    function openImportModal() {
+                        document.getElementById('importModal').style.display = 'flex';
+                    }
+
+                    function closeImportModal() {
+                        document.getElementById('importModal').style.display = 'none';
+                        clearImportTeacher();
+                    }
+
+                    function clearImportTeacher() {
+                        document.getElementById('importPreviewTeacher').style.display = 'none';
+                        document.getElementById('importBtnTeacher').style.display = 'none';
+                        document.getElementById('importFileTeacher').value = '';
+                        document.getElementById('csvDataTeacher').value = '';
+                    }
+
+                    function downloadTeacherTemplate() {
+                        var csv = 'teacher_id,lastname,firstname,middlename,address,email,department,password\n';
+                        csv += 'T-001,Dela Cruz,Juan,Santos,"123 Main St, Manila",juan.teacher@gmail.com,College of Information Technology,Teacher@123\n';
+                        csv += 'T-002,Garcia,Maria,Lopez,"456 Oak Ave, Quezon City",maria.teacher@gmail.com,College of Engineering,Teacher@456\n';
+                        downloadCSV(csv, 'teacher_import_template.csv');
+                    }
+
+                    function handleTeacherFile(input) {
+                        var file = input.files[0];
+                        if (!file) return;
+
+                        var reader = new FileReader();
+                        reader.onload = function(e) {
+                            try {
+                                var workbook = XLSX.read(e.target.result, { type: 'array' });
+                                var sheet = workbook.Sheets[workbook.SheetNames[0]];
+                                var jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+                                if (jsonData.length < 2) {
+                                    alert('The file appears to be empty or contains only a header row.');
+                                    return;
+                                }
+
+                                var rows = jsonData.slice(1).filter(function(row) {
+                                    return row.some(function(cell) { return String(cell).trim() !== ''; });
+                                });
+
+                                if (rows.length === 0) {
+                                    alert('No data rows found in the file.');
+                                    return;
+                                }
+
+                                showTeacherPreview(rows);
+                            } catch (err) {
+                                alert('Error reading file: ' + err.message);
+                            }
+                        };
+                        reader.readAsArrayBuffer(file);
+                    }
+
+                    function showTeacherPreview(rows) {
+                        var displayHeaders = ['Teacher ID', 'Last Name', 'First Name', 'Middle Name', 'Address', 'Email', 'Department', 'Password'];
+                        var thead = document.querySelector('#previewTableTeacher thead');
+                        var tbody = document.querySelector('#previewTableTeacher tbody');
+
+                        thead.innerHTML = '<tr>' + displayHeaders.map(function(h) { return '<th style="white-space:nowrap;">' + h + '</th>'; }).join('') + '</tr>';
+
+                        var maxPreview = Math.min(rows.length, 10);
+                        var tbodyHtml = '';
+                        for (var i = 0; i < maxPreview; i++) {
+                            tbodyHtml += '<tr>';
+                            for (var j = 0; j < 8; j++) {
+                                var val = rows[i][j] !== undefined ? String(rows[i][j]) : '';
+                                // Mask password column
+                                if (j === 7 && val.length > 0) {
+                                    val = '••••••••';
+                                }
+                                if (val.length > 40) val = val.substring(0, 40) + '...';
+                                tbodyHtml += '<td>' + val.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</td>';
+                            }
+                            tbodyHtml += '</tr>';
+                        }
+                        tbody.innerHTML = tbodyHtml;
+
+                        document.getElementById('previewCountTeacher').textContent = '— ' + rows.length + ' record(s)' + (rows.length > 10 ? ' (showing first 10)' : '');
+                        document.getElementById('importPreviewTeacher').style.display = 'block';
+                        document.getElementById('importBtnTeacher').style.display = 'inline-block';
+                        document.getElementById('importBtnTeacher').textContent = '📥 Import ' + rows.length + ' Teacher(s)';
+
+                        // Build CSV data for form submission
+                        var headers = ['teacher_id','lastname','firstname','middlename','address','email','department','password'];
+                        var csvLines = [headers.join(',')];
+                        rows.forEach(function(row) {
+                            var csvRow = [];
+                            for (var j = 0; j < 8; j++) {
+                                var val = row[j] !== undefined ? String(row[j]) : '';
+                                if (val.indexOf(',') !== -1 || val.indexOf('"') !== -1 || val.indexOf('\n') !== -1) {
+                                    val = '"' + val.replace(/"/g, '""') + '"';
+                                }
+                                csvRow.push(val);
+                            }
+                            csvLines.push(csvRow.join(','));
+                        });
+                        document.getElementById('csvDataTeacher').value = csvLines.join('\n');
+                    }
+
+                    // Drag and drop support for teacher import
+                    (function() {
+                        var dz = document.getElementById('teacherDropzone');
+                        if (!dz) return;
+                        ['dragenter','dragover','dragleave','drop'].forEach(function(evt) {
+                            dz.addEventListener(evt, function(e) { e.preventDefault(); e.stopPropagation(); });
+                        });
+                        ['dragenter','dragover'].forEach(function(evt) {
+                            dz.addEventListener(evt, function() { dz.classList.add('dropzone-active'); });
+                        });
+                        ['dragleave','drop'].forEach(function(evt) {
+                            dz.addEventListener(evt, function() { dz.classList.remove('dropzone-active'); });
+                        });
+                        dz.addEventListener('drop', function(e) {
+                            var files = e.dataTransfer.files;
+                            if (files.length > 0) {
+                                document.getElementById('importFileTeacher').files = files;
+                                handleTeacherFile(document.getElementById('importFileTeacher'));
+                            }
+                        });
+                    })();
                 </script>
                 
                 <!-- Teachers List -->
@@ -626,6 +898,6 @@ $message = getMessage();
         document.getElementById('confirm_password').addEventListener('input', checkConfirmMatch);
     </script>
 
-    <script src="/SYSTEM/js/functions.js"></script>
+    <script src="/CLASS_CARD_DROPPING_SYSTEM/js/functions.js"></script>
 </body>
 </html>

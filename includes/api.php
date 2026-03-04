@@ -10,12 +10,12 @@ $action = $_GET['action'] ?? '';
 
 if ($action === 'drop_class_card') {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        redirect('/SYSTEM/teacher/drop_class_card.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php');
     }
     
     if ($_SESSION['user_role'] !== 'teacher') {
         setMessage('error', 'Unauthorized action.');
-        redirect('/SYSTEM/teacher/drop_class_card.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php');
     }
     
     $teacher_id = $_SESSION['user_id'];
@@ -25,7 +25,7 @@ if ($action === 'drop_class_card') {
     
     if (!$student_id || !$subject_no) {
         setMessage('error', 'Please select both student and subject.');
-        redirect('/SYSTEM/teacher/drop_class_card.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php');
     }
     
     // Verify student exists
@@ -33,7 +33,7 @@ if ($action === 'drop_class_card') {
     $stmt->execute([$student_id]);
     if (!$stmt->fetch()) {
         setMessage('error', 'Invalid student.');
-        redirect('/SYSTEM/teacher/drop_class_card.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php');
     }
     
     // Get subject name
@@ -42,7 +42,7 @@ if ($action === 'drop_class_card') {
     $subject = $stmt->fetch();
     if (!$subject) {
         setMessage('error', 'Invalid subject.');
-        redirect('/SYSTEM/teacher/drop_class_card.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php');
     }
     
     $subject_name = $subject['subject_name'];
@@ -77,17 +77,17 @@ if ($action === 'drop_class_card') {
         setMessage('error', 'Error submitting class card drop: ' . $e->getMessage());
     }
     
-    redirect('/SYSTEM/teacher/drop_class_card.php');
+    redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php');
 }
 
 if ($action === 'approve_drop') {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        redirect('/SYSTEM/admin/dashboard.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dashboard.php');
     }
     
     if ($_SESSION['user_role'] !== 'admin') {
         setMessage('error', 'Unauthorized action.');
-        redirect('/SYSTEM/admin/dashboard.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dashboard.php');
     }
     
     $admin_id = $_SESSION['user_id'];
@@ -95,7 +95,7 @@ if ($action === 'approve_drop') {
     
     if (!$drop_id) {
         setMessage('error', 'Invalid drop record.');
-        redirect('/SYSTEM/admin/dropped_cards.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php');
     }
     
     try {
@@ -106,7 +106,7 @@ if ($action === 'approve_drop') {
         
         if (!$drop) {
             setMessage('error', 'Drop record not found.');
-            redirect('/SYSTEM/admin/dropped_cards.php');
+            redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php');
         }
         
         // Update status to Dropped and set approval info
@@ -150,17 +150,17 @@ if ($action === 'approve_drop') {
         setMessage('error', 'Error approving class card drop: ' . $e->getMessage());
     }
     
-    redirect('/SYSTEM/admin/dropped_cards.php');
+    redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php');
 }
 
 if ($action === 'undo_drop') {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        redirect('/SYSTEM/teacher/drop_history.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php');
     }
     
     if ($_SESSION['user_role'] !== 'teacher') {
         setMessage('error', 'Unauthorized action.');
-        redirect('/SYSTEM/teacher/drop_history.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php');
     }
     
     $teacher_id = $_SESSION['user_id'];
@@ -168,7 +168,7 @@ if ($action === 'undo_drop') {
     
     if (!$drop_id) {
         setMessage('error', 'Invalid drop record.');
-        redirect('/SYSTEM/teacher/drop_history.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php');
     }
     
     try {
@@ -179,7 +179,7 @@ if ($action === 'undo_drop') {
         
         if (!$drop) {
             setMessage('error', 'Drop record not found or you do not have permission to undo it.');
-            redirect('/SYSTEM/teacher/drop_history.php');
+            redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php');
         }
         
         // Delete the drop record
@@ -191,10 +191,10 @@ if ($action === 'undo_drop') {
         setMessage('error', 'Error undoing class card drop: ' . $e->getMessage());
     }
     
-    redirect('/SYSTEM/teacher/drop_history.php');
+    redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php');
 }
 
 // If no valid action
-redirect('/SYSTEM/index.php');
+redirect('/CLASS_CARD_DROPPING_SYSTEM/index.php');
 ?>
 

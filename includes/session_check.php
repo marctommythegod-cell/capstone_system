@@ -4,7 +4,7 @@
 session_start();
 
 if (!isset($_SESSION['user_id'])) {
-    header('Location: /SYSTEM/index.php');
+    header('Location: /CLASS_CARD_DROPPING_SYSTEM/index.php');
     exit;
 }
 
@@ -18,7 +18,7 @@ $user = $stmt->fetch();
 
 if (!$user) {
     session_destroy();
-    header('Location: /SYSTEM/index.php');
+    header('Location: /CLASS_CARD_DROPPING_SYSTEM/index.php');
     exit;
 }
 

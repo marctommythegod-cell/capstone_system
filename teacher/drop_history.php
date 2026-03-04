@@ -7,7 +7,7 @@ require_once '../includes/functions.php';
 
 // Check if user is teacher
 if ($_SESSION['user_role'] !== 'teacher') {
-    redirect('/SYSTEM/index.php');
+    redirect('/CLASS_CARD_DROPPING_SYSTEM/index.php');
 }
 
 $user_id = $_SESSION['user_id'];
@@ -41,26 +41,26 @@ $message = getMessage();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Class Card Drop History - PhilCST</title>
-    <link rel="stylesheet" href="/SYSTEM/css/style.css">
+    <link rel="stylesheet" href="/CLASS_CARD_DROPPING_SYSTEM/css/style.css">
 </head>
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="/SYSTEM/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
+                <img src="/CLASS_CARD_DROPPING_SYSTEM/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
                 <h2>PhilCST</h2>
                 <p>Teacher Portal</p>
             </div>
             
             <nav class="sidebar-nav">
-                <a href="/SYSTEM/teacher/dashboard.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/dashboard.php" class="nav-item">
                     <span>Overview</span>
                 </a>
-                <a href="/SYSTEM/teacher/drop_class_card.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php" class="nav-item">
                     <span>Drop Class Card</span>
                 </a>
-                <a href="/SYSTEM/teacher/drop_history.php" class="nav-item active">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php" class="nav-item active">
                     <span>Drop History</span>
                 </a>
                 <a href="#" class="nav-item logout-item" onclick="showLogoutModal(); return false;">
@@ -133,7 +133,7 @@ $message = getMessage();
                                             <td><span class="status status-<?php echo strtolower($drop['status']); ?>"><?php echo htmlspecialchars($drop['status']); ?></span></td>
                                             <td><?php echo htmlspecialchars(substr($drop['remarks'], 0, 50)); ?></td>
                                             <td>
-                                                <form method="POST" action="/SYSTEM/includes/api.php?action=undo_drop" style="display: inline;" id="cancelDropForm<?php echo $drop['id']; ?>">
+                                                <form method="POST" action="/CLASS_CARD_DROPPING_SYSTEM/includes/api.php?action=undo_drop" style="display: inline;" id="cancelDropForm<?php echo $drop['id']; ?>">
                                                     <input type="hidden" name="drop_id" value="<?php echo $drop['id']; ?>">
                                                     <button type="button" class="btn btn-sm btn-danger" onclick="showConfirmModal('Are you sure you want to cancel this drop? The student will not be notified.', function(){ document.getElementById('cancelDropForm<?php echo $drop['id']; ?>').submit(); })">Cancel</button>
                                                 </form>
@@ -151,7 +151,7 @@ $message = getMessage();
         </main>
     </div>
 
-    <script src="/SYSTEM/js/functions.js"></script>
+    <script src="/CLASS_CARD_DROPPING_SYSTEM/js/functions.js"></script>
     <script>
         function filterDropHistoryTable() {
             var search = document.getElementById('liveSearch').value.toLowerCase().trim();

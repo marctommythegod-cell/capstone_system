@@ -3,6 +3,6 @@
 
 session_start();
 session_destroy();
-header('Location: /SYSTEM/index.php');
+header('Location: /CLASS_CARD_DROPPING_SYSTEM/index.php');
 exit;
 ?>
