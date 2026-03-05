@@ -362,14 +362,14 @@ $message = getMessage();
                 
                 <!-- Register Modal -->
                 <div id="registerModal" class="modal" style="display: none;">
-                    <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+                    <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
                         <div class="modal-header">
                             <h2>Register New Teacher</h2>
                             <button type="button" class="modal-close" onclick="closeRegisterModal()">&times;</button>
                         </div>
                         <form method="POST" class="teacher-form" id="teacherForm">
                             <input type="hidden" name="action" value="add">
-                            <div class="modal-body" style="padding: 20px;">
+                            <div class="modal-body" style="padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                                 <div class="form-group">
                                     <label for="teacher_id">Teacher ID</label>
                                     <input type="text" id="teacher_id" name="teacher_id" required placeholder="Enter teacher ID">
@@ -390,7 +390,7 @@ $message = getMessage();
                                     <input type="text" id="middlename" name="middlename" required placeholder="Enter middle name">
                                 </div>
                                 
-                                <div class="form-group">
+                                <div class="form-group" style="grid-column: 1 / -1;">
                                     <label for="address">Complete Address</label>
                                     <textarea id="address" name="address" required placeholder="Enter complete address" rows="3"></textarea>
                                 </div>
@@ -405,7 +405,7 @@ $message = getMessage();
                                     <input type="text" id="department" name="department" required placeholder="Enter department">
                                 </div>
                                 
-                                <div class="form-group">
+                                <div class="form-group" style="grid-column: 1 / -1;">
                                     <label for="password">Password</label>
                                     <div class="password-input-wrapper">
                                         <input type="password" id="password" name="password" required minlength="6" placeholder="Put a strong password here" oninput="checkPasswordStrength(this.value)">
@@ -423,7 +423,7 @@ $message = getMessage();
                                     <div id="password-strength" style="margin-top: 6px; font-size: 0.85em;"></div>
                                 </div>
                                 
-                                <div class="form-group">
+                                <div class="form-group" style="grid-column: 1 / -1;">
                                     <label for="confirm_password">Confirm Password</label>
                                     <div class="password-input-wrapper">
                                         <input type="password" id="confirm_password" name="confirm_password" required placeholder="Re-enter your password">

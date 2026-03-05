@@ -449,14 +449,14 @@ $message = getMessage();
 
                 <!-- Register Modal -->
                 <div id="registerModal" class="modal" style="display: none;">
-                    <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+                    <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
                         <div class="modal-header">
                             <h2>Register New Student</h2>
                             <button type="button" class="modal-close" onclick="closeRegisterModal()">&times;</button>
                         </div>
                         <form method="POST" class="student-form">
                             <input type="hidden" name="action" value="add">
-                            <div class="modal-body" style="padding: 20px;">
+                            <div class="modal-body" style="padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                                 <div class="form-group">
                                     <label for="student_id">Student ID</label>
                                     <input type="text" id="student_id" name="student_id" required
@@ -481,7 +481,7 @@ $message = getMessage();
                                         placeholder="Enter middle name">
                                 </div>
 
-                                <div class="form-group">
+                                <div class="form-group" style="grid-column: 1 / -1;">
                                     <label for="address">Complete Address</label>
                                     <textarea id="address" name="address" required placeholder="Enter complete address"
                                         rows="3"></textarea>
@@ -505,7 +505,7 @@ $message = getMessage();
                                         placeholder="example@gmail.com">
                                 </div>
 
-                                <div class="form-group">
+                                <div class="form-group" style="grid-column: 1 / -1;">
                                     <label for="course">Course</label>
                                     <select id="course" name="course" required>
                                         <option value="">-- Select Course --</option>
