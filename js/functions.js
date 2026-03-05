@@ -11,7 +11,7 @@ function showLogoutModal() {
     modal.className = 'logout-modal';
     modal.innerHTML = `
         <div class="logout-modal-box">
-            <div class="logout-icon">🚪</div>
+            <div class="logout-icon"></div>
             <h3>Confirm Logout</h3>
             <p>Are you sure you want to log out of the system?</p>
             <div class="logout-modal-actions">

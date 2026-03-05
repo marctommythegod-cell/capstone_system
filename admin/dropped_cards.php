@@ -11,6 +11,7 @@ if ($_SESSION['user_role'] !== 'admin') {
 }
 
 $admin_name = getUserName($pdo, $_SESSION['user_id']);
+$user_info = getUserInfo($pdo, $_SESSION['user_id']);
 
 // Handle undrop action
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'undrop') {
@@ -131,7 +132,8 @@ $message = getMessage();
             </nav>
 
             <div class="sidebar-footer">
-                <p>Welcome, <strong><?php echo htmlspecialchars($admin_name); ?></strong></p>
+                <p class="sidebar-footer-name"><?php echo htmlspecialchars($user_info['name']); ?></p>
+                <p class="sidebar-footer-dept"><?php echo htmlspecialchars($user_info['department'] ?: 'Administrator'); ?></p>
             </div>
         </aside>
 

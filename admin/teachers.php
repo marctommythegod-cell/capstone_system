@@ -10,6 +10,7 @@ if ($_SESSION['user_role'] !== 'admin') {
 }
 
 $admin_name = getUserName($pdo, $_SESSION['user_id']);
+$user_info = getUserInfo($pdo, $_SESSION['user_id']);
 
 // Handle teacher registration
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
@@ -334,7 +335,8 @@ $message = getMessage();
             </nav>
             
             <div class="sidebar-footer">
-                <p>Welcome, <strong><?php echo htmlspecialchars($admin_name); ?></strong></p>
+                <p class="sidebar-footer-name"><?php echo htmlspecialchars($user_info['name']); ?></p>
+                <p class="sidebar-footer-dept"><?php echo htmlspecialchars($user_info['department'] ?: 'Administrator'); ?></p>
             </div>
         </aside>
         
@@ -357,7 +359,7 @@ $message = getMessage();
                 <!-- Action Buttons -->
                 <div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
                     <button type="button" class="btn btn-primary" onclick="openRegisterModal()">Register Teacher</button>
-                    <button type="button" class="btn btn-success" onclick="openImportModal()">📥 Import from CSV/Excel</button>
+                    <button type="button" class="btn btn-success" onclick="openImportModal()">Import from CSV/Excel</button>
                 </div>
                 
                 <!-- Register Modal -->
@@ -409,7 +411,10 @@ $message = getMessage();
                                     <label for="password">Password</label>
                                     <div class="password-input-wrapper">
                                         <input type="password" id="password" name="password" required minlength="6" placeholder="Put a strong password here" oninput="checkPasswordStrength(this.value)">
-                                        <button type="button" class="password-toggle" onclick="togglePassword('password')">👁️</button>
+                                        <button type="button" class="password-toggle" onclick="togglePassword('password')">
+                                            <svg class="eye-icon eye-show" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                            <svg class="eye-icon eye-hide" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                                        </button>
                                     </div>
                                     <small id="password-requirements" style="display: none; display: block; margin-top: 5px; color: #666;">
                                         <strong>Password Requirements:</strong><br>
@@ -427,7 +432,10 @@ $message = getMessage();
                                     <label for="confirm_password">Confirm Password</label>
                                     <div class="password-input-wrapper">
                                         <input type="password" id="confirm_password" name="confirm_password" required placeholder="Re-enter your password">
-                                        <button type="button" class="password-toggle" onclick="togglePassword('confirm_password')">👁️</button>
+                                        <button type="button" class="password-toggle" onclick="togglePassword('confirm_password')">
+                                            <svg class="eye-icon eye-show" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                            <svg class="eye-icon eye-hide" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                                        </button>
                                     </div>
                                     <div id="confirm-match" style="margin-top: 5px; font-size: 0.85em; display: none;"></div>
                                 </div>
@@ -578,12 +586,12 @@ $message = getMessage();
                 <div id="importModal" class="modal" style="display: none;">
                     <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
                         <div class="modal-header">
-                            <h2>📥 Import Teachers from CSV / Excel</h2>
+                            <h2>Import Teachers from CSV / Excel</h2>
                             <button type="button" class="modal-close" onclick="closeImportModal()">&times;</button>
                         </div>
                         <div class="modal-body" style="padding: 20px;">
                             <div class="import-info-box">
-                                <p><strong>📋 Instructions:</strong></p>
+                                <p><strong>Instructions:</strong></p>
                                 <ol style="margin: 8px 0 0 20px; line-height: 1.8;">
                                     <li>Download the CSV template and fill in the teacher data</li>
                                     <li>Save as <strong>.csv</strong> or <strong>.xlsx</strong> format</li>
@@ -594,14 +602,14 @@ $message = getMessage();
                                     <strong>Required columns:</strong> Teacher ID, Last Name, First Name, Middle Name, Address, Email, Department, Password
                                 </p>
                                 <div class="alert alert-warning" style="margin-top: 10px; padding: 10px; font-size: 0.88em;">
-                                    ⚠️ <strong>Note:</strong> Passwords in the file should meet the requirements (6+ chars, uppercase, lowercase, number, special character). Each teacher will use the password provided in the file for their initial login.
+                                    <strong>Note:</strong> Passwords in the file should meet the requirements (6+ chars, uppercase, lowercase, number, special character). Each teacher will use the password provided in the file for their initial login.
                                 </div>
-                                <button type="button" class="btn btn-secondary btn-sm" onclick="downloadTeacherTemplate()" style="margin-top: 10px;">📄 Download CSV Template</button>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="downloadTeacherTemplate()" style="margin-top: 10px;">Download CSV Template</button>
                             </div>
 
                             <div class="import-dropzone" id="teacherDropzone" onclick="document.getElementById('importFileTeacher').click()">
                                 <div class="dropzone-content">
-                                    <div class="dropzone-icon">📁</div>
+                                    <div class="dropzone-icon"></div>
                                     <p><strong>Click to browse</strong> or drag & drop your file here</p>
                                     <p class="dropzone-hint">Accepts .csv, .xlsx, .xls files</p>
                                 </div>
@@ -610,7 +618,7 @@ $message = getMessage();
 
                             <div id="importPreviewTeacher" style="display: none;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin: 15px 0 10px;">
-                                    <h3>📊 Data Preview <span id="previewCountTeacher" style="font-weight: normal; font-size: 0.85em; color: #666;"></span></h3>
+                                    <h3>Data Preview <span id="previewCountTeacher" style="font-weight: normal; font-size: 0.85em; color: #666;"></span></h3>
                                     <button type="button" class="btn btn-sm btn-secondary" onclick="clearImportTeacher()">✕ Clear</button>
                                 </div>
                                 <div class="table-responsive" style="max-height: 350px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px;">
@@ -626,7 +634,7 @@ $message = getMessage();
                             <textarea name="csv_data" id="csvDataTeacher" style="display:none"></textarea>
                             <div class="modal-footer" style="padding: 15px 20px; border-top: 1px solid #ddd; display: flex; gap: 10px; justify-content: flex-end;">
                                 <button type="button" class="btn btn-secondary" onclick="closeImportModal()">Cancel</button>
-                                <button type="submit" class="btn btn-success" id="importBtnTeacher" style="display: none;">📥 Import Teachers</button>
+                                <button type="submit" class="btn btn-success" id="importBtnTeacher" style="display: none;">Import Teachers</button>
                             </div>
                         </form>
                     </div>
@@ -717,7 +725,7 @@ $message = getMessage();
                         document.getElementById('previewCountTeacher').textContent = '— ' + rows.length + ' record(s)' + (rows.length > 10 ? ' (showing first 10)' : '');
                         document.getElementById('importPreviewTeacher').style.display = 'block';
                         document.getElementById('importBtnTeacher').style.display = 'inline-block';
-                        document.getElementById('importBtnTeacher').textContent = '📥 Import ' + rows.length + ' Teacher(s)';
+                        document.getElementById('importBtnTeacher').textContent = 'Import ' + rows.length + ' Teacher(s)';
 
                         // Build CSV data for form submission
                         var headers = ['teacher_id','lastname','firstname','middlename','address','email','department','password'];
@@ -832,11 +840,14 @@ $message = getMessage();
     <script>
         function togglePassword(fieldId) {
             const passwordField = document.getElementById(fieldId);
-            const toggleButton = passwordField.nextElementSibling;
+            const toggleBtn = passwordField.closest('.password-input-wrapper').querySelector('.password-toggle');
+            const eyeShow = toggleBtn.querySelector('.eye-show');
+            const eyeHide = toggleBtn.querySelector('.eye-hide');
             const isPassword = passwordField.type === 'password';
             passwordField.type = isPassword ? 'text' : 'password';
-            toggleButton.textContent = isPassword ? '👁️‍🗨️' : '👁️';
-            toggleButton.classList.toggle('active', isPassword);
+            eyeShow.style.display = isPassword ? 'none' : 'block';
+            eyeHide.style.display = isPassword ? 'block' : 'none';
+            toggleBtn.classList.toggle('active', isPassword);
         }
 
         function checkPasswordStrength(value) {

@@ -16,6 +16,13 @@ function getUserName($pdo, $user_id) {
     return $result ? $result['name'] : 'Unknown';
 }
 
+function getUserInfo($pdo, $user_id) {
+    $stmt = $pdo->prepare('SELECT name, department, role FROM users WHERE id = ?');
+    $stmt->execute([$user_id]);
+    $result = $stmt->fetch();
+    return $result ? $result : ['name' => 'Unknown', 'department' => '', 'role' => ''];
+}
+
 function getStudentName($pdo, $student_id) {
     $stmt = $pdo->prepare('SELECT name FROM students WHERE id = ?');
     $stmt->execute([$student_id]);

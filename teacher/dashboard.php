@@ -12,6 +12,7 @@ if ($_SESSION['user_role'] !== 'teacher') {
 
 $user_id = $_SESSION['user_id'];
 $teacher_name = getUserName($pdo, $user_id);
+$user_info = getUserInfo($pdo, $user_id);
 
 // Get statistics
 $stmt = $pdo->prepare('SELECT COUNT(*) as total_drops FROM class_card_drops WHERE teacher_id = ?');
@@ -72,6 +73,11 @@ $message = getMessage();
                     <span>Logout</span>
                 </a>
             </nav>
+
+            <div class="sidebar-footer">
+                <p class="sidebar-footer-name"><?php echo htmlspecialchars($user_info['name']); ?></p>
+                <p class="sidebar-footer-dept"><?php echo htmlspecialchars($user_info['department'] ?: 'Teacher'); ?></p>
+            </div>
         </aside>
         
         <!-- Main Content -->

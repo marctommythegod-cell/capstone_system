@@ -10,6 +10,7 @@ if ($_SESSION['user_role'] !== 'admin') {
 }
 
 $admin_name = getUserName($pdo, $_SESSION['user_id']);
+$user_info = getUserInfo($pdo, $_SESSION['user_id']);
 
 // Fetch all drop history
 $stmt = $pdo->prepare('
@@ -64,7 +65,8 @@ $message = getMessage();
             </nav>
             
             <div class="sidebar-footer">
-                <p>Welcome, <strong><?php echo htmlspecialchars($admin_name); ?></strong></p>
+                <p class="sidebar-footer-name"><?php echo htmlspecialchars($user_info['name']); ?></p>
+                <p class="sidebar-footer-dept"><?php echo htmlspecialchars($user_info['department'] ?: 'Administrator'); ?></p>
             </div>
         </aside>
         
@@ -86,9 +88,22 @@ $message = getMessage();
                 
                 <!-- Live Search -->
                 <section class="section">
-                    <div class="form-group" style="max-width: 400px; margin-bottom: 0;">
-                        <label for="liveSearch">Search by Student ID, Name, Subject, or Teacher</label>
-                        <input type="text" id="liveSearch" data-live-filter="historyTable" placeholder="Type to filter..." style="width: 100%;">
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;">
+                        <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
+                            <label for="liveSearch">Search by Student ID, Name, Subject, or Teacher</label>
+                            <input type="text" id="liveSearch" data-live-filter="historyTable" placeholder="Type to filter..." style="width: 100%;">
+                        </div>
+                        <div class="form-group" style="min-width: 160px; margin-bottom: 0;">
+                            <label for="filterFromDate">From Date</label>
+                            <input type="date" id="filterFromDate" style="width: 100%;">
+                        </div>
+                        <div class="form-group" style="min-width: 160px; margin-bottom: 0;">
+                            <label for="filterToDate">To Date</label>
+                            <input type="date" id="filterToDate" style="width: 100%;">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <button type="button" class="btn btn-secondary" onclick="document.getElementById('liveSearch').value=''; document.getElementById('filterFromDate').value=''; document.getElementById('filterToDate').value=''; filterHistoryTable();">Clear</button>
+                        </div>
                     </div>
                 </section>
                 
@@ -138,5 +153,51 @@ $message = getMessage();
     </div>
 
     <script src="/CLASS_CARD_DROPPING_SYSTEM/js/functions.js"></script>
+    <script>
+        function filterHistoryTable() {
+            var search = document.getElementById('liveSearch').value.toLowerCase().trim();
+            var fromDate = document.getElementById('filterFromDate').value;
+            var toDate = document.getElementById('filterToDate').value;
+            var table = document.getElementById('historyTable');
+            if (!table) return;
+            var rows = table.querySelector('tbody').querySelectorAll('tr');
+            var visibleCount = 0;
+
+            rows.forEach(function(row) {
+                var cells = row.querySelectorAll('td');
+                var textMatch = false;
+                cells.forEach(function(cell) {
+                    if (cell.textContent.toLowerCase().includes(search)) textMatch = true;
+                });
+
+                // Date filter: column index 5 is "Drop Date"
+                var dateMatch = true;
+                if (fromDate || toDate) {
+                    var dateCell = cells[5] ? cells[5].textContent.trim() : '';
+                    var rowDate = new Date(dateCell);
+                    if (isNaN(rowDate.getTime())) {
+                        dateMatch = false;
+                    } else {
+                        var rowDateStr = rowDate.toISOString().split('T')[0];
+                        if (fromDate && rowDateStr < fromDate) dateMatch = false;
+                        if (toDate && rowDateStr > toDate) dateMatch = false;
+                    }
+                }
+
+                var show = textMatch && dateMatch;
+                row.style.display = show ? '' : 'none';
+                if (show) visibleCount++;
+            });
+
+            var countEl = document.getElementById('historyTable-count');
+            if (countEl) countEl.textContent = visibleCount;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('liveSearch').addEventListener('input', filterHistoryTable);
+            document.getElementById('filterFromDate').addEventListener('input', filterHistoryTable);
+            document.getElementById('filterToDate').addEventListener('input', filterHistoryTable);
+        });
+    </script>
 </body>
 </html>

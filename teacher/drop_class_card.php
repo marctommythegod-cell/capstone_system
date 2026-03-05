@@ -12,6 +12,7 @@ if ($_SESSION['user_role'] !== 'teacher') {
 
 $user_id = $_SESSION['user_id'];
 $teacher_name = getUserName($pdo, $user_id);
+$user_info = getUserInfo($pdo, $user_id);
 
 // Fetch all students
 $stmt = $pdo->prepare('SELECT id, student_id, name, course, year FROM students ORDER BY name');
@@ -57,6 +58,11 @@ $message = getMessage();
                     <span>Logout</span>
                 </a>
             </nav>
+
+            <div class="sidebar-footer">
+                <p class="sidebar-footer-name"><?php echo htmlspecialchars($user_info['name']); ?></p>
+                <p class="sidebar-footer-dept"><?php echo htmlspecialchars($user_info['department'] ?: 'Teacher'); ?></p>
+            </div>
         </aside>
         
         <!-- Main Content -->

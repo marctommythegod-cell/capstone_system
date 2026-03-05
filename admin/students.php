@@ -10,6 +10,7 @@ if ($_SESSION['user_role'] !== 'admin') {
 }
 
 $admin_name = getUserName($pdo, $_SESSION['user_id']);
+$user_info = getUserInfo($pdo, $_SESSION['user_id']);
 
 // Handle student registration
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
@@ -421,7 +422,8 @@ $message = getMessage();
             </nav>
 
             <div class="sidebar-footer">
-                <p>Welcome, <strong><?php echo htmlspecialchars($admin_name); ?></strong></p>
+                <p class="sidebar-footer-name"><?php echo htmlspecialchars($user_info['name']); ?></p>
+                <p class="sidebar-footer-dept"><?php echo htmlspecialchars($user_info['department'] ?: 'Administrator'); ?></p>
             </div>
         </aside>
 
@@ -444,7 +446,7 @@ $message = getMessage();
                 <!-- Action Buttons -->
                 <div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
                     <button type="button" class="btn btn-primary" onclick="openRegisterModal()">Register Student</button>
-                    <button type="button" class="btn btn-success" onclick="openImportModal()">📥 Import from CSV/Excel</button>
+                    <button type="button" class="btn btn-success" onclick="openImportModal()">Import from CSV/Excel</button>
                 </div>
 
                 <!-- Register Modal -->
@@ -788,12 +790,12 @@ $message = getMessage();
                 <div id="importModal" class="modal" style="display: none;">
                     <div class="modal-content" style="max-width: 950px; max-height: 90vh; overflow-y: auto;">
                         <div class="modal-header">
-                            <h2>📥 Import Students from CSV / Excel</h2>
+                            <h2>Import Students from CSV / Excel</h2>
                             <button type="button" class="modal-close" onclick="closeImportModal()">&times;</button>
                         </div>
                         <div class="modal-body" style="padding: 20px;">
                             <div class="import-info-box">
-                                <p><strong>📋 Instructions:</strong></p>
+                                <p><strong>Instructions:</strong></p>
                                 <ol style="margin: 8px 0 0 20px; line-height: 1.8;">
                                     <li>Download the CSV template and fill in the student data</li>
                                     <li>Save as <strong>.csv</strong> or <strong>.xlsx</strong> format</li>
@@ -803,12 +805,12 @@ $message = getMessage();
                                 <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
                                     <strong>Required columns:</strong> Student ID (8 digits), Last Name, First Name, Middle Name, Address, Email, Guardian Name, Guardian Email, Course, Year (1-4)
                                 </p>
-                                <button type="button" class="btn btn-secondary btn-sm" onclick="downloadStudentTemplate()" style="margin-top: 10px;">📄 Download CSV Template</button>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="downloadStudentTemplate()" style="margin-top: 10px;">Download CSV Template</button>
                             </div>
 
                             <div class="import-dropzone" id="studentDropzone" onclick="document.getElementById('importFileStudent').click()">
                                 <div class="dropzone-content">
-                                    <div class="dropzone-icon">📁</div>
+                                    <div class="dropzone-icon"></div>
                                     <p><strong>Click to browse</strong> or drag & drop your file here</p>
                                     <p class="dropzone-hint">Accepts .csv, .xlsx, .xls files</p>
                                 </div>
@@ -817,7 +819,7 @@ $message = getMessage();
 
                             <div id="importPreviewStudent" style="display: none;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin: 15px 0 10px;">
-                                    <h3>📊 Data Preview <span id="previewCountStudent" style="font-weight: normal; font-size: 0.85em; color: #666;"></span></h3>
+                                    <h3>Data Preview <span id="previewCountStudent" style="font-weight: normal; font-size: 0.85em; color: #666;"></span></h3>
                                     <button type="button" class="btn btn-sm btn-secondary" onclick="clearImportStudent()">✕ Clear</button>
                                 </div>
                                 <div class="table-responsive" style="max-height: 350px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px;">
@@ -833,7 +835,7 @@ $message = getMessage();
                             <textarea name="csv_data" id="csvDataStudent" style="display:none"></textarea>
                             <div class="modal-footer" style="padding: 15px 20px; border-top: 1px solid #ddd; display: flex; gap: 10px; justify-content: flex-end;">
                                 <button type="button" class="btn btn-secondary" onclick="closeImportModal()">Cancel</button>
-                                <button type="submit" class="btn btn-success" id="importBtnStudent" style="display: none;">📥 Import Students</button>
+                                <button type="submit" class="btn btn-success" id="importBtnStudent" style="display: none;">Import Students</button>
                             </div>
                         </form>
                     </div>
@@ -920,7 +922,7 @@ $message = getMessage();
                         document.getElementById('previewCountStudent').textContent = '— ' + rows.length + ' record(s)' + (rows.length > 10 ? ' (showing first 10)' : '');
                         document.getElementById('importPreviewStudent').style.display = 'block';
                         document.getElementById('importBtnStudent').style.display = 'inline-block';
-                        document.getElementById('importBtnStudent').textContent = '📥 Import ' + rows.length + ' Student(s)';
+                        document.getElementById('importBtnStudent').textContent = 'Import ' + rows.length + ' Student(s)';
 
                         // Build CSV data for form submission
                         var headers = ['student_id','lastname','firstname','middlename','address','email','guardian_name','guardian_email','course','year'];
