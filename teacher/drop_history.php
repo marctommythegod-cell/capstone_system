@@ -16,7 +16,7 @@ $user_info = getUserInfo($pdo, $user_id);
 
 // Fetch all teacher's drops
 $query = '
-    SELECT ccd.*, s.name as student_name, s.student_id as student_id_number, u.name as teacher_name
+    SELECT ccd.*, s.name as student_name, s.student_id as student_id_number, s.course as student_course, s.status as student_status, u.name as teacher_name
     FROM class_card_drops ccd
     JOIN students s ON ccd.student_id = s.id
     JOIN users u ON ccd.teacher_id = u.id
@@ -122,11 +122,14 @@ $message = getMessage();
                                     <tr>
                                         <th>Student ID</th>
                                         <th>Student Name</th>
+                                        <th>Course</th>
                                         <th>Subject</th>
                                         <th>Drop Date & Time</th>
-                                        <th>Status</th>
-                                        <th>Remarks</th>
-                                        <th>Action</th>
+                                        <th>Retrieve Date & Time</th>
+                                        <th>Class Card Status</th>
+                                        <th>Student Status</th>
+                                        <th>Teacher Remarks</th>
+                                        <th>Admin Remarks</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -134,16 +137,14 @@ $message = getMessage();
                                         <tr>
                                             <td><?php echo htmlspecialchars($drop['student_id_number']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['student_name']); ?></td>
+                                            <td><?php echo htmlspecialchars($drop['student_course']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['subject_no'] . ' - ' . $drop['subject_name']); ?></td>
                                             <td><?php echo formatDate($drop['drop_date']); ?></td>
+                                            <td><?php echo $drop['retrieve_date'] ? formatDate($drop['retrieve_date']) : '-'; ?></td>
                                             <td><span class="status status-<?php echo strtolower($drop['status']); ?>"><?php echo htmlspecialchars($drop['status']); ?></span></td>
+                                            <td><span class="status status-<?php echo strtolower($drop['student_status']); ?>"><?php echo ucfirst(htmlspecialchars($drop['student_status'])); ?></span></td>
                                             <td><?php echo htmlspecialchars(substr($drop['remarks'], 0, 50)); ?></td>
-                                            <td>
-                                                <form method="POST" action="/CLASS_CARD_DROPPING_SYSTEM/includes/api.php?action=undo_drop" style="display: inline;" id="cancelDropForm<?php echo $drop['id']; ?>">
-                                                    <input type="hidden" name="drop_id" value="<?php echo $drop['id']; ?>">
-                                                    <button type="button" class="btn btn-sm btn-danger" onclick="showConfirmModal('Are you sure you want to cancel this drop? The student will not be notified.', function(){ document.getElementById('cancelDropForm<?php echo $drop['id']; ?>').submit(); })">Cancel</button>
-                                                </form>
-                                            </td>
+                                            <td><?php echo !empty($drop['undrop_remarks']) ? htmlspecialchars($drop['undrop_remarks']) : '-'; ?></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
@@ -174,10 +175,10 @@ $message = getMessage();
                     if (cell.textContent.toLowerCase().includes(search)) textMatch = true;
                 });
 
-                // Date filter: column index 3 is "Drop Date & Time"
+                // Date filter: column index 4 is "Drop Date & Time"
                 var dateMatch = true;
                 if (fromDate || toDate) {
-                    var dateCell = cells[3] ? cells[3].textContent.trim() : '';
+                    var dateCell = cells[4] ? cells[4].textContent.trim() : '';
                     var rowDate = new Date(dateCell);
                     if (isNaN(rowDate.getTime())) {
                         dateMatch = false;

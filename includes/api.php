@@ -153,6 +153,45 @@ if ($action === 'approve_drop') {
     redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php');
 }
 
+if ($action === 'cancel_drop') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php');
+    }
+    
+    if ($_SESSION['user_role'] !== 'teacher') {
+        setMessage('error', 'Unauthorized action.');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php');
+    }
+    
+    $teacher_id = $_SESSION['user_id'];
+    $drop_id = intval($_POST['drop_id'] ?? 0);
+    
+    if (!$drop_id) {
+        setMessage('error', 'Invalid drop record.');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php');
+    }
+    
+    try {
+        $stmt = $pdo->prepare('SELECT id FROM class_card_drops WHERE id = ? AND teacher_id = ? AND status = ?');
+        $stmt->execute([$drop_id, $teacher_id, 'Pending']);
+        $drop = $stmt->fetch();
+        
+        if (!$drop) {
+            setMessage('error', 'Drop request not found or cannot be cancelled.');
+            redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php');
+        }
+        
+        $stmt = $pdo->prepare('DELETE FROM class_card_drops WHERE id = ?');
+        $stmt->execute([$drop_id]);
+        
+        setMessage('success', 'Drop request has been cancelled successfully.');
+    } catch (Exception $e) {
+        setMessage('error', 'Error cancelling drop request: ' . $e->getMessage());
+    }
+    
+    redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php');
+}
+
 if ($action === 'undo_drop') {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php');

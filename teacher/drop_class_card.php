@@ -24,6 +24,18 @@ $stmt = $pdo->prepare('SELECT id, subject_no, subject_name FROM subjects ORDER B
 $stmt->execute();
 $subjects = $stmt->fetchAll();
 
+// Fetch recent drops (last 5)
+$stmt = $pdo->prepare('
+    SELECT ccd.*, s.name as student_name, s.student_id as student_id_number, s.course as student_course, s.status as student_status
+    FROM class_card_drops ccd
+    JOIN students s ON ccd.student_id = s.id
+    WHERE ccd.teacher_id = ?
+    ORDER BY ccd.drop_date DESC
+    LIMIT 5
+');
+$stmt->execute([$user_id]);
+$recent_drops = $stmt->fetchAll();
+
 $message = getMessage();
 ?>
 <!DOCTYPE html>
@@ -84,64 +96,138 @@ $message = getMessage();
                 <!-- Drop Form Section -->
                 <section class="section">
                     <h2>Drop Student Class Card</h2>
-                    <form method="POST" action="/CLASS_CARD_DROPPING_SYSTEM/includes/api.php?action=drop_class_card" class="drop-form">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="student_id">Select Student</label>
-                                <select id="student_id" name="student_id" required onchange="updateStudentInfo()">
-                                    <option value="">-- Select a Student --</option>
-                                    <?php foreach ($students as $student): ?>
-                                        <option value="<?php echo $student['id']; ?>" data-course="<?php echo htmlspecialchars($student['course']); ?>" data-year="<?php echo $student['year']; ?>">
-                                            <?php echo htmlspecialchars($student['student_id'] . ' - ' . $student['name']); ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="course">Course</label>
-                                <input type="text" id="course" name="course" readonly>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="year">Year</label>
-                                <input type="text" id="year" name="year" readonly>
-                            </div>
+                    <p style="margin-bottom: 15px; color: #666;">Click the button below to submit a class card drop request. All requests require admin approval.</p>
+                    <button type="button" class="btn btn-primary btn-large" onclick="openDropModal()">Drop Class Card</button>
+                </section>
+
+                <!-- Drop Class Card Modal -->
+                <div id="dropModal" class="drop-modal" style="display: none;">
+                    <div class="drop-modal-box">
+                        <div class="drop-modal-header">
+                            <h3>Drop Student Class Card</h3>
+                            <button type="button" class="drop-modal-close" onclick="closeDropModal()">&times;</button>
                         </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="subject_search">Search Subject (Code or Name)</label>
-                                <input type="text" id="subject_search" name="subject_search" placeholder="Search by subject code or name..." onkeyup="filterSubjects()">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="subject_id">Select Subject</label>
-                                <select id="subject_id" name="subject_id" required onchange="updateSubjectInfo()">
-                                    <option value="">-- Select a Subject --</option>
-                                    <?php foreach ($subjects as $subject): ?>
-                                        <option value="<?php echo htmlspecialchars($subject['subject_no']); ?>" data-name="<?php echo htmlspecialchars($subject['subject_name']); ?>" data-code="<?php echo htmlspecialchars($subject['subject_no']); ?>" data-full="<?php echo htmlspecialchars($subject['subject_no'] . ' - ' . $subject['subject_name']); ?>">
-                                            <?php echo htmlspecialchars($subject['subject_no'] . ' - ' . $subject['subject_name']); ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
+                        <div class="drop-modal-body">
+                            <form method="POST" action="/CLASS_CARD_DROPPING_SYSTEM/includes/api.php?action=drop_class_card" id="dropForm">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="student_id">Select Student</label>
+                                        <select id="student_id" name="student_id" required onchange="updateStudentInfo()">
+                                            <option value="">-- Select a Student --</option>
+                                            <?php foreach ($students as $student): ?>
+                                                <?php
+                                                    // Fetch status for each student
+                                                    $stmt_status = $pdo->prepare('SELECT status FROM students WHERE id = ?');
+                                                    $stmt_status->execute([$student['id']]);
+                                                    $status = $stmt_status->fetchColumn();
+                                                ?>
+                                                <option value="<?php echo $student['id']; ?>" data-course="<?php echo htmlspecialchars($student['course']); ?>" data-year="<?php echo $student['year']; ?>" <?php echo ($status === 'inactive') ? 'disabled style="color:#aaa;"' : ''; ?>>
+                                                    <?php echo htmlspecialchars($student['student_id'] . ' - ' . $student['name']); ?><?php if ($status === 'inactive') echo ' (Inactive)'; ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="course">Course</label>
+                                        <input type="text" id="course" name="course" readonly>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="year">Year</label>
+                                        <input type="text" id="year" name="year" readonly>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="subject_search">Search Subject (Code or Name)</label>
+                                        <input type="text" id="subject_search" name="subject_search" placeholder="Search by subject code or name..." onkeyup="filterSubjects()">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="subject_id">Select Subject</label>
+                                        <select id="subject_id" name="subject_id" required onchange="updateSubjectInfo()">
+                                            <option value="">-- Select a Subject --</option>
+                                            <?php foreach ($subjects as $subject): ?>
+                                                <option value="<?php echo htmlspecialchars($subject['subject_no']); ?>" data-name="<?php echo htmlspecialchars($subject['subject_name']); ?>" data-code="<?php echo htmlspecialchars($subject['subject_no']); ?>" data-full="<?php echo htmlspecialchars($subject['subject_no'] . ' - ' . $subject['subject_name']); ?>">
+                                                    <?php echo htmlspecialchars($subject['subject_no'] . ' - ' . $subject['subject_name']); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="remarks">Remarks</label>
+                                    <textarea id="remarks" name="remarks" rows="4" placeholder="Enter reason for dropping class card..."></textarea>
+                                </div>
+
+                                <div class="alert alert-info" style="margin: 15px 0 0;">
+                                    <strong>Note:</strong> All class card drop requests require approval from the admin before they are officially processed.
+                                </div>
+                            </form>
                         </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group full-width">
-                                <label for="remarks">Remarks</label>
-                                <textarea id="remarks" name="remarks" rows="4" placeholder="Enter reason for dropping class card..."></textarea>
-                            </div>
+                        <div class="drop-modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="closeDropModal()">Cancel</button>
+                            <button type="button" class="btn btn-primary" onclick="document.getElementById('dropForm').submit()">Submit Drop Request</button>
                         </div>
-                        
-                        <div class="form-row">
-                            <button type="submit" class="btn btn-primary">Request Drop (Requires Admin Approval)</button>
-                        </div>
-                    </form>
-                    <div class="alert alert-info" style="margin-top: 20px;">
-                        <strong>Note:</strong> All class card drop requests require approval from the admin before they are officially processed. You will be notified via email once your request has been approved.
                     </div>
+                </div>
+
+                <!-- Recent Class Card Drops Section -->
+                <section class="section">
+                    <h2>Recent Class Card Drops</h2>
+                    <?php if (count($recent_drops) > 0): ?>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Student ID</th>
+                                        <th>Student Name</th>
+                                        <th>Course</th>
+                                        <th>Subject</th>
+                                        <th>Drop Date & Time</th>
+                                        <th>Class Card Status</th>
+                                        <th>Student Status</th>
+                                        <th>Teacher Remarks</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($recent_drops as $drop): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($drop['student_id_number']); ?></td>
+                                            <td><?php echo htmlspecialchars($drop['student_name']); ?></td>
+                                            <td><?php echo htmlspecialchars($drop['student_course']); ?></td>
+                                            <td><?php echo htmlspecialchars($drop['subject_no'] . ' - ' . $drop['subject_name']); ?></td>
+                                            <td><?php echo formatDate($drop['drop_date']); ?></td>
+                                            <td><span class="status status-<?php echo strtolower($drop['status']); ?>"><?php echo htmlspecialchars($drop['status']); ?></span></td>
+                                            <td><span class="status status-<?php echo strtolower($drop['student_status']); ?>"><?php echo ucfirst(htmlspecialchars($drop['student_status'])); ?></span></td>
+                                            <td><?php echo htmlspecialchars(substr($drop['remarks'], 0, 50)); ?></td>
+                                            <td>
+                                                <?php if ($drop['status'] === 'Pending'): ?>
+                                                    <form method="POST" action="/CLASS_CARD_DROPPING_SYSTEM/includes/api.php?action=cancel_drop" style="display:inline;">
+                                                        <input type="hidden" name="drop_id" value="<?php echo $drop['id']; ?>">
+                                                        <button type="submit" class="btn btn-sm btn-cancel" onclick="return confirm('Are you sure you want to cancel this drop request?');">Cancel</button>
+                                                    </form>
+                                                <?php elseif ($drop['status'] === 'Dropped' || $drop['status'] === 'Undropped'): ?>
+                                                    <button class="btn btn-sm btn-cancel" style="opacity:0.6; cursor:not-allowed;" disabled>Cancel</button>
+                                                <?php else: ?>
+                                                    <span style="color: #aaa; font-style: italic;">—</span>
+                                                <?php endif; ?>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div style="text-align: center; margin-top: 15px;">
+                            <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php" class="btn btn-secondary">View All Drops</a>
+                        </div>
+                    <?php else: ?>
+                        <p class="no-data">No class cards dropped yet.</p>
+                    <?php endif; ?>
                 </section>
             </div>
         </main>
@@ -170,6 +256,26 @@ $message = getMessage();
                 }
             });
         }
+
+        function openDropModal() {
+            document.getElementById('dropModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDropModal() {
+            document.getElementById('dropModal').style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('dropModal').addEventListener('click', function(e) {
+            if (e.target === this) closeDropModal();
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeDropModal();
+        });
     </script>
 </body>
 </html>

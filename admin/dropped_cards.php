@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
 // Fetch pending drop requests
 $pending_query = '
-    SELECT ccd.*, s.name as student_name, s.student_id, u.name as teacher_name
+    SELECT ccd.*, s.name as student_name, s.student_id, s.course as student_course, u.name as teacher_name
     FROM class_card_drops ccd
     JOIN students s ON ccd.student_id = s.id
     JOIN users u ON ccd.teacher_id = u.id
@@ -171,11 +171,12 @@ $message = getMessage();
                                     <tr>
                                         <th>Student ID</th>
                                         <th>Student Name</th>
+                                        <th>Course</th>
                                         <th>Subject</th>
                                         <th>Teacher</th>
-                                        <th>Remarks</th>
                                         <th>Request Date & Time</th>
-                                        <th>Status</th>
+                                        <th>Class Card Status</th>
+                                        <th>Teacher Remarks</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -184,11 +185,12 @@ $message = getMessage();
                                         <tr>
                                             <td><?php echo htmlspecialchars($drop['student_id']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['student_name']); ?></td>
+                                            <td><?php echo htmlspecialchars($drop['student_course']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['subject_no'] . ' - ' . $drop['subject_name']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['teacher_name']); ?></td>
-                                            <td><?php echo htmlspecialchars(substr($drop['remarks'], 0, 50)); ?></td>
                                             <td><?php echo formatDate($drop['drop_date']); ?></td>
                                             <td><span class="status status-pending"><?php echo htmlspecialchars($drop['status']); ?></span></td>
+                                            <td><?php echo htmlspecialchars(substr($drop['remarks'], 0, 50)); ?></td>
                                             <td>
                                                 <button type="button" class="btn btn-sm btn-success" onclick="approveDrop(<?php echo $drop['id']; ?>)">Approve</button>
                                             </td>
@@ -214,9 +216,10 @@ $message = getMessage();
                                         <th>Student Name</th>
                                         <th>Subject</th>
                                         <th>Teacher</th>
-                                        <th>Remarks</th>
-                                        <th>Drop Date & Time</th>
-                                        <th>Status</th>
+                                        <th>Dropped Date & Time</th>
+                                        <th>Approved Date & Time</th>
+                                        <th>Class Card Status</th>
+                                        <th>Teacher Remarks</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -227,13 +230,14 @@ $message = getMessage();
                                             <td><?php echo htmlspecialchars($drop['student_name']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['subject_no'] . ' - ' . $drop['subject_name']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['teacher_name']); ?></td>
-                                            <td><?php echo htmlspecialchars(substr($drop['remarks'], 0, 30)); ?></td>
                                             <td><?php echo formatDate($drop['drop_date']); ?></td>
+                                            <td><?php echo $drop['approved_date'] ? formatDate($drop['approved_date']) : '-'; ?></td>
                                             <td>
                                                 <span class="status status-<?php echo strtolower($drop['status']); ?>">
                                                     <?php echo htmlspecialchars($drop['status']); ?>
                                                 </span>
                                             </td>
+                                            <td><?php echo htmlspecialchars(substr($drop['remarks'], 0, 30)); ?></td>
                                             <td>
                                                 <?php if ($drop['status'] === 'Dropped'): ?>
                                                     <form method="POST" style="display: inline;" id="undropForm<?php echo $drop['id']; ?>">
@@ -241,6 +245,8 @@ $message = getMessage();
                                                         <input type="hidden" name="drop_id" value="<?php echo $drop['id']; ?>">
                                                         <button type="button" class="btn btn-sm btn-danger" onclick="showUndropModal(<?php echo $drop['id']; ?>)">Undrop</button>
                                                     </form>
+                                                <?php elseif ($drop['status'] === 'Undropped'): ?>
+                                                    <button class="btn btn-sm btn-danger" style="opacity:0.6; cursor:not-allowed;" disabled>Undrop</button>
                                                 <?php else: ?>
                                                     <span style="color: #aaa; font-style: italic;">—</span>
                                                 <?php endif; ?>

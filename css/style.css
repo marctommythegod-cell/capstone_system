@@ -873,6 +873,116 @@ html, body {
     color: #ffffff;
 }
 
+.status-active {
+    background-color: #d1fae5;
+    color: #065f46;
+    border: 1px solid #6ee7b7;
+}
+
+.status-inactive {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+}
+
+.btn-cancel {
+    background-color: #dc2626;
+    color: #ffffff;
+    border: none;
+    padding: 5px 14px;
+    border-radius: 5px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-cancel:hover {
+    background-color: #b91c1c;
+}
+
+/* ===== DROP MODAL ===== */
+.drop-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(3px);
+}
+
+.drop-modal-box {
+    background: #fff;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 700px;
+    max-height: 90vh;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.drop-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #eee;
+    background: linear-gradient(135deg, var(--primary-color), #9b59b6);
+    color: #fff;
+}
+
+.drop-modal-header h3 {
+    font-size: 1.2em;
+    font-weight: 600;
+    margin: 0;
+}
+
+.drop-modal-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: #fff;
+    font-size: 1.5em;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    line-height: 1;
+}
+
+.drop-modal-close:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+.drop-modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.drop-modal-body .form-group {
+    margin-bottom: 16px;
+}
+
+.drop-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid #eee;
+    background: #f9fafb;
+}
+
 /* ===== UTILITIES ===== */
 .no-data {
     text-align: center;

@@ -29,7 +29,7 @@ $this_week = $stmt->fetch()['this_week'];
 
 // Get recent drops (last 5)
 $stmt = $pdo->prepare('
-    SELECT ccd.*, s.name as student_name
+    SELECT ccd.*, s.name as student_name, s.student_id as student_id_number, s.course as student_course, s.status as student_status
     FROM class_card_drops ccd
     JOIN students s ON ccd.student_id = s.id
     WHERE ccd.teacher_id = ?
@@ -136,19 +136,27 @@ $message = getMessage();
                             <table class="table">
                                 <thead>
                                     <tr>
+                                        <th>Student ID</th>
                                         <th>Student Name</th>
+                                        <th>Course</th>
                                         <th>Subject</th>
-                                        <th>Date & Time</th>
-                                        <th>Status</th>
+                                        <th>Drop Date & Time</th>
+                                        <th>Class Card Status</th>
+                                        <th>Student Status</th>
+                                        <th>Teacher Remarks</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php foreach ($recent_drops as $drop): ?>
                                         <tr>
+                                            <td><?php echo htmlspecialchars($drop['student_id_number']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['student_name']); ?></td>
+                                            <td><?php echo htmlspecialchars($drop['student_course']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['subject_no'] . ' - ' . $drop['subject_name']); ?></td>
                                             <td><?php echo formatDate($drop['drop_date']); ?></td>
                                             <td><span class="status status-<?php echo strtolower($drop['status']); ?>"><?php echo htmlspecialchars($drop['status']); ?></span></td>
+                                            <td><span class="status status-<?php echo strtolower($drop['student_status']); ?>"><?php echo ucfirst(htmlspecialchars($drop['student_status'])); ?></span></td>
+                                            <td><?php echo htmlspecialchars(substr($drop['remarks'], 0, 50)); ?></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>

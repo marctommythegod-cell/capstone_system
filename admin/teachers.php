@@ -785,7 +785,7 @@ $message = getMessage();
                                         <th>Email</th>
                                         <th>Address</th>
                                         <th>Department</th>
-                                        <th>Status</th>
+                                        <th>Teacher Status</th>
                                         <th>Registered</th>
                                         <th>Action</th>
                                     </tr>
@@ -809,7 +809,7 @@ $message = getMessage();
                                             <td><?php echo htmlspecialchars($teacher['email']); ?></td>
                                             <td><?php echo htmlspecialchars($teacher['address'] ?? ''); ?></td>
                                             <td><?php echo htmlspecialchars($teacher['department'] ?? ''); ?></td>
-                                            <td><span class="badge badge-<?php echo ($teacher['status'] === 'active') ? 'success' : 'danger'; ?>"><?php echo ucfirst($teacher['status'] ?? 'inactive'); ?></span></td>
+                                            <td><span class="status status-<?php echo ($teacher['status'] === 'active') ? 'active' : 'inactive'; ?>"><?php echo ucfirst($teacher['status'] ?? 'inactive'); ?></span></td>
                                             <td><?php echo formatDate($teacher['created_at']); ?></td>
                                             <td>
                                                 <button type="button" class="btn btn-sm btn-primary" onclick="openUpdateModal(

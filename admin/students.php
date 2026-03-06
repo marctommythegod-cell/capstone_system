@@ -985,7 +985,7 @@ $message = getMessage();
                                         <th>Guardian Email</th>
                                         <th>Course</th>
                                         <th>Year</th>
-                                        <th>Status</th>
+                                        <th>Student Status</th>
                                         <th>Registered</th>
                                         <th>Action</th>
                                     </tr>
@@ -1013,7 +1013,7 @@ $message = getMessage();
                                             <td><?php echo htmlspecialchars($student['course'] ?? ''); ?></td>
                                             <td><?php echo $student['year'] ?? ''; ?></td>
                                             <td><span
-                                                    class="badge badge-<?php echo ($student['status'] === 'active') ? 'success' : 'danger'; ?>"><?php echo ucfirst($student['status'] ?? 'inactive'); ?></span>
+                                                    class="status status-<?php echo ($student['status'] === 'active') ? 'active' : 'inactive'; ?>"><?php echo ucfirst($student['status'] ?? 'inactive'); ?></span>
                                             </td>
                                             <td><?php echo formatDate($student['created_at'] ?? ''); ?></td>
                                             <td>

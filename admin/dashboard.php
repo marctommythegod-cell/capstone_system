@@ -133,7 +133,7 @@ $message = getMessage();
                                         <th>Subject</th>
                                         <th>Teacher</th>
                                         <th>Date & Time</th>
-                                        <th>Status</th>
+                                        <th>Class Card Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
