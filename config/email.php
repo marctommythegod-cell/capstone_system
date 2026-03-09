@@ -1,17 +1,17 @@
 <?php
-// config/email.php - Email Configuration
 
 return [
-    'smtp_host' => 'smtp.gmail.com',
-    'smtp_port' => 587,
-    'smtp_secure' => 'tls',
-    'smtp_auth' => true,
-    'from_email' => 'fmarctommy@gmail.com',
-    'from_name' => 'PhilCST Class Card System',
-    'admin_email' => 'fmarctommy@gmail.com',
-    'username' => 'fmarctommy@gmail.com',
-    'password' => 'ijsd xjwq paub civm', // Gmail App Password
-    'no_reply_email' => 'noreply@philcst.edu.ph'
-];
-?>
+    'smtp_host' => $_ENV['SMTP_HOST'],
+    'smtp_port' => $_ENV['SMTP_PORT'],
+    'smtp_secure' => $_ENV['SMTP_SECURE'],
+    'smtp_auth' => $_ENV['SMTP_AUTH'],
 
+    'from_email' => $_ENV['MAIL_FROM_EMAIL'],
+    'from_name' => $_ENV['MAIL_FROM_NAME'],
+    'admin_email' => $_ENV['MAIL_ADMIN_EMAIL'],
+
+    'username' => $_ENV['MAIL_USERNAME'],
+    'password' => $_ENV['MAIL_PASSWORD'],
+
+    'no_reply_email' => $_ENV['MAIL_NO_REPLY']
+];
