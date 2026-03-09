@@ -2,9 +2,9 @@
 
 return [
     'smtp_host' => $_ENV['SMTP_HOST'],
-    'smtp_port' => $_ENV['SMTP_PORT'],
+    'smtp_port' => (int) $_ENV['SMTP_PORT'],
     'smtp_secure' => $_ENV['SMTP_SECURE'],
-    'smtp_auth' => $_ENV['SMTP_AUTH'],
+    'smtp_auth' => filter_var($_ENV['SMTP_AUTH'], FILTER_VALIDATE_BOOLEAN),
 
     'from_email' => $_ENV['MAIL_FROM_EMAIL'],
     'from_name' => $_ENV['MAIL_FROM_NAME'],
