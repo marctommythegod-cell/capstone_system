@@ -23,7 +23,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $address = trim($_POST['address'] ?? '');
         $email = trim($_POST['email'] ?? '');
         $guardian_name = trim($_POST['guardian_name'] ?? '');
-        $guardian_email = trim($_POST['guardian_email'] ?? '');
         $course = trim($_POST['course'] ?? '');
         $year = intval($_POST['year'] ?? 0);
 
@@ -87,14 +86,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $errors[] = 'Guardian name must not exceed 100 characters.';
         }
 
-        if (empty($guardian_email)) {
-            $errors[] = 'Guardian email is required.';
-        } elseif (!filter_var($guardian_email, FILTER_VALIDATE_EMAIL)) {
-            $errors[] = 'Please enter a valid guardian email address.';
-        } elseif (strlen($guardian_email) > 100) {
-            $errors[] = 'Guardian email must not exceed 100 characters.';
-        }
-
         if (empty($course)) {
             $errors[] = 'Course is required.';
         } elseif (strlen($course) > 100) {
@@ -129,8 +120,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             setMessage('error', implode('<br>', $errors));
         } else {
             try {
-                $stmt = $pdo->prepare('INSERT INTO students (student_id, name, email, address, guardian_name, guardian_email, course, year) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-                $stmt->execute([$student_id, $name, $email, $address, $guardian_name, $guardian_email, $course, $year]);
+                $stmt = $pdo->prepare('INSERT INTO students (student_id, name, email, address, guardian_name, course, year) VALUES (?, ?, ?, ?, ?, ?, ?)');
+                $stmt->execute([$student_id, $name, $email, $address, $guardian_name, $course, $year]);
                 setMessage('success', 'Student added successfully.');
             } catch (Exception $e) {
                 setMessage('error', 'Error adding student: ' . $e->getMessage());
@@ -147,7 +138,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $address = trim($_POST['address'] ?? '');
         $email = trim($_POST['email'] ?? '');
         $guardian_name = trim($_POST['guardian_name'] ?? '');
-        $guardian_email = trim($_POST['guardian_email'] ?? '');
         $course = trim($_POST['course'] ?? '');
         $year = intval($_POST['year'] ?? 0);
         $status = trim($_POST['status'] ?? '');
@@ -215,14 +205,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $errors[] = 'Guardian name must not exceed 100 characters.';
         }
 
-        if (empty($guardian_email)) {
-            $errors[] = 'Guardian email is required.';
-        } elseif (!filter_var($guardian_email, FILTER_VALIDATE_EMAIL)) {
-            $errors[] = 'Please enter a valid guardian email address.';
-        } elseif (strlen($guardian_email) > 100) {
-            $errors[] = 'Guardian email must not exceed 100 characters.';
-        }
-
         if (empty($course)) {
             $errors[] = 'Course is required.';
         } elseif (strlen($course) > 100) {
@@ -243,8 +225,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             setMessage('error', implode('<br>', $errors));
         } else {
             try {
-                $stmt = $pdo->prepare('UPDATE students SET student_id = ?, name = ?, email = ?, address = ?, guardian_name = ?, guardian_email = ?, course = ?, year = ?, status = ? WHERE id = ?');
-                $stmt->execute([$student_id, $name, $email, $address, $guardian_name, $guardian_email, $course, $year, $status, $id]);
+                $stmt = $pdo->prepare('UPDATE students SET student_id = ?, name = ?, email = ?, address = ?, guardian_name = ?, course = ?, year = ?, status = ? WHERE id = ?');
+                $stmt->execute([$student_id, $name, $email, $address, $guardian_name, $course, $year, $status, $id]);
                 setMessage('success', 'Student updated successfully.');
             } catch (Exception $e) {
                 setMessage('error', 'Error updating student: ' . $e->getMessage());
@@ -295,9 +277,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
         foreach ($lines as $index => $line) {
             $row = str_getcsv($line);
-            if (count($row) < 10) {
+            if (count($row) < 9) {
                 $skipped++;
-                $import_errors[] = "Row " . ($index + 2) . ": Incomplete data (expected 10 columns, got " . count($row) . ").";
+                $import_errors[] = "Row " . ($index + 2) . ": Incomplete data (expected 9 columns, got " . count($row) . ").";
                 continue;
             }
 
@@ -309,9 +291,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $address = trim($row[4]);
             $email = trim($row[5]);
             $guardian_name = trim($row[6]);
-            $guardian_email = trim($row[7]);
-            $course = trim($row[8]);
-            $year = intval($row[9]);
+            $course = trim($row[7]);
+            $year = intval($row[8]);
 
             // Basic validation
             if (empty($student_id) || empty($lastname) || empty($firstname) || empty($email)) {
@@ -348,8 +329,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
 
             try {
-                $stmt = $pdo->prepare('INSERT INTO students (student_id, name, email, address, guardian_name, guardian_email, course, year) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-                $stmt->execute([$student_id, $name, $email, $address, $guardian_name, $guardian_email, $course, $year]);
+                $stmt = $pdo->prepare('INSERT INTO students (student_id, name, email, address, guardian_name, course, year) VALUES (?, ?, ?, ?, ?, ?, ?)');
+                $stmt->execute([$student_id, $name, $email, $address, $guardian_name, $course, $year]);
                 $imported++;
             } catch (Exception $e) {
                 $skipped++;
@@ -499,12 +480,6 @@ $message = getMessage();
                                     <label for="guardian_name">Guardian Name</label>
                                     <input type="text" id="guardian_name" name="guardian_name" required
                                         placeholder="Enter guardian name">
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="guardian_email">Guardian Email</label>
-                                    <input type="email" id="guardian_email" name="guardian_email" required
-                                        placeholder="example@gmail.com">
                                 </div>
 
                                 <div class="form-group" style="grid-column: 1 / -1;">
@@ -682,12 +657,6 @@ $message = getMessage();
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="updateGuardianEmail">Guardian Email</label>
-                                    <input type="email" id="updateGuardianEmail" name="guardian_email" required
-                                        placeholder="example@gmail.com">
-                                </div>
-
-                                <div class="form-group">
                                     <label for="updateCourse">Course</label>
                                     <select id="updateCourse" name="course" required>
                                         <option value="">-- Select Course --</option>
@@ -860,9 +829,9 @@ $message = getMessage();
                     }
 
                     function downloadStudentTemplate() {
-                        var csv = 'student_id,lastname,firstname,middlename,address,email,guardian_name,guardian_email,course,year\n';
-                        csv += '00012345,Dela Cruz,Juan,Santos,"123 Main St, Manila",juan@gmail.com,Maria Dela Cruz,maria@gmail.com,BS in Information Technology (BSIT),1\n';
-                        csv += '00067890,Garcia,Jose,Reyes,"456 Oak Ave, Quezon City",jose@gmail.com,Rosa Garcia,rosa@gmail.com,BS in Computer Science (BSCS),2\n';
+                        var csv = 'student_id,lastname,firstname,middlename,address,email,guardian_name,course,year\n';
+                        csv += '00012345,Dela Cruz,Juan,Santos,"123 Main St, Manila",juan@gmail.com,Maria Dela Cruz,BS in Information Technology (BSIT),1\n';
+                        csv += '00067890,Garcia,Jose,Reyes,"456 Oak Ave, Quezon City",jose@gmail.com,Rosa Garcia,BS in Computer Science (BSCS),2\n';
                         downloadCSV(csv, 'student_import_template.csv');
                     }
 
@@ -900,7 +869,7 @@ $message = getMessage();
                     }
 
                     function showStudentPreview(rows) {
-                        var displayHeaders = ['Student ID', 'Last Name', 'First Name', 'Middle Name', 'Address', 'Email', 'Guardian Name', 'Guardian Email', 'Course', 'Year'];
+                        var displayHeaders = ['Student ID', 'Last Name', 'First Name', 'Middle Name', 'Address', 'Email', 'Guardian Name', 'Course', 'Year'];
                         var thead = document.querySelector('#previewTableStudent thead');
                         var tbody = document.querySelector('#previewTableStudent tbody');
 
@@ -910,7 +879,7 @@ $message = getMessage();
                         var tbodyHtml = '';
                         for (var i = 0; i < maxPreview; i++) {
                             tbodyHtml += '<tr>';
-                            for (var j = 0; j < 10; j++) {
+                            for (var j = 0; j < 9; j++) {
                                 var val = rows[i][j] !== undefined ? String(rows[i][j]) : '';
                                 if (val.length > 40) val = val.substring(0, 40) + '...';
                                 tbodyHtml += '<td>' + val.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</td>';
@@ -925,11 +894,11 @@ $message = getMessage();
                         document.getElementById('importBtnStudent').textContent = 'Import ' + rows.length + ' Student(s)';
 
                         // Build CSV data for form submission
-                        var headers = ['student_id','lastname','firstname','middlename','address','email','guardian_name','guardian_email','course','year'];
+                        var headers = ['student_id','lastname','firstname','middlename','address','email','guardian_name','course','year'];
                         var csvLines = [headers.join(',')];
                         rows.forEach(function(row) {
                             var csvRow = [];
-                            for (var j = 0; j < 10; j++) {
+                            for (var j = 0; j < 9; j++) {
                                 var val = row[j] !== undefined ? String(row[j]) : '';
                                 if (val.indexOf(',') !== -1 || val.indexOf('"') !== -1 || val.indexOf('\n') !== -1) {
                                     val = '"' + val.replace(/"/g, '""') + '"';
@@ -982,7 +951,6 @@ $message = getMessage();
                                         <th>Email</th>
                                         <th>Address</th>
                                         <th>Guardian Name</th>
-                                        <th>Guardian Email</th>
                                         <th>Course</th>
                                         <th>Year</th>
                                         <th>Student Status</th>
@@ -1009,7 +977,6 @@ $message = getMessage();
                                             <td><?php echo htmlspecialchars($student['email'] ?? ''); ?></td>
                                             <td><?php echo htmlspecialchars($student['address'] ?? ''); ?></td>
                                             <td><?php echo htmlspecialchars($student['guardian_name'] ?? ''); ?></td>
-                                            <td><?php echo htmlspecialchars($student['guardian_email'] ?? ''); ?></td>
                                             <td><?php echo htmlspecialchars($student['course'] ?? ''); ?></td>
                                             <td><?php echo $student['year'] ?? ''; ?></td>
                                             <td><span
@@ -1019,7 +986,7 @@ $message = getMessage();
                                             <td>
                                                 <button type="button" class="btn btn-sm btn-primary"
                                                     onclick="openUpdateModal(<?php echo $student['id']; ?>, '<?php echo htmlspecialchars($student['student_id']); ?>', '<?php $nameParts = explode(', ', $student['name']);
-                                                          echo htmlspecialchars(trim($nameParts[0] ?? '')); ?>', '<?php echo htmlspecialchars(trim($nameParts[1] ?? '')); ?>', '<?php echo htmlspecialchars(trim($nameParts[2] ?? '')); ?>', '<?php echo htmlspecialchars($student['address'] ?? ''); ?>', '<?php echo htmlspecialchars($student['email']); ?>', '<?php echo htmlspecialchars($student['guardian_name'] ?? ''); ?>', '<?php echo htmlspecialchars($student['guardian_email'] ?? ''); ?>', '<?php echo htmlspecialchars($student['course']); ?>', <?php echo $student['year']; ?>, '<?php echo htmlspecialchars($student['status'] ?? 'inactive'); ?>')">Update</button>
+                                                          echo htmlspecialchars(trim($nameParts[0] ?? '')); ?>', '<?php echo htmlspecialchars(trim($nameParts[1] ?? '')); ?>', '<?php echo htmlspecialchars(trim($nameParts[2] ?? '')); ?>', '<?php echo htmlspecialchars($student['address'] ?? ''); ?>', '<?php echo htmlspecialchars($student['email']); ?>', '<?php echo htmlspecialchars($student['guardian_name'] ?? ''); ?>', '<?php echo htmlspecialchars($student['course']); ?>', <?php echo $student['year']; ?>, '<?php echo htmlspecialchars($student['status'] ?? 'inactive'); ?>')">Update</button>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>

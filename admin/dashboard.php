@@ -26,17 +26,18 @@ $stmt = $pdo->prepare('SELECT COUNT(*) as total FROM users WHERE role = "teacher
 $stmt->execute();
 $total_teachers = $stmt->fetch()['total'];
 
-// Recent drops
+// Approved dropped cards
 $stmt = $pdo->prepare('
     SELECT ccd.*, s.name as student_name, s.student_id, u.name as teacher_name
     FROM class_card_drops ccd
     JOIN students s ON ccd.student_id = s.id
     JOIN users u ON ccd.teacher_id = u.id
+    WHERE ccd.status IN ("Dropped", "Undropped")
     ORDER BY ccd.drop_date DESC
     LIMIT 10
 ');
 $stmt->execute();
-$recent_drops = $stmt->fetchAll();
+$approved_drops = $stmt->fetchAll();
 
 $message = getMessage();
 ?>
@@ -120,10 +121,10 @@ $message = getMessage();
                     </div>
                 </section>
                 
-                <!-- Recent Drops Section -->
+                <!-- Approved Dropped Cards Section -->
                 <section class="section">
-                    <h2>Recent Class Card Drops</h2>
-                    <?php if (count($recent_drops) > 0): ?>
+                    <h2>Approved Dropped Cards</h2>
+                    <?php if (count($approved_drops) > 0): ?>
                         <div class="table-responsive">
                             <table class="table">
                                 <thead>
@@ -132,26 +133,34 @@ $message = getMessage();
                                         <th>Student Name</th>
                                         <th>Subject</th>
                                         <th>Teacher</th>
-                                        <th>Date & Time</th>
+                                        <th>Dropped Date & Time</th>
+                                        <th>Approved Date & Time</th>
                                         <th>Class Card Status</th>
+                                        <th>Teacher Remarks</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($recent_drops as $drop): ?>
+                                    <?php foreach ($approved_drops as $drop): ?>
                                         <tr>
                                             <td><?php echo htmlspecialchars($drop['student_id']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['student_name']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['subject_no'] . ' - ' . $drop['subject_name']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['teacher_name']); ?></td>
                                             <td><?php echo formatDate($drop['drop_date']); ?></td>
-                                            <td><span class="status status-<?php echo strtolower($drop['status']); ?>"><?php echo htmlspecialchars($drop['status']); ?></span></td>
+                                            <td><?php echo $drop['approved_date'] ? formatDate($drop['approved_date']) : '-'; ?></td>
+                                            <td>
+                                                <span class="status status-<?php echo strtolower($drop['status']); ?>">
+                                                    <?php echo htmlspecialchars($drop['status']); ?>
+                                                </span>
+                                            </td>
+                                            <td><?php echo htmlspecialchars(substr($drop['remarks'], 0, 50)); ?></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
                             </table>
                         </div>
                     <?php else: ?>
-                        <p class="no-data">No class cards dropped yet.</p>
+                        <p class="no-data">No approved dropped cards yet.</p>
                     <?php endif; ?>
                 </section>
             </div>
