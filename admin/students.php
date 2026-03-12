@@ -221,6 +221,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $errors[] = 'Invalid status.';
         }
 
+        // Check for duplicate student ID (excluding current record)
+        if (empty($errors)) {
+            $stmt = $pdo->prepare('SELECT id FROM students WHERE student_id = ? AND id != ?');
+            $stmt->execute([$student_id, $id]);
+            if ($stmt->fetch()) {
+                $errors[] = 'This student ID is already registered by another student. Please use a different ID.';
+            }
+        }
+
+        // Check for duplicate email (excluding current record)
+        if (empty($errors)) {
+            $stmt = $pdo->prepare('SELECT id FROM students WHERE email = ? AND id != ?');
+            $stmt->execute([$email, $id]);
+            if ($stmt->fetch()) {
+                $errors[] = 'This email is already registered by another student. Please use a different email.';
+            }
+        }
+
         if (!empty($errors)) {
             setMessage('error', implode('<br>', $errors));
         } else {
@@ -613,7 +631,7 @@ $message = getMessage();
                         <form method="POST" id="updateForm">
                             <input type="hidden" name="action" value="update">
                             <input type="hidden" name="id" id="updateStudentId" value="">
-                            <div class="modal-body" style="padding: 20px;">
+                            <div class="modal-body" style="padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                                 <div class="form-group">
                                     <label for="updateStudentIdField">Student ID</label>
                                     <input type="text" id="updateStudentIdField" name="student_id" required
@@ -638,7 +656,7 @@ $message = getMessage();
                                         placeholder="Enter middle name">
                                 </div>
 
-                                <div class="form-group">
+                                <div class="form-group" style="grid-column: 1 / -1;">
                                     <label for="updateAddress">Complete Address</label>
                                     <textarea id="updateAddress" name="address" required
                                         placeholder="Enter complete address" rows="3"></textarea>
@@ -657,6 +675,12 @@ $message = getMessage();
                                 </div>
 
                                 <div class="form-group">
+                                    <label for="updateGuardianEmail">Guardian Email</label>
+                                    <input type="email" id="updateGuardianEmail" name="guardian_email"
+                                        placeholder="Enter guardian email">
+                                </div>
+
+                                <div class="form-group" style="grid-column: 1 / -1;">
                                     <label for="updateCourse">Course</label>
                                     <select id="updateCourse" name="course" required>
                                         <option value="">-- Select Course --</option>
@@ -986,7 +1010,7 @@ $message = getMessage();
                                             <td>
                                                 <button type="button" class="btn btn-sm btn-primary"
                                                     onclick="openUpdateModal(<?php echo $student['id']; ?>, '<?php echo htmlspecialchars($student['student_id']); ?>', '<?php $nameParts = explode(', ', $student['name']);
-                                                          echo htmlspecialchars(trim($nameParts[0] ?? '')); ?>', '<?php echo htmlspecialchars(trim($nameParts[1] ?? '')); ?>', '<?php echo htmlspecialchars(trim($nameParts[2] ?? '')); ?>', '<?php echo htmlspecialchars($student['address'] ?? ''); ?>', '<?php echo htmlspecialchars($student['email']); ?>', '<?php echo htmlspecialchars($student['guardian_name'] ?? ''); ?>', '<?php echo htmlspecialchars($student['course']); ?>', <?php echo $student['year']; ?>, '<?php echo htmlspecialchars($student['status'] ?? 'inactive'); ?>')">Update</button>
+                                                          echo htmlspecialchars(trim($nameParts[0] ?? '')); ?>', '<?php echo htmlspecialchars(trim($nameParts[1] ?? '')); ?>', '<?php echo htmlspecialchars(trim($nameParts[2] ?? '')); ?>', '<?php echo htmlspecialchars($student['address'] ?? ''); ?>', '<?php echo htmlspecialchars($student['email']); ?>', '<?php echo htmlspecialchars($student['guardian_name'] ?? ''); ?>', '<?php echo htmlspecialchars($student['guardian_email'] ?? ''); ?>', '<?php echo htmlspecialchars($student['course']); ?>', <?php echo $student['year']; ?>, '<?php echo htmlspecialchars($student['status'] ?? 'inactive'); ?>')">Update</button>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>

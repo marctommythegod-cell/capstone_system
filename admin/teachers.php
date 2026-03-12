@@ -508,7 +508,7 @@ $message = getMessage();
                         <form method="POST" id="updateForm">
                             <input type="hidden" name="action" value="update">
                             <input type="hidden" name="id" id="updateId" value="">
-                            <div class="modal-body" style="padding: 20px;">
+                            <div class="modal-body" style="padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                                 <div class="form-group">
                                     <label for="updateTeacherId">Teacher ID</label>
                                     <input type="text" id="updateTeacherId" name="teacher_id" required placeholder="Enter teacher ID">
@@ -525,7 +525,7 @@ $message = getMessage();
                                     <label for="updateMiddlename">Middle Name</label>
                                     <input type="text" id="updateMiddlename" name="middlename" placeholder="Enter middle name">
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group" style="grid-column: 1 / -1;">
                                     <label for="updateAddress">Complete Address</label>
                                     <textarea id="updateAddress" name="address" required placeholder="Enter complete address" rows="3"></textarea>
                                 </div>

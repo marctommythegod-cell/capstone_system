@@ -14,7 +14,7 @@ $user_info = getUserInfo($pdo, $_SESSION['user_id']);
 
 // Fetch all drop history
 $stmt = $pdo->prepare('
-    SELECT ccd.*, s.student_id, s.name as student_name, s.course as student_course, s.status as student_status, u.name as teacher_name
+    SELECT ccd.*, s.student_id, s.name as student_name, s.guardian_name, s.course as student_course, s.status as student_status, u.name as teacher_name
     FROM class_card_drops ccd
     JOIN students s ON ccd.student_id = s.id
     JOIN users u ON ccd.teacher_id = u.id
@@ -118,6 +118,7 @@ $message = getMessage();
                                         <tr>
                                             <th>Student ID</th>
                                             <th>Student Name</th>
+                                            <th>Guardian Name</th>
                                             <th>Course</th>
                                             <th>Subject</th>
                                             <th>Teacher</th>
@@ -134,6 +135,7 @@ $message = getMessage();
                                             <tr>
                                                 <td><?php echo htmlspecialchars($record['student_id']); ?></td>
                                                 <td><?php echo htmlspecialchars($record['student_name']); ?></td>
+                                                <td><?php echo htmlspecialchars($record['guardian_name'] ?? ''); ?></td>
                                                 <td><?php echo htmlspecialchars($record['student_course']); ?></td>
                                                 <td><?php echo htmlspecialchars($record['subject_no'] . ' - ' . $record['subject_name']); ?></td>
                                                 <td><?php echo htmlspecialchars($record['teacher_name']); ?></td>

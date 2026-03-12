@@ -28,7 +28,7 @@ $total_teachers = $stmt->fetch()['total'];
 
 // Approved dropped cards
 $stmt = $pdo->prepare('
-    SELECT ccd.*, s.name as student_name, s.student_id, u.name as teacher_name
+    SELECT ccd.*, s.name as student_name, s.guardian_name, s.student_id, u.name as teacher_name
     FROM class_card_drops ccd
     JOIN students s ON ccd.student_id = s.id
     JOIN users u ON ccd.teacher_id = u.id
@@ -131,6 +131,7 @@ $message = getMessage();
                                     <tr>
                                         <th>Student ID</th>
                                         <th>Student Name</th>
+                                        <th>Guardian Name</th>
                                         <th>Subject</th>
                                         <th>Teacher</th>
                                         <th>Dropped Date & Time</th>
@@ -144,6 +145,7 @@ $message = getMessage();
                                         <tr>
                                             <td><?php echo htmlspecialchars($drop['student_id']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['student_name']); ?></td>
+                                            <td><?php echo htmlspecialchars($drop['guardian_name'] ?? ''); ?></td>
                                             <td><?php echo htmlspecialchars($drop['subject_no'] . ' - ' . $drop['subject_name']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['teacher_name']); ?></td>
                                             <td><?php echo formatDate($drop['drop_date']); ?></td>

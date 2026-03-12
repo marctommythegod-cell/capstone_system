@@ -16,7 +16,7 @@ $user_info = getUserInfo($pdo, $user_id);
 
 // Fetch all teacher's drops
 $query = '
-    SELECT ccd.*, s.name as student_name, s.student_id as student_id_number, s.course as student_course, s.status as student_status, u.name as teacher_name
+    SELECT ccd.*, s.name as student_name, s.guardian_name, s.student_id as student_id_number, s.course as student_course, s.status as student_status, u.name as teacher_name
     FROM class_card_drops ccd
     JOIN students s ON ccd.student_id = s.id
     JOIN users u ON ccd.teacher_id = u.id
@@ -122,6 +122,7 @@ $message = getMessage();
                                     <tr>
                                         <th>Student ID</th>
                                         <th>Student Name</th>
+                                        <th>Guardian Name</th>
                                         <th>Course</th>
                                         <th>Subject</th>
                                         <th>Drop Date & Time</th>
@@ -137,6 +138,7 @@ $message = getMessage();
                                         <tr>
                                             <td><?php echo htmlspecialchars($drop['student_id_number']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['student_name']); ?></td>
+                                            <td><?php echo htmlspecialchars($drop['guardian_name'] ?? ''); ?></td>
                                             <td><?php echo htmlspecialchars($drop['student_course']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['subject_no'] . ' - ' . $drop['subject_name']); ?></td>
                                             <td><?php echo formatDate($drop['drop_date']); ?></td>
