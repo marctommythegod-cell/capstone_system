@@ -32,6 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         // Check for empty fields
         if (empty($teacher_id)) {
             $errors[] = 'Teacher ID is required.';
+        } elseif (!preg_match('/^\d+$/', $teacher_id)) {
+            $errors[] = 'Teacher ID must contain only numbers.';
         } elseif (strlen($teacher_id) < 2) {
             $errors[] = 'Teacher ID must be at least 2 characters.';
         } elseif (strlen($teacher_id) > 50) {
@@ -72,10 +74,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         
         if (empty($department)) {
             $errors[] = 'Department is required.';
-        } elseif (strlen($department) < 2) {
-            $errors[] = 'Department must be at least 2 characters.';
-        } elseif (strlen($department) > 100) {
-            $errors[] = 'Department must not exceed 100 characters.';
+        } else {
+            // Valid departments (courses) for teachers
+            $valid_departments = [
+                'BS in Civil Engineering (BSCE)',
+                'BS in Electrical Engineering (BSEE)',
+                'BS in Mechanical Engineering (BSME)',
+                'BS in Criminology (BSCrim)',
+                'BS in Information Technology (BSIT)',
+                'BS in Computer Science (BSCS)',
+                'Bachelor of Elementary Education (BEEd)',
+                'Bachelor of Secondary Education (BSEd)',
+                'BS in Business Administration (BSBA)',
+                'BS in Hospitality Management (BSHM)'
+            ];
+            
+            if (!in_array($department, $valid_departments)) {
+                $errors[] = 'Department must be a valid course.';
+            }
         }
         
         if (empty($email)) {
@@ -172,6 +188,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $errors[] = 'Please enter a valid email address.';
         }
+        
+        if (empty($department)) {
+            $errors[] = 'Department is required.';
+        } else {
+            // Valid departments (courses) for teachers
+            $valid_departments = [
+                'BS in Civil Engineering (BSCE)',
+                'BS in Electrical Engineering (BSEE)',
+                'BS in Mechanical Engineering (BSME)',
+                'BS in Criminology (BSCrim)',
+                'BS in Information Technology (BSIT)',
+                'BS in Computer Science (BSCS)',
+                'Bachelor of Elementary Education (BEEd)',
+                'Bachelor of Secondary Education (BSEd)',
+                'BS in Business Administration (BSBA)',
+                'BS in Hospitality Management (BSHM)'
+            ];
+            
+            if (!in_array($department, $valid_departments)) {
+                $errors[] = 'Department must be a valid course.';
+            }
+        }
+        
         if (!in_array($status, ['active', 'inactive'])) {
             $errors[] = 'Invalid status.';
         }
@@ -379,17 +418,17 @@ $message = getMessage();
                                 
                                 <div class="form-group">
                                     <label for="lastname">Last Name</label>
-                                    <input type="text" id="lastname" name="lastname" required placeholder="Enter last name">
+                                    <input type="text" id="lastname" name="lastname" required placeholder="Enter last name" oninput="this.value = this.value.toUpperCase()">
                                 </div>
                                 
                                 <div class="form-group">
                                     <label for="firstname">First Name</label>
-                                    <input type="text" id="firstname" name="firstname" required placeholder="Enter first name">
+                                    <input type="text" id="firstname" name="firstname" required placeholder="Enter first name" oninput="this.value = this.value.toUpperCase()">
                                 </div>
                                 
                                 <div class="form-group">
                                     <label for="middlename">Middle Name</label>
-                                    <input type="text" id="middlename" name="middlename" required placeholder="Enter middle name">
+                                    <input type="text" id="middlename" name="middlename" required placeholder="Enter middle name" oninput="this.value = this.value.toUpperCase()">
                                 </div>
                                 
                                 <div class="form-group" style="grid-column: 1 / -1;">
@@ -404,7 +443,29 @@ $message = getMessage();
                                 
                                 <div class="form-group">
                                     <label for="department">Department</label>
-                                    <input type="text" id="department" name="department" required placeholder="Enter department">
+                                    <select id="department" name="department" required>
+                                        <option value="">-- Select Department --</option>
+                                        <optgroup label="College of Engineering and Architecture">
+                                            <option value="BS in Civil Engineering (BSCE)">BS in Civil Engineering (BSCE)</option>
+                                            <option value="BS in Electrical Engineering (BSEE)">BS in Electrical Engineering (BSEE)</option>
+                                            <option value="BS in Mechanical Engineering (BSME)">BS in Mechanical Engineering (BSME)</option>
+                                        </optgroup>
+                                        <optgroup label="College of Criminology">
+                                            <option value="BS in Criminology (BSCrim)">BS in Criminology (BSCrim)</option>
+                                        </optgroup>
+                                        <optgroup label="College of Information Technology">
+                                            <option value="BS in Information Technology (BSIT)">BS in Information Technology (BSIT)</option>
+                                            <option value="BS in Computer Science (BSCS)">BS in Computer Science (BSCS)</option>
+                                        </optgroup>
+                                        <optgroup label="College of Education">
+                                            <option value="Bachelor of Elementary Education (BEEd)">Bachelor of Elementary Education (BEEd)</option>
+                                            <option value="Bachelor of Secondary Education (BSEd)">Bachelor of Secondary Education (BSEd)</option>
+                                        </optgroup>
+                                        <optgroup label="College of Business and Management">
+                                            <option value="BS in Business Administration (BSBA)">BS in Business Administration (BSBA)</option>
+                                            <option value="BS in Hospitality Management (BSHM)">BS in Hospitality Management (BSHM)</option>
+                                        </optgroup>
+                                    </select>
                                 </div>
                                 
                                 <div class="form-group" style="grid-column: 1 / -1;">
@@ -515,15 +576,15 @@ $message = getMessage();
                                 </div>
                                 <div class="form-group">
                                     <label for="updateLastname">Last Name</label>
-                                    <input type="text" id="updateLastname" name="lastname" required placeholder="Enter last name">
+                                    <input type="text" id="updateLastname" name="lastname" required placeholder="Enter last name" oninput="this.value = this.value.toUpperCase()">
                                 </div>
                                 <div class="form-group">
                                     <label for="updateFirstname">First Name</label>
-                                    <input type="text" id="updateFirstname" name="firstname" required placeholder="Enter first name">
+                                    <input type="text" id="updateFirstname" name="firstname" required placeholder="Enter first name" oninput="this.value = this.value.toUpperCase()">
                                 </div>
                                 <div class="form-group">
                                     <label for="updateMiddlename">Middle Name</label>
-                                    <input type="text" id="updateMiddlename" name="middlename" placeholder="Enter middle name">
+                                    <input type="text" id="updateMiddlename" name="middlename" required placeholder="Enter middle name" oninput="this.value = this.value.toUpperCase()">
                                 </div>
                                 <div class="form-group" style="grid-column: 1 / -1;">
                                     <label for="updateAddress">Complete Address</label>
@@ -535,7 +596,29 @@ $message = getMessage();
                                 </div>
                                 <div class="form-group">
                                     <label for="updateDepartment">Department</label>
-                                    <input type="text" id="updateDepartment" name="department" required placeholder="Enter department">
+                                    <select id="updateDepartment" name="department" required>
+                                        <option value="">-- Select Department --</option>
+                                        <optgroup label="College of Engineering and Architecture">
+                                            <option value="BS in Civil Engineering (BSCE)">BS in Civil Engineering (BSCE)</option>
+                                            <option value="BS in Electrical Engineering (BSEE)">BS in Electrical Engineering (BSEE)</option>
+                                            <option value="BS in Mechanical Engineering (BSME)">BS in Mechanical Engineering (BSME)</option>
+                                        </optgroup>
+                                        <optgroup label="College of Criminology">
+                                            <option value="BS in Criminology (BSCrim)">BS in Criminology (BSCrim)</option>
+                                        </optgroup>
+                                        <optgroup label="College of Information Technology">
+                                            <option value="BS in Information Technology (BSIT)">BS in Information Technology (BSIT)</option>
+                                            <option value="BS in Computer Science (BSCS)">BS in Computer Science (BSCS)</option>
+                                        </optgroup>
+                                        <optgroup label="College of Education">
+                                            <option value="Bachelor of Elementary Education (BEEd)">Bachelor of Elementary Education (BEEd)</option>
+                                            <option value="Bachelor of Secondary Education (BSEd)">Bachelor of Secondary Education (BSEd)</option>
+                                        </optgroup>
+                                        <optgroup label="College of Business and Management">
+                                            <option value="BS in Business Administration (BSBA)">BS in Business Administration (BSBA)</option>
+                                            <option value="BS in Hospitality Management (BSHM)">BS in Hospitality Management (BSHM)</option>
+                                        </optgroup>
+                                    </select>
                                 </div>
                                 <div class="form-group">
                                     <label for="updateStatus">Status</label>

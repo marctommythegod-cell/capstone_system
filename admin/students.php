@@ -467,19 +467,19 @@ $message = getMessage();
                                 <div class="form-group">
                                     <label for="lastname">Last Name</label>
                                     <input type="text" id="lastname" name="lastname" required
-                                        placeholder="Enter last name">
+                                        placeholder="Enter last name" oninput="this.value = this.value.toUpperCase()">
                                 </div>
 
                                 <div class="form-group">
                                     <label for="firstname">First Name</label>
                                     <input type="text" id="firstname" name="firstname" required
-                                        placeholder="Enter first name">
+                                        placeholder="Enter first name" oninput="this.value = this.value.toUpperCase()">
                                 </div>
 
                                 <div class="form-group">
                                     <label for="middlename">Middle Name</label>
                                     <input type="text" id="middlename" name="middlename" required
-                                        placeholder="Enter middle name">
+                                        placeholder="Enter middle name" oninput="this.value = this.value.toUpperCase()">
                                 </div>
 
                                 <div class="form-group" style="grid-column: 1 / -1;">
@@ -496,8 +496,7 @@ $message = getMessage();
 
                                 <div class="form-group">
                                     <label for="guardian_name">Guardian Name</label>
-                                    <input type="text" id="guardian_name" name="guardian_name" required
-                                        placeholder="Enter guardian name">
+                                    <input type="text" id="guardian_name" name="guardian_name" required placeholder="Enter guardian name" oninput="this.value = this.value.toUpperCase()">
                                 </div>
 
                                 <div class="form-group" style="grid-column: 1 / -1;">
@@ -641,19 +640,19 @@ $message = getMessage();
                                 <div class="form-group">
                                     <label for="updateLastName">Last Name</label>
                                     <input type="text" id="updateLastName" name="lastname" required
-                                        placeholder="Enter last name">
+                                        placeholder="Enter last name" oninput="this.value = this.value.toUpperCase()">
                                 </div>
 
                                 <div class="form-group">
                                     <label for="updateFirstName">First Name</label>
                                     <input type="text" id="updateFirstName" name="firstname" required
-                                        placeholder="Enter first name">
+                                        placeholder="Enter first name" oninput="this.value = this.value.toUpperCase()">
                                 </div>
 
                                 <div class="form-group">
                                     <label for="updateMiddleName">Middle Name</label>
                                     <input type="text" id="updateMiddleName" name="middlename" required
-                                        placeholder="Enter middle name">
+                                        placeholder="Enter middle name" oninput="this.value = this.value.toUpperCase()">
                                 </div>
 
                                 <div class="form-group" style="grid-column: 1 / -1;">
@@ -671,13 +670,7 @@ $message = getMessage();
                                 <div class="form-group">
                                     <label for="updateGuardianName">Guardian Name</label>
                                     <input type="text" id="updateGuardianName" name="guardian_name" required
-                                        placeholder="Enter guardian name">
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="updateGuardianEmail">Guardian Email</label>
-                                    <input type="email" id="updateGuardianEmail" name="guardian_email"
-                                        placeholder="Enter guardian email">
+                                        placeholder="Enter guardian name" oninput="this.value = this.value.toUpperCase()">
                                 </div>
 
                                 <div class="form-group" style="grid-column: 1 / -1;">
@@ -748,7 +741,7 @@ $message = getMessage();
                 </div>
 
                 <script>
-                    function openUpdateModal(id, studentId, lastName, firstName, middleName, address, email, guardianName, guardianEmail, course, year, status) {
+                    function openUpdateModal(id, studentId, lastName, firstName, middleName, address, email, guardianName, course, year, status) {
                         document.getElementById('updateStudentId').value = id;
                         document.getElementById('updateStudentIdField').value = studentId;
                         document.getElementById('updateLastName').value = lastName;
@@ -757,7 +750,6 @@ $message = getMessage();
                         document.getElementById('updateAddress').value = address;
                         document.getElementById('updateEmail').value = email;
                         document.getElementById('updateGuardianName').value = guardianName;
-                        document.getElementById('updateGuardianEmail').value = guardianEmail;
                         document.getElementById('updateCourse').value = course;
                         document.getElementById('updateYear').value = year;
                         document.getElementById('updateStatus').value = status;
@@ -1010,7 +1002,7 @@ $message = getMessage();
                                             <td>
                                                 <button type="button" class="btn btn-sm btn-primary"
                                                     onclick="openUpdateModal(<?php echo $student['id']; ?>, '<?php echo htmlspecialchars($student['student_id']); ?>', '<?php $nameParts = explode(', ', $student['name']);
-                                                          echo htmlspecialchars(trim($nameParts[0] ?? '')); ?>', '<?php echo htmlspecialchars(trim($nameParts[1] ?? '')); ?>', '<?php echo htmlspecialchars(trim($nameParts[2] ?? '')); ?>', '<?php echo htmlspecialchars($student['address'] ?? ''); ?>', '<?php echo htmlspecialchars($student['email']); ?>', '<?php echo htmlspecialchars($student['guardian_name'] ?? ''); ?>', '<?php echo htmlspecialchars($student['guardian_email'] ?? ''); ?>', '<?php echo htmlspecialchars($student['course']); ?>', <?php echo $student['year']; ?>, '<?php echo htmlspecialchars($student['status'] ?? 'inactive'); ?>')">Update</button>
+                                                          echo htmlspecialchars(trim($nameParts[0] ?? '')); ?>', '<?php echo htmlspecialchars(trim($nameParts[1] ?? '')); ?>', '<?php echo htmlspecialchars(trim($nameParts[2] ?? '')); ?>', '<?php echo htmlspecialchars($student['address'] ?? ''); ?>', '<?php echo htmlspecialchars($student['email']); ?>', '<?php echo htmlspecialchars($student['guardian_name'] ?? ''); ?>', '<?php echo htmlspecialchars($student['course']); ?>', <?php echo $student['year']; ?>, '<?php echo htmlspecialchars($student['status'] ?? 'inactive'); ?>')">Update</button>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
