@@ -46,6 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $errors[] = 'Last name must be at least 2 characters.';
         } elseif (strlen($lastname) > 100) {
             $errors[] = 'Last name must not exceed 100 characters.';
+        } elseif (!preg_match("/^[a-zA-Z\s\-']+$/", $lastname)) {
+            $errors[] = 'Last name must contain only letters, spaces, hyphens, and apostrophes.';
         }
         
         if (empty($firstname)) {
@@ -54,6 +56,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $errors[] = 'First name must be at least 2 characters.';
         } elseif (strlen($firstname) > 100) {
             $errors[] = 'First name must not exceed 100 characters.';
+        } elseif (!preg_match("/^[a-zA-Z\s\-']+$/", $firstname)) {
+            $errors[] = 'First name must contain only letters, spaces, hyphens, and apostrophes.';
         }
         
         if (empty($middlename)) {
@@ -62,6 +66,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $errors[] = 'Middle name must be at least 2 characters.';
         } elseif (strlen($middlename) > 100) {
             $errors[] = 'Middle name must not exceed 100 characters.';
+        } elseif (!preg_match("/^[a-zA-Z\s\-']+$/", $middlename)) {
+            $errors[] = 'Middle name must contain only letters, spaces, hyphens, and apostrophes.';
         }
         
         if (empty($address)) {
@@ -149,8 +155,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } else {
             try {
                 $hashed_password = securePassword($password);
-                $stmt = $pdo->prepare('INSERT INTO users (name, email, password, role, teacher_id, address, department) VALUES (?, ?, ?, ?, ?, ?, ?)');
-                $stmt->execute([$name, $email, $hashed_password, 'teacher', $teacher_id, $address, $department]);
+                $stmt = $pdo->prepare('INSERT INTO users (name, email, password, role, teacher_id, address, department, password_changed) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+                $stmt->execute([$name, $email, $hashed_password, 'teacher', $teacher_id, $address, $department, 0]);
                 setMessage('success', 'Teacher added successfully.');
             } catch (Exception $e) {
                 setMessage('error', 'Error adding teacher: ' . $e->getMessage());
@@ -302,8 +308,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
             try {
                 $hashed_password = securePassword($password);
-                $stmt = $pdo->prepare('INSERT INTO users (name, email, password, role, teacher_id, address, department) VALUES (?, ?, ?, ?, ?, ?, ?)');
-                $stmt->execute([$name, $email, $hashed_password, 'teacher', $teacher_id, $address, $department]);
+                $stmt = $pdo->prepare('INSERT INTO users (name, email, password, role, teacher_id, address, department, password_changed) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+                $stmt->execute([$name, $email, $hashed_password, 'teacher', $teacher_id, $address, $department, 0]);
                 $imported++;
             } catch (Exception $e) {
                 $skipped++;
@@ -418,17 +424,17 @@ $message = getMessage();
                                 
                                 <div class="form-group">
                                     <label for="lastname">Last Name</label>
-                                    <input type="text" id="lastname" name="lastname" required placeholder="Enter last name" oninput="this.value = this.value.toUpperCase()">
+                                    <input type="text" id="lastname" name="lastname" required placeholder="Letters only" pattern="[a-zA-Z\s\-']+" oninput="validateNameInput(this); this.value = this.value.toUpperCase()" title="Last name must contain only letters, spaces, hyphens, and apostrophes">
                                 </div>
                                 
                                 <div class="form-group">
                                     <label for="firstname">First Name</label>
-                                    <input type="text" id="firstname" name="firstname" required placeholder="Enter first name" oninput="this.value = this.value.toUpperCase()">
+                                    <input type="text" id="firstname" name="firstname" required placeholder="Letters only" pattern="[a-zA-Z\s\-']+" oninput="validateNameInput(this); this.value = this.value.toUpperCase()" title="First name must contain only letters, spaces, hyphens, and apostrophes">
                                 </div>
                                 
                                 <div class="form-group">
                                     <label for="middlename">Middle Name</label>
-                                    <input type="text" id="middlename" name="middlename" required placeholder="Enter middle name" oninput="this.value = this.value.toUpperCase()">
+                                    <input type="text" id="middlename" name="middlename" required placeholder="Letters only" pattern="[a-zA-Z\s\-']+" oninput="validateNameInput(this); this.value = this.value.toUpperCase()" title="Middle name must contain only letters, spaces, hyphens, and apostrophes">
                                 </div>
                                 
                                 <div class="form-group" style="grid-column: 1 / -1;">
@@ -470,12 +476,15 @@ $message = getMessage();
                                 
                                 <div class="form-group" style="grid-column: 1 / -1;">
                                     <label for="password">Password</label>
-                                    <div class="password-input-wrapper">
-                                        <input type="password" id="password" name="password" required minlength="6" placeholder="Put a strong password here" oninput="checkPasswordStrength(this.value)">
-                                        <button type="button" class="password-toggle" onclick="togglePassword('password')">
-                                            <svg class="eye-icon eye-show" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                            <svg class="eye-icon eye-hide" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-                                        </button>
+                                    <div style="display: flex; gap: 10px; align-items: flex-start;">
+                                        <div class="password-input-wrapper" style="flex: 1;">
+                                            <input type="password" id="password" name="password" required minlength="6" placeholder="Put a strong password here" oninput="checkPasswordStrength(this.value)">
+                                            <button type="button" class="password-toggle" onclick="togglePassword('password')">
+                                                <svg class="eye-icon eye-show" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                                <svg class="eye-icon eye-hide" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                                            </button>
+                                        </div>
+                                        <button type="button" class="btn btn-secondary" onclick="generatePassword()" style="padding: 8px 16px; font-size: 0.9em; margin-top: 0;">Generate</button>
                                     </div>
                                     <small id="password-requirements" style="display: none; display: block; margin-top: 5px; color: #666;">
                                         <strong>Password Requirements:</strong><br>
@@ -990,6 +999,50 @@ $message = getMessage();
         }
 
         document.getElementById('confirm_password').addEventListener('input', checkConfirmMatch);
+
+        function generatePassword() {
+            const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+            const numbers = '0123456789';
+            const special = '!@#$%';
+            
+            // Generate random characters from each required set
+            let password = '';
+            password += uppercase[Math.floor(Math.random() * uppercase.length)];
+            password += lowercase[Math.floor(Math.random() * lowercase.length)];
+            password += numbers[Math.floor(Math.random() * numbers.length)];
+            password += special[Math.floor(Math.random() * special.length)];
+            
+            // Add 4 more random characters to reach 8 characters
+            const allChars = uppercase + lowercase + numbers + special;
+            for (let i = 0; i < 4; i++) {
+                password += allChars[Math.floor(Math.random() * allChars.length)];
+            }
+            
+            // Shuffle the password
+            password = password.split('').sort(() => Math.random() - 0.5).join('');
+            
+            // Set password field
+            const passwordField = document.getElementById('password');
+            passwordField.value = password;
+            passwordField.type = 'text'; // Show the generated password
+            
+            // Update password strength indicator
+            checkPasswordStrength(password);
+            
+            // Clear confirm password to make user type it again
+            document.getElementById('confirm_password').value = '';
+            document.getElementById('confirm-match').innerHTML = '';
+            document.getElementById('confirm-match').style.display = 'none';
+        }
+
+        function validateNameInput(input) {
+            // Allow only letters, spaces, hyphens, and apostrophes
+            const validValue = input.value.replace(/[^a-zA-Z\s\-']/g, '');
+            if (validValue !== input.value) {
+                input.value = validValue;
+            }
+        }
     </script>
 
     <script src="/CLASS_CARD_DROPPING_SYSTEM/js/functions.js"></script>

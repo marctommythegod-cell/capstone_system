@@ -1,5 +1,5 @@
 <?php
-// teacher/dashboard.php - Teacher Dashboard
+// teacher/settings.php - Teacher Settings/Profile
 
 require_once '../includes/session_check.php';
 require_once '../config/db.php';
@@ -14,37 +14,16 @@ $user_id = $_SESSION['user_id'];
 $teacher_name = getUserName($pdo, $user_id);
 $user_info = getUserInfo($pdo, $user_id);
 
-// Check if password has been changed
-$stmt = $pdo->prepare('SELECT password_changed FROM users WHERE id = ?');
+// Get full teacher info
+$stmt = $pdo->prepare('SELECT id, name, email, address, department FROM users WHERE id = ?');
 $stmt->execute([$user_id]);
-$user_data = $stmt->fetch();
-$password_changed = $user_data ? $user_data['password_changed'] : true;
-$show_password_modal = !$password_changed;
+$teacher_info = $stmt->fetch();
 
-// Get statistics
-$stmt = $pdo->prepare('SELECT COUNT(*) as total_drops FROM class_card_drops WHERE teacher_id = ?');
-$stmt->execute([$user_id]);
-$total_drops = $stmt->fetch()['total_drops'];
-
-$stmt = $pdo->prepare('SELECT COUNT(*) as this_month FROM class_card_drops WHERE teacher_id = ? AND MONTH(drop_date) = MONTH(NOW()) AND YEAR(drop_date) = YEAR(NOW())');
-$stmt->execute([$user_id]);
-$this_month = $stmt->fetch()['this_month'];
-
-$stmt = $pdo->prepare('SELECT COUNT(*) as this_week FROM class_card_drops WHERE teacher_id = ? AND WEEK(drop_date) = WEEK(NOW()) AND YEAR(drop_date) = YEAR(NOW())');
-$stmt->execute([$user_id]);
-$this_week = $stmt->fetch()['this_week'];
-
-// Get recent drops (last 5)
-$stmt = $pdo->prepare('
-    SELECT ccd.*, s.name as student_name, s.student_id as student_id_number, s.course as student_course, s.status as student_status
-    FROM class_card_drops ccd
-    JOIN students s ON ccd.student_id = s.id
-    WHERE ccd.teacher_id = ?
-    ORDER BY ccd.drop_date DESC
-    LIMIT 5
-');
-$stmt->execute([$user_id]);
-$recent_drops = $stmt->fetchAll();
+// Extract name parts
+$nameParts = explode(', ', $teacher_info['name']);
+$lastname = trim($nameParts[0] ?? '');
+$firstname = trim($nameParts[1] ?? '');
+$middlename = trim($nameParts[2] ?? '');
 
 $message = getMessage();
 ?>
@@ -53,7 +32,7 @@ $message = getMessage();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teacher Dashboard - PhilCST</title>
+    <title>Settings - Teacher Portal - PhilCST</title>
     <link rel="stylesheet" href="/CLASS_CARD_DROPPING_SYSTEM/css/style.css">
 </head>
 <body>
@@ -67,7 +46,7 @@ $message = getMessage();
             </div>
             
             <nav class="sidebar-nav">
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/dashboard.php" class="nav-item active">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/dashboard.php" class="nav-item">
                     <span>Overview</span>
                 </a>
                 <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php" class="nav-item">
@@ -76,7 +55,7 @@ $message = getMessage();
                 <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php" class="nav-item">
                     <span>Drop History</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/settings.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/settings.php" class="nav-item active">
                     <span>Settings</span>
                 </a>
                 <a href="#" class="nav-item logout-item" onclick="showLogoutModal(); return false;">
@@ -93,7 +72,7 @@ $message = getMessage();
         <!-- Main Content -->
         <main class="main-content">
             <header class="top-bar">
-                <h1>Dashboard Overview</h1>
+                <h1>Settings</h1>
                 <div class="user-info">
                     <span><?php echo htmlspecialchars($teacher_name); ?> (Teacher)</span>
                 </div>
@@ -102,102 +81,102 @@ $message = getMessage();
             <div class="content-wrapper">
                 <?php if ($message): ?>
                     <div class="alert alert-<?php echo $message['type']; ?>">
-                        <?php echo htmlspecialchars($message['text']); ?>
+                        <?php echo $message['text']; ?>
                     </div>
                 <?php endif; ?>
-                
-                <!-- Statistics Section -->
+
+                <!-- Profile Section -->
                 <section class="section">
-                    <h2>Statistics</h2>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-value"><?php echo $total_drops; ?></div>
-                            <div class="stat-label">Total Class Card Drops</div>
+                    <h2>My Profile</h2>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <!-- Profile Info Display -->
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                            <h3 style="margin-top: 0;">Profile Information</h3>
+                            <div style="margin-bottom: 15px;">
+                                <p style="margin: 0; color: #666; font-size: 0.9em;">EMAIL</p>
+                                <p style="margin: 5px 0 0 0; font-weight: 500;"><?php echo htmlspecialchars($teacher_info['email']); ?></p>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <p style="margin: 0; color: #666; font-size: 0.9em;">DEPARTMENT</p>
+                                <p style="margin: 5px 0 0 0; font-weight: 500;"><?php echo htmlspecialchars($teacher_info['department'] ?: 'N/A'); ?></p>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <p style="margin: 0; color: #666; font-size: 0.9em;">LAST NAME</p>
+                                <p style="margin: 5px 0 0 0; font-weight: 500;"><?php echo htmlspecialchars($lastname); ?></p>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <p style="margin: 0; color: #666; font-size: 0.9em;">FIRST NAME</p>
+                                <p style="margin: 5px 0 0 0; font-weight: 500;"><?php echo htmlspecialchars($firstname); ?></p>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <p style="margin: 0; color: #666; font-size: 0.9em;">MIDDLE NAME</p>
+                                <p style="margin: 5px 0 0 0; font-weight: 500;"><?php echo htmlspecialchars($middlename); ?></p>
+                            </div>
+                            <div style="margin-bottom: 0;">
+                                <p style="margin: 0; color: #666; font-size: 0.9em;">COMPLETE ADDRESS</p>
+                                <p style="margin: 5px 0 0 0; font-weight: 500;"><?php echo htmlspecialchars($teacher_info['address'] ?: 'N/A'); ?></p>
+                            </div>
                         </div>
-                        <div class="stat-card">
-                            <div class="stat-value"><?php echo $this_month; ?></div>
-                            <div class="stat-label">This Month</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value"><?php echo $this_week; ?></div>
-                            <div class="stat-label">This Week</div>
+
+                        <!-- Profile Edit Form -->
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                            <h3 style="margin-top: 0;">Edit Profile</h3>
+                            <form method="POST" action="/CLASS_CARD_DROPPING_SYSTEM/includes/api.php?action=update_profile" style="display: grid; gap: 12px;">
+                                <div class="form-group">
+                                    <label for="edit_lastname">Last Name</label>
+                                    <input type="text" id="edit_lastname" name="lastname" required value="<?php echo htmlspecialchars($lastname); ?>" placeholder="Letters only" pattern="[a-zA-Z\s\-']+" oninput="validateNameInput(this); this.value = this.value.toUpperCase()" title="Last name must contain only letters, spaces, hyphens, and apostrophes">
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit_firstname">First Name</label>
+                                    <input type="text" id="edit_firstname" name="firstname" required value="<?php echo htmlspecialchars($firstname); ?>" placeholder="Letters only" pattern="[a-zA-Z\s\-']+" oninput="validateNameInput(this); this.value = this.value.toUpperCase()" title="First name must contain only letters, spaces, hyphens, and apostrophes">
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit_middlename">Middle Name</label>
+                                    <input type="text" id="edit_middlename" name="middlename" required value="<?php echo htmlspecialchars($middlename); ?>" placeholder="Letters only" pattern="[a-zA-Z\s\-']+" oninput="validateNameInput(this); this.value = this.value.toUpperCase()" title="Middle name must contain only letters, spaces, hyphens, and apostrophes">
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit_address">Complete Address</label>
+                                    <textarea id="edit_address" name="address" required rows="4"><?php echo htmlspecialchars($teacher_info['address'] ?: ''); ?></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Save Changes</button>
+                            </form>
                         </div>
                     </div>
                 </section>
-                
-                <!-- Quick Actions Section -->
+
+                <!-- Password Section -->
                 <section class="section">
-                    <h2>Quick Actions</h2>
-                    <div class="action-buttons">
-                        <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php" class="btn btn-primary btn-large">
-                            Drop Student Class Card
-                        </a>
-                        <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php" class="btn btn-secondary btn-large">
-                            View Drop History
-                        </a>
+                    <h2>Security</h2>
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; max-width: 500px;">
+                        <h3 style="margin-top: 0;">Change Password</h3>
+                        <p style="color: #666; margin-bottom: 20px;">Manage your password and keep your account secure.</p>
+                        <button type="button" class="btn btn-primary" onclick="openChangePasswordModal()">Change Password</button>
                     </div>
-                </section>
-                
-                <!-- Recent Drops Section -->
-                <section class="section">
-                    <h2>Recent Class Card Drops</h2>
-                    <?php if (count($recent_drops) > 0): ?>
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Student ID</th>
-                                        <th>Student Name</th>
-                                        <th>Course</th>
-                                        <th>Subject</th>
-                                        <th>Drop Date & Time</th>
-                                        <th>Class Card Status</th>
-                                        <th>Student Status</th>
-                                        <th>Teacher Remarks</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($recent_drops as $drop): ?>
-                                        <tr>
-                                            <td><?php echo htmlspecialchars($drop['student_id_number']); ?></td>
-                                            <td><?php echo htmlspecialchars($drop['student_name']); ?></td>
-                                            <td><?php echo htmlspecialchars($drop['student_course']); ?></td>
-                                            <td><?php echo htmlspecialchars($drop['subject_no'] . ' - ' . $drop['subject_name']); ?></td>
-                                            <td><?php echo formatDate($drop['drop_date']); ?></td>
-                                            <td><span class="status status-<?php echo strtolower($drop['status']); ?>"><?php echo htmlspecialchars($drop['status']); ?></span></td>
-                                            <td><span class="status status-<?php echo strtolower($drop['student_status']); ?>"><?php echo ucfirst(htmlspecialchars($drop['student_status'])); ?></span></td>
-                                            <td><?php echo htmlspecialchars(substr($drop['remarks'], 0, 50)); ?></td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                        <div style="text-align: center; margin-top: 15px;">
-                            <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php" class="btn btn-secondary">View All Drops</a>
-                        </div>
-                    <?php else: ?>
-                        <p class="no-data">No class cards dropped yet.</p>
-                    <?php endif; ?>
                 </section>
             </div>
         </main>
     </div>
 
-    <!-- Change Password Modal (First Time Login) -->
-    <div id="changePasswordModal" class="modal" style="display: <?php echo $show_password_modal ? 'flex' : 'none'; ?>;">
+    <!-- Change Password Modal -->
+    <div id="changePasswordModal" class="modal" style="display: none;">
         <div class="modal-content" style="max-width: 500px;">
-            <div class="modal-header" style="background-color: #ff9800;">
-                <h2 style="color: white; margin: 0;">Change Your Default Password</h2>
+            <div class="modal-header">
+                <h2>Change Password</h2>
+                <button type="button" class="modal-close" onclick="closeChangePasswordModal()">&times;</button>
             </div>
-            <div class="modal-body" style="padding: 25px;">
-                <div style="margin-bottom: 20px; padding: 15px; background-color: #fff3cd; border-left: 4px solid #ff9800; border-radius: 4px;">
-                    <p style="margin: 0; color: #856404; line-height: 1.6;">
-                        <strong>Welcome!</strong> For security reasons, you must change your default password on your first login. Please create a strong password below.
-                    </p>
-                </div>
-                <form method="POST" action="/CLASS_CARD_DROPPING_SYSTEM/includes/api.php?action=change_password" id="changePasswordForm">
-                    <input type="hidden" name="is_first_time" value="1">
-                    
+            <div class="modal-body" style="padding: 20px;">
+                <form method="POST" action="/CLASS_CARD_DROPPING_SYSTEM/includes/api.php?action=update_password" id="changePasswordForm">
+                    <div class="form-group">
+                        <label for="currentPassword">Current Password</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="currentPassword" name="current_password" required placeholder="Enter your current password">
+                            <button type="button" class="password-toggle" onclick="togglePassword('currentPassword')">
+                                <svg class="eye-icon eye-show" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                <svg class="eye-icon eye-hide" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="form-group">
                         <label for="newPassword">New Password</label>
                         <div class="password-input-wrapper">
@@ -219,9 +198,9 @@ $message = getMessage();
                     </div>
 
                     <div class="form-group">
-                        <label for="confirmPassword">Confirm Password</label>
+                        <label for="confirmPassword">Confirm New Password</label>
                         <div class="password-input-wrapper">
-                            <input type="password" id="confirmPassword" name="confirm_password" required placeholder="Re-enter your new password">
+                            <input type="password" id="confirmPassword" name="confirm_password" required placeholder="Re-enter your new password" oninput="checkConfirmMatch()">
                             <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword')">
                                 <svg class="eye-icon eye-show" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                                 <svg class="eye-icon eye-hide" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
@@ -231,7 +210,8 @@ $message = getMessage();
                     </div>
 
                     <div class="modal-footer" style="padding: 0; margin-top: 20px; border-top: 1px solid #ddd; display: flex; gap: 10px; justify-content: flex-end; padding-top: 20px;">
-                        <button type="submit" class="btn btn-primary" style="flex: 1;">Change Password</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeChangePasswordModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update Password</button>
                     </div>
                 </form>
             </div>
@@ -246,7 +226,7 @@ $message = getMessage();
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.7);
+            background-color: rgba(0,0,0,0.5);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -254,19 +234,29 @@ $message = getMessage();
         .modal-content {
             background-color: white;
             border-radius: 8px;
-            box-shadow: 0 4px 30px rgba(0,0,0,0.4);
-        }
-        .modal-header {
-            padding: 20px;
-            border-bottom: 1px solid #ddd;
-            border-radius: 8px 8px 0 0;
-        }
-        .modal-body {
-            max-height: 80vh;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            max-height: 90vh;
             overflow-y: auto;
         }
-        .modal-footer {
-            padding: 15px 20px;
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        .modal-header h2 {
+            margin: 0;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+        }
+        .modal-close:hover {
+            color: #333;
         }
         .password-input-wrapper {
             position: relative;
@@ -297,6 +287,18 @@ $message = getMessage();
     </style>
 
     <script>
+        function openChangePasswordModal() {
+            document.getElementById('changePasswordModal').style.display = 'flex';
+        }
+
+        function closeChangePasswordModal() {
+            document.getElementById('changePasswordModal').style.display = 'none';
+            document.getElementById('changePasswordForm').reset();
+            document.getElementById('password-strength').innerHTML = '';
+            document.getElementById('password-requirements').style.display = 'none';
+            document.getElementById('confirm-match').innerHTML = '';
+        }
+
         function togglePassword(fieldId) {
             const passwordField = document.getElementById(fieldId);
             const wrapper = passwordField.closest('.password-input-wrapper') || passwordField.parentElement;
@@ -365,17 +367,23 @@ $message = getMessage();
             }
         }
 
-        document.getElementById('confirmPassword').addEventListener('input', checkConfirmMatch);
+        function validateNameInput(input) {
+            // Allow only letters, spaces, hyphens, and apostrophes
+            const validValue = input.value.replace(/[^a-zA-Z\s\-']/g, '');
+            if (validValue !== input.value) {
+                input.value = validValue;
+            }
+        }
 
-        // Prevent closing modal on first password change
-        <?php if ($show_password_modal): ?>
-        window.addEventListener('beforeunload', function(e) {
-            // This prevents navigation away from the page
-            // but doesn't work perfectly - the form submission will work fine
-        });
-        <?php endif; ?>
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            var modal = document.getElementById('changePasswordModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
     </script>
-    
+
     <script src="/CLASS_CARD_DROPPING_SYSTEM/js/functions.js"></script>
 </body>
 </html>
