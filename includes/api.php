@@ -462,6 +462,151 @@ if ($action === 'update_password') {
     redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/settings.php');
 }
 
+if ($action === 'update_admin_profile') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/settings.php');
+    }
+    
+    if ($_SESSION['user_role'] !== 'admin') {
+        setMessage('error', 'Unauthorized action.');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/settings.php');
+    }
+    
+    $user_id = $_SESSION['user_id'];
+    $lastname = trim($_POST['lastname'] ?? '');
+    $firstname = trim($_POST['firstname'] ?? '');
+    $middlename = trim($_POST['middlename'] ?? '');
+    $position = trim($_POST['position'] ?? '');
+    
+    $errors = [];
+    
+    if (empty($lastname) || strlen($lastname) < 2) {
+        $errors[] = 'Last name must be at least 2 characters.';
+    } elseif (strlen($lastname) > 100) {
+        $errors[] = 'Last name must not exceed 100 characters.';
+    } elseif (!preg_match("/^[a-zA-Z\s\-']+$/", $lastname)) {
+        $errors[] = 'Last name must contain only letters, spaces, hyphens, and apostrophes.';
+    }
+    
+    if (empty($firstname) || strlen($firstname) < 2) {
+        $errors[] = 'First name must be at least 2 characters.';
+    } elseif (strlen($firstname) > 100) {
+        $errors[] = 'First name must not exceed 100 characters.';
+    } elseif (!preg_match("/^[a-zA-Z\s\-']+$/", $firstname)) {
+        $errors[] = 'First name must contain only letters, spaces, hyphens, and apostrophes.';
+    }
+    
+    if (empty($middlename) || strlen($middlename) < 2) {
+        $errors[] = 'Middle name must be at least 2 characters.';
+    } elseif (strlen($middlename) > 100) {
+        $errors[] = 'Middle name must not exceed 100 characters.';
+    } elseif (!preg_match("/^[a-zA-Z\s\-']+$/", $middlename)) {
+        $errors[] = 'Middle name must contain only letters, spaces, hyphens, and apostrophes.';
+    }
+    
+    if (empty($position) || strlen($position) < 2) {
+        $errors[] = 'Position must be at least 2 characters.';
+    } elseif (strlen($position) > 100) {
+        $errors[] = 'Position must not exceed 100 characters.';
+    }
+    
+    if (!empty($errors)) {
+        setMessage('error', implode('<br>', $errors));
+    } else {
+        try {
+            $name = $lastname . ', ' . $firstname . ', ' . $middlename;
+            $stmt = $pdo->prepare('UPDATE users SET name = ?, department = ? WHERE id = ?');
+            $stmt->execute([$name, $position, $user_id]);
+            setMessage('success', 'Profile updated successfully!');
+        } catch (Exception $e) {
+            setMessage('error', 'Error updating profile: ' . $e->getMessage());
+        }
+    }
+    
+    redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/settings.php');
+}
+
+if ($action === 'update_admin_password') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/settings.php');
+    }
+    
+    if ($_SESSION['user_role'] !== 'admin') {
+        setMessage('error', 'Unauthorized action.');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/settings.php');
+    }
+    
+    $user_id = $_SESSION['user_id'];
+    $current_password = $_POST['current_password'] ?? '';
+    $new_password = $_POST['new_password'] ?? '';
+    $confirm_password = $_POST['confirm_password'] ?? '';
+    
+    $errors = [];
+    
+    // Get current user password
+    $stmt = $pdo->prepare('SELECT password FROM users WHERE id = ?');
+    $stmt->execute([$user_id]);
+    $user = $stmt->fetch();
+    
+    if (!$user) {
+        setMessage('error', 'User not found.');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/settings.php');
+    }
+    
+    // Verify current password
+    if (empty($current_password)) {
+        $errors[] = 'Current password is required.';
+    } elseif (!verifyPassword($current_password, $user['password'])) {
+        $errors[] = 'Current password is incorrect.';
+    }
+    
+    // Validate new password
+    if (empty($new_password)) {
+        $errors[] = 'New password is required.';
+    } else {
+        if (strlen($new_password) < 6) {
+            $errors[] = 'Password must be at least 6 characters long.';
+        }
+        if (strlen($new_password) > 255) {
+            $errors[] = 'Password must not exceed 255 characters.';
+        }
+        if (!preg_match('/[A-Z]/', $new_password)) {
+            $errors[] = 'Password must contain at least one uppercase letter (A–Z).';
+        }
+        if (!preg_match('/[a-z]/', $new_password)) {
+            $errors[] = 'Password must contain at least one lowercase letter (a–z).';
+        }
+        if (!preg_match('/[0-9]/', $new_password)) {
+            $errors[] = 'Password must contain at least one number (0–9).';
+        }
+        if (!preg_match('/[!@#$%]/', $new_password)) {
+            $errors[] = 'Password must contain at least one special character (!, @, #, $, %).';
+        }
+    }
+    
+    // Confirm password match
+    if (empty($confirm_password)) {
+        $errors[] = 'Password confirmation is required.';
+    } elseif ($new_password !== $confirm_password) {
+        $errors[] = 'Passwords do not match.';
+    }
+    
+    if (!empty($errors)) {
+        setMessage('error', implode('<br>', $errors));
+    } else {
+        try {
+            $hashed_password = securePassword($new_password);
+            $stmt = $pdo->prepare('UPDATE users SET password = ? WHERE id = ?');
+            $stmt->execute([$hashed_password, $user_id]);
+            setMessage('success', 'Password updated successfully!');
+        } catch (Exception $e) {
+            setMessage('error', 'Error updating password: ' . $e->getMessage());
+        }
+    }
+    
+    redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/settings.php');
+}
+
 // If no valid action
 redirect('/CLASS_CARD_DROPPING_SYSTEM/index.php');
 ?>

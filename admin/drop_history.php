@@ -59,6 +59,9 @@ $message = getMessage();
                 <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/drop_history.php" class="nav-item active">
                     <span>Drop History</span>
                 </a>
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/settings.php" class="nav-item">
+                    <span>Settings</span>
+                </a>
                 <a href="#" class="nav-item logout-item" onclick="showLogoutModal(); return false;">
                     <span>Logout</span>
                 </a>
