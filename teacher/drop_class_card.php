@@ -36,6 +36,19 @@ $stmt = $pdo->prepare('
 $stmt->execute([$user_id]);
 $recent_drops = $stmt->fetchAll();
 
+// Function to get active drop status for a student
+function getActiveDropStatus($pdo, $student_id, $subject_no) {
+    $stmt = $pdo->prepare('
+        SELECT id, status FROM class_card_drops 
+        WHERE student_id = ? AND subject_no = ? 
+        AND status IN ("Pending", "Dropped")
+        AND cancelled_date IS NULL
+        LIMIT 1
+    ');
+    $stmt->execute([$student_id, $subject_no]);
+    return $stmt->fetch();
+}
+
 $message = getMessage();
 ?>
 <!DOCTYPE html>
@@ -265,12 +278,63 @@ $message = getMessage();
         function openDropModal() {
             document.getElementById('dropModal').style.display = 'flex';
             document.body.style.overflow = 'hidden';
+            checkDropAvailability();
         }
 
         function closeDropModal() {
             document.getElementById('dropModal').style.display = 'none';
             document.body.style.overflow = '';
         }
+
+        // Check if student-subject combination has active drop request
+        function checkDropAvailability() {
+            const studentId = document.getElementById('student_id').value;
+            const subjectNo = document.getElementById('subject_id').value;
+            const submitBtn = document.querySelector('button[onclick*="dropForm"]');
+            const warningMsg = document.getElementById('dropWarningMsg');
+
+            if (!studentId || !subjectNo) {
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                submitBtn.style.cursor = 'pointer';
+                if (warningMsg) warningMsg.style.display = 'none';
+                return;
+            }
+
+            // Check if there's an active drop (Pending or Dropped status)
+            fetch('/CLASS_CARD_DROPPING_SYSTEM/includes/api.php?action=check_active_drop&student_id=' + studentId + '&subject_no=' + encodeURIComponent(subjectNo))
+                .then(response => response.json())
+                .then(data => {
+                    if (data.has_active_drop) {
+                        submitBtn.disabled = true;
+                        submitBtn.style.opacity = '0.5';
+                        submitBtn.style.cursor = 'not-allowed';
+                        if (!warningMsg) {
+                            const warning = document.createElement('div');
+                            warning.id = 'dropWarningMsg';
+                            warning.style.cssText = 'background-color: #fff3cd; border: 1px solid #ffc107; color: #856404; padding: 12px; border-radius: 4px; margin-top: 10px; font-weight: 500;';
+                            warning.innerHTML = '⚠ This student-subject combination already has an active drop request (' + data.status + '). Cannot request again until it is processed or undropped.';
+                            submitBtn.parentNode.insertBefore(warning, submitBtn.nextSibling);
+                        } else {
+                            warningMsg.style.display = 'block';
+                        }
+                    } else {
+                        submitBtn.disabled = false;
+                        submitBtn.style.opacity = '1';
+                        submitBtn.style.cursor = 'pointer';
+                        if (warningMsg) warningMsg.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking drop availability:', error);
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = '1';
+                });
+        }
+
+        // Check availability when student or subject changes
+        document.getElementById('student_id').addEventListener('change', checkDropAvailability);
+        document.getElementById('subject_id').addEventListener('change', checkDropAvailability);
 
         // Close modal when clicking outside
         document.getElementById('dropModal').addEventListener('click', function(e) {

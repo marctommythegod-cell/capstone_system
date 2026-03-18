@@ -8,6 +8,48 @@ require_once '../email/EmailNotifier.php';
 
 $action = $_GET['action'] ?? '';
 
+// Check if student-subject has active drop request
+if ($action === 'check_active_drop') {
+    header('Content-Type: application/json');
+    
+    if ($_SESSION['user_role'] !== 'teacher') {
+        echo json_encode(['has_active_drop' => false]);
+        exit;
+    }
+    
+    $student_id = intval($_GET['student_id'] ?? 0);
+    $subject_no = trim($_GET['subject_no'] ?? '');
+    
+    if (!$student_id || !$subject_no) {
+        echo json_encode(['has_active_drop' => false]);
+        exit;
+    }
+    
+    try {
+        $stmt = $pdo->prepare('
+            SELECT id, status FROM class_card_drops 
+            WHERE student_id = ? AND subject_no = ? 
+            AND status IN ("Pending", "Dropped")
+            AND cancelled_date IS NULL
+            LIMIT 1
+        ');
+        $stmt->execute([$student_id, $subject_no]);
+        $activeDrop = $stmt->fetch();
+        
+        if ($activeDrop) {
+            echo json_encode([
+                'has_active_drop' => true,
+                'status' => $activeDrop['status']
+            ]);
+        } else {
+            echo json_encode(['has_active_drop' => false]);
+        }
+    } catch (Exception $e) {
+        echo json_encode(['has_active_drop' => false]);
+    }
+    exit;
+}
+
 if ($action === 'drop_class_card') {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php');
@@ -51,11 +93,14 @@ if ($action === 'drop_class_card') {
     $drop_year = date('Y');
     
     try {
-        // Insert drop record with Pending status
+        // Set deadline to end of the same day (11:59 PM)
+        $deadline = date('Y-m-d 23:59:59');
+        
+        // Insert drop record with Pending status and deadline
         $stmt = $pdo->prepare('
             INSERT INTO class_card_drops 
-            (teacher_id, student_id, subject_no, subject_name, remarks, status, drop_date, drop_month, drop_year)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (teacher_id, student_id, subject_no, subject_name, remarks, status, drop_date, deadline, drop_month, drop_year)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ');
         $stmt->execute([
             $teacher_id,
@@ -65,6 +110,7 @@ if ($action === 'drop_class_card') {
             $remarks,
             'Pending',
             $drop_date,
+            $deadline,
             $drop_month,
             $drop_year
         ]);

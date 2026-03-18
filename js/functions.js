@@ -148,7 +148,7 @@ function showConfirmModal(message, onConfirm) {
     });
 }
 
-// Undrop modal with remarks textarea
+// Undrop modal with remarks textarea and certificate checkboxes
 function showUndropModal(dropId) {
     const existing = document.getElementById('undropModal');
     if (existing) existing.remove();
@@ -158,14 +158,32 @@ function showUndropModal(dropId) {
     overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
 
     const box = document.createElement('div');
-    box.style.cssText = 'background:#fff;border-radius:8px;padding:0;min-width:400px;max-width:500px;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
+    box.style.cssText = 'background:#fff;border-radius:8px;padding:0;min-width:400px;max-width:550px;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
 
     box.innerHTML = `
         <div style="padding:20px 20px 10px;border-bottom:1px solid #eee;">
             <h3 style="margin:0;font-size:1.1em;">Undrop Class Card</h3>
         </div>
         <div style="padding:20px;">
-            <p style="margin:0 0 12px;color:#555;">Are you sure you want to undrop this class card?</p>
+            <p style="margin:0 0 15px;color:#555;">Are you sure you want to undrop this class card?</p>
+            
+            <label style="display:block;margin-bottom:10px;font-weight:600;color:#333;font-size:0.95em;">Reason for Undrop</label>
+            <div style="background:#f9f9f9;border:1px solid #e0e0e0;border-radius:5px;padding:10px;margin-bottom:15px;">
+                <div style="margin-bottom:8px;">
+                    <input type="checkbox" id="undropCert_medical" name="undrop_certificates" value="Medical Certificate" style="margin-right:8px;">
+                    <label for="undropCert_medical" style="display:inline;cursor:pointer;font-weight:400;">Medical Certificate</label>
+                </div>
+                <div style="margin-bottom:8px;">
+                    <input type="checkbox" id="undropCert_parents" name="undrop_certificates" value="Parents Letter" style="margin-right:8px;">
+                    <label for="undropCert_parents" style="display:inline;cursor:pointer;font-weight:400;">Parents Letter</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="undropCert_other" name="undrop_certificates" value="Other" style="margin-right:8px;" onchange="toggleOtherField()">
+                    <label for="undropCert_other" style="display:inline;cursor:pointer;font-weight:400;">Other</label>
+                </div>
+                <input type="text" id="undropOtherText" placeholder="Please specify..." style="display:none;width:100%;padding:8px;margin-top:8px;border:1px solid #ccc;border-radius:4px;font-size:0.9em;box-sizing:border-box;">
+            </div>
+            
             <label for="undropRemarks" style="display:block;margin-bottom:6px;font-weight:600;color:#333;font-size:0.95em;">Admin Remarks <span style="color:#999;font-weight:400;">(required)</span></label>
             <textarea id="undropRemarks" rows="4" placeholder="Enter reason for undropping..." style="width:100%;padding:10px;border:1px solid #ccc;border-radius:5px;font-size:0.95em;resize:vertical;box-sizing:border-box;"></textarea>
             <p id="undropRemarksError" style="color:#dc3545;font-size:0.85em;margin:4px 0 0;display:none;">Please enter remarks before proceeding.</p>
@@ -191,7 +209,55 @@ function showUndropModal(dropId) {
             document.getElementById('undropRemarks').focus();
             return;
         }
-        // Set the remarks value in the hidden form and submit
+        
+        // Collect selected certificates
+        const certificates = [];
+        const medicalCheck = document.getElementById('undropCert_medical');
+        const parentsCheck = document.getElementById('undropCert_parents');
+        const otherCheck = document.getElementById('undropCert_other');
+        const otherText = document.getElementById('undropOtherText');
+        
+        if (medicalCheck && medicalCheck.checked) {
+            certificates.push('Medical Certificate');
+        }
+        if (parentsCheck && parentsCheck.checked) {
+            certificates.push('Parents Letter');
+        }
+        if (otherCheck && otherCheck.checked) {
+            if (otherText && otherText.value.trim()) {
+                certificates.push('Other: ' + otherText.value.trim());
+            } else {
+                certificates.push('Other');
+            }
+        }
+        
+        // Validate that at least one certificate is selected
+        if (certificates.length === 0) {
+            // Show error for certificates
+            let certErrorEl = document.getElementById('undropCertificatesError');
+            if (!certErrorEl) {
+                certErrorEl = document.createElement('p');
+                certErrorEl.id = 'undropCertificatesError';
+                certErrorEl.style.cssText = 'color:#dc3545;font-size:0.85em;margin:8px 0 0;';
+                const certBox = document.querySelector('[style*="background:#f9f9f9"]');
+                if (certBox) {
+                    certBox.parentNode.insertBefore(certErrorEl, certBox.nextSibling);
+                }
+            }
+            certErrorEl.textContent = 'Please select at least one reason for undrop.';
+            certErrorEl.style.display = 'block';
+            return;
+        }
+        
+        // Hide error if certificates are selected
+        const certErrorEl = document.getElementById('undropCertificatesError');
+        if (certErrorEl) {
+            certErrorEl.style.display = 'none';
+        }
+        
+        const certificatesStr = certificates.join(', ');
+        
+        // Set the remarks and certificates in the hidden form and submit
         const form = document.getElementById('undropForm' + dropId);
         if (form) {
             const remarksInput = document.createElement('input');
@@ -199,6 +265,13 @@ function showUndropModal(dropId) {
             remarksInput.name = 'undrop_remarks';
             remarksInput.value = remarks;
             form.appendChild(remarksInput);
+            
+            const certificatesInput = document.createElement('input');
+            certificatesInput.type = 'hidden';
+            certificatesInput.name = 'undrop_certificates';
+            certificatesInput.value = certificatesStr;
+            form.appendChild(certificatesInput);
+            
             form.submit();
         }
         overlay.remove();
@@ -207,6 +280,27 @@ function showUndropModal(dropId) {
     document.getElementById('undropRemarks').addEventListener('input', function() {
         document.getElementById('undropRemarksError').style.display = 'none';
     });
+
+    // Add event listeners to clear certificate error when any checkbox changes
+    const checkboxes = document.querySelectorAll('input[name="undrop_certificates"]');
+    checkboxes.forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+            const certErrorEl = document.getElementById('undropCertificatesError');
+            if (certErrorEl) {
+                certErrorEl.style.display = 'none';
+            }
+        });
+    });
+
+}
+
+// Helper function to toggle the "Other" text field
+function toggleOtherField() {
+    const otherCheck = document.getElementById('undropCert_other');
+    const otherText = document.getElementById('undropOtherText');
+    if (otherCheck && otherText) {
+        otherText.style.display = otherCheck.checked ? 'block' : 'none';
+    }
 
     overlay.addEventListener('click', function(e) {
         if (e.target === overlay) overlay.remove();

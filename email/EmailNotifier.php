@@ -88,11 +88,9 @@ class EmailNotifier {
     <style>
         body { font-family: Arial, sans-serif; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background-color: #7f3fc6; color: white; padding: 20px; border-radius: 5px 5px 0 0; display: flex; align-items: center; gap: 20px; }
-        .logo { width: 80px; height: 80px; }
-        .header-content { flex: 1; }
-        .header-content h1 { margin: 0; font-size: 24px; }
-        .header-content p { margin: 5px 0 0 0; font-size: 14px; }
+        .header { background-color: #7f3fc6; color: white; padding: 20px; border-radius: 5px 5px 0 0; text-align: center; }
+        .header h2 { margin: 0; font-size: 24px; }
+        .header p { margin: 5px 0 0 0; font-size: 14px; }
         .content { background-color: #f9f9f9; padding: 20px; border: 1px solid #ddd; }
         .footer { background-color: #f0f0f0; padding: 10px; border-radius: 0 0 5px 5px; text-align: center; font-size: 12px; }
         .alert { background-color: #e7d4f5; border: 1px solid #7f3fc6; padding: 15px; border-radius: 5px; margin: 15px 0; color: #5a2d82; }
@@ -104,11 +102,8 @@ class EmailNotifier {
 <body>
     <div class='container'>
         <div class='header'>
-            <img src='https://imgur.com/a/thIeOyO' alt='PhilCST Logo' class='logo'>
-            <div class='header-content'>
-                <h1>Class Card Drop Official Letter</h1>
-                <p>PhilCST - Official Confirmation</p>
-            </div>
+            <h2>Class Card Drop Official Letter</h2>
+            <p>Guidance - Official Confirmation</p>
         </div>
         <div class='content'>
             <p>Dear " . htmlspecialchars($data['student_name']) . ",</p>
@@ -129,7 +124,12 @@ class EmailNotifier {
             
             <div class='field'>
                 <div class='label'>Request Date:</div>
-                <div class='value'>" . htmlspecialchars($data['drop_date']) . "</div>
+                <div class='value'>" . htmlspecialchars($this->formatDate12Hour($data['drop_date'])) . "</div>
+            </div>
+            
+            <div class='field'>
+                <div class='label'>Approval Date:</div>
+                <div class='value'>" . htmlspecialchars($this->formatDate12Hour($data['approved_date'] ?? date('Y-m-d H:i:s'))) . "</div>
             </div>
             
             <p style='margin-top: 20px;'><strong>Status:</strong> Your class card drop is now officially recorded in the system. This subject will no longer appear on your enrollment.</p>
@@ -152,12 +152,14 @@ class EmailNotifier {
     <style>
         body { font-family: Arial, sans-serif; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background-color: #28a745; color: white; padding: 20px; border-radius: 5px 5px 0 0; }
+        .header { background-color: #7f3fc6; color: white; padding: 20px; border-radius: 5px 5px 0 0; }
+        .header h1 { margin: 0; font-size: 24px; }
+        .header p { margin: 5px 0 0 0; font-size: 14px; }
         .content { background-color: #f9f9f9; padding: 20px; border: 1px solid #ddd; }
         .footer { background-color: #f0f0f0; padding: 10px; border-radius: 0 0 5px 5px; text-align: center; font-size: 12px; }
-        .alert { background-color: #d4edda; border: 1px solid #28a745; padding: 15px; border-radius: 5px; margin: 15px 0; color: #155724; }
+        .alert { background-color: #e7d4f5; border: 1px solid #7f3fc6; padding: 15px; border-radius: 5px; margin: 15px 0; color: #5a2d82; }
         .field { margin: 15px 0; }
-        .label { font-weight: bold; color: #28a745; }
+        .label { font-weight: bold; color: #7f3fc6; }
         .value { margin-top: 5px; }
     </style>
 </head>
@@ -186,12 +188,12 @@ class EmailNotifier {
             
             <div class='field'>
                 <div class='label'>Request Date:</div>
-                <div class='value'>" . htmlspecialchars($data['drop_date']) . "</div>
+                <div class='value'>" . htmlspecialchars($this->formatDate12Hour($data['drop_date'])) . "</div>
             </div>
             
             <div class='field'>
                 <div class='label'>Approval Date:</div>
-                <div class='value'>" . htmlspecialchars($data['approved_date']) . "</div>
+                <div class='value'>" . htmlspecialchars($this->formatDate12Hour($data['approved_date'])) . "</div>
             </div>
             
             <p style='margin-top: 20px;'><strong>Status:</strong> The class card drop has been officially processed and recorded in the system.</p>
@@ -214,12 +216,14 @@ class EmailNotifier {
     <style>
         body { font-family: Arial, sans-serif; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background-color: #dc3545; color: white; padding: 20px; border-radius: 5px 5px 0 0; }
+        .header { background-color: #7f3fc6; color: white; padding: 20px; border-radius: 5px 5px 0 0; }
+        .header h1 { margin: 0; font-size: 24px; }
+        .header p { margin: 5px 0 0 0; font-size: 14px; }
         .content { background-color: #f9f9f9; padding: 20px; border: 1px solid #ddd; }
         .footer { background-color: #f0f0f0; padding: 10px; border-radius: 0 0 5px 5px; text-align: center; font-size: 12px; }
-        .alert { background-color: #f8d7da; border: 1px solid #dc3545; padding: 15px; border-radius: 5px; margin: 15px 0; color: #721c24; }
+        .alert { background-color: #e7d4f5; border: 1px solid #7f3fc6; padding: 15px; border-radius: 5px; margin: 15px 0; color: #5a2d82; }
         .field { margin: 15px 0; }
-        .label { font-weight: bold; color: #dc3545; }
+        .label { font-weight: bold; color: #7f3fc6; }
         .value { margin-top: 5px; }
     </style>
 </head>
@@ -248,12 +252,17 @@ class EmailNotifier {
             
             <div class='field'>
                 <div class='label'>Original Drop Date:</div>
-                <div class='value'>" . htmlspecialchars($data['drop_date']) . "</div>
+                <div class='value'>" . htmlspecialchars($this->formatDate12Hour($data['drop_date'])) . "</div>
             </div>
             
             <div class='field'>
                 <div class='label'>Retrieve Date:</div>
-                <div class='value'>" . htmlspecialchars($data['retrieve_date']) . "</div>
+                <div class='value'>" . htmlspecialchars($this->formatDate12Hour($data['retrieve_date'])) . "</div>
+            </div>
+            
+            <div class='field'>
+                <div class='label'>Reason for Undrop:</div>
+                <div class='value'>" . (!empty($data['undrop_certificates']) ? htmlspecialchars($data['undrop_certificates']) : '-') . "</div>
             </div>
             
             <div class='field'>
@@ -272,5 +281,14 @@ class EmailNotifier {
 </html>";
         
         return $html;
+    }
+    
+    private function formatDate12Hour($dateString) {
+        try {
+            $dateTime = new DateTime($dateString);
+            return $dateTime->format('F j, Y \a\t g:i A');
+        } catch (Exception $e) {
+            return $dateString;
+        }
     }
 }

@@ -4,11 +4,15 @@
 require_once '../includes/session_check.php';
 require_once '../config/db.php';
 require_once '../includes/functions.php';
+require_once '../includes/check_overdue_requests.php';
 require_once '../email/EmailNotifier.php';
 
 if ($_SESSION['user_role'] !== 'admin') {
     redirect('/CLASS_CARD_DROPPING_SYSTEM/index.php');
 }
+
+// Check and cancel any overdue requests
+checkAndCancelOverdueRequests($pdo);
 
 $admin_name = getUserName($pdo, $_SESSION['user_id']);
 $user_info = getUserInfo($pdo, $_SESSION['user_id']);
@@ -17,6 +21,7 @@ $user_info = getUserInfo($pdo, $_SESSION['user_id']);
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'undrop') {
     $drop_id = intval($_POST['drop_id']);
     $undrop_remarks = trim($_POST['undrop_remarks'] ?? '');
+    $undrop_certificates = trim($_POST['undrop_certificates'] ?? '');
     try {
         // Get drop details before updating
         $stmt = $pdo->prepare('SELECT * FROM class_card_drops WHERE id = ?');
@@ -28,8 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php');
         }
 
-        $stmt = $pdo->prepare('UPDATE class_card_drops SET status = ?, retrieve_date = NOW(), undrop_remarks = ? WHERE id = ?');
-        $stmt->execute(['Undropped', $undrop_remarks, $drop_id]);
+        $stmt = $pdo->prepare('UPDATE class_card_drops SET status = ?, retrieve_date = NOW(), undrop_remarks = ?, undrop_certificates = ? WHERE id = ?');
+        $stmt->execute(['Undropped', $undrop_remarks, $undrop_certificates, $drop_id]);
 
         // Get student and teacher info for email notification
         $stmt = $pdo->prepare('SELECT student_id, name, email FROM students WHERE id = ?');
@@ -50,7 +55,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 'subject_name' => $drop['subject_name'],
                 'drop_date' => $drop['drop_date'],
                 'retrieve_date' => date('Y-m-d H:i:s'),
-                'undrop_remarks' => $undrop_remarks
+                'undrop_remarks' => $undrop_remarks,
+                'undrop_certificates' => $undrop_certificates
             ];
             $emailNotifier->notifyTeacherUndropped($teacher['email'], $emailData);
         }
@@ -62,14 +68,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php');
 }
 
-// Fetch pending drop requests
+// Fetch pending drop requests with deadline
 $pending_query = '
     SELECT ccd.*, s.name as student_name, s.guardian_name, s.student_id, s.course as student_course, u.name as teacher_name
     FROM class_card_drops ccd
     JOIN students s ON ccd.student_id = s.id
     JOIN users u ON ccd.teacher_id = u.id
-    WHERE ccd.status = "Pending"
-    ORDER BY ccd.drop_date ASC
+    WHERE ccd.status = "Pending" AND ccd.cancelled_date IS NULL
+    ORDER BY ccd.deadline ASC
 ';
 
 $stmt = $pdo->prepare($pending_query);
@@ -179,6 +185,8 @@ $message = getMessage();
                                         <th>Subject</th>
                                         <th>Teacher</th>
                                         <th>Request Date & Time</th>
+                                        <th>Deadline</th>
+                                        <th>Time Remaining</th>
                                         <th>Class Card Status</th>
                                         <th>Teacher Remarks</th>
                                         <th>Actions</th>
@@ -194,6 +202,25 @@ $message = getMessage();
                                             <td><?php echo htmlspecialchars($drop['subject_no'] . ' - ' . $drop['subject_name']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['teacher_name']); ?></td>
                                             <td><?php echo formatDate($drop['drop_date']); ?></td>
+                                            <td><?php echo formatDate($drop['deadline']); ?></td>
+                                            <td>
+                                                <span class="countdown" data-deadline="<?php echo htmlspecialchars($drop['deadline']); ?>" style="color: inherit;">
+                                                    <?php 
+                                                    $now = new DateTime('now');
+                                                    $deadline = new DateTime($drop['deadline']);
+                                                    $diff = $deadline->diff($now);
+                                                    if ($deadline > $now) {
+                                                        if ($diff->h > 0) {
+                                                            echo $diff->h . 'h ' . $diff->i . 'm';
+                                                        } else {
+                                                            echo $diff->i . 'm ' . $diff->s . 's';
+                                                        }
+                                                    } else {
+                                                        echo '<span style="color: #dc3545; font-weight: bold;">OVERDUE</span>';
+                                                    }
+                                                    ?>
+                                                </span>
+                                            </td>
                                             <td><span class="status status-pending"><?php echo htmlspecialchars($drop['status']); ?></span></td>
                                             <td><?php echo htmlspecialchars(substr($drop['remarks'], 0, 50)); ?></td>
                                             <td>
@@ -226,6 +253,8 @@ $message = getMessage();
                                         <th>Approved Date & Time</th>
                                         <th>Class Card Status</th>
                                         <th>Teacher Remarks</th>
+                                        <th>Undrop Reason</th>
+                                        <th>Admin Remarks</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -245,6 +274,8 @@ $message = getMessage();
                                                 </span>
                                             </td>
                                             <td><?php echo htmlspecialchars(substr($drop['remarks'], 0, 30)); ?></td>
+                                            <td><?php echo htmlspecialchars(substr($drop['undrop_certificates'] ?? '-', 0, 40)); ?></td>
+                                            <td><?php echo htmlspecialchars(substr($drop['undrop_remarks'] ?? '-', 0, 30)); ?></td>
                                             <td>
                                                 <?php if ($drop['status'] === 'Dropped'): ?>
                                                     <form method="POST" style="display: inline;" id="undropForm<?php echo $drop['id']; ?>">
@@ -267,6 +298,64 @@ $message = getMessage();
                         <p class="no-data">No dropped cards found.</p>
                     <?php endif; ?>
                 </section>
+
+                <!-- Cancelled Requests Section -->
+                <?php 
+                // Fetch cancelled requests
+                $cancelled_query = '
+                    SELECT ccd.*, s.name as student_name, s.guardian_name, s.student_id, u.name as teacher_name
+                    FROM class_card_drops ccd
+                    JOIN students s ON ccd.student_id = s.id
+                    JOIN users u ON ccd.teacher_id = u.id
+                    WHERE ccd.status = "Cancelled"
+                    ORDER BY ccd.cancelled_date DESC
+                ';
+                
+                $stmt = $pdo->prepare($cancelled_query);
+                $stmt->execute();
+                $cancelled_requests = $stmt->fetchAll();
+                ?>
+                <section class="section">
+                    <h2>Cancelled Requests (<span id="cancelledTable-count"><?php echo count($cancelled_requests); ?></span> records)</h2>
+                    <?php if (count($cancelled_requests) > 0): ?>
+                        <div class="table-responsive">
+                            <table class="table" id="cancelledTable">
+                                <thead>
+                                    <tr>
+                                        <th>Student ID</th>
+                                        <th>Student Name</th>
+                                        <th>Guardian Name</th>
+                                        <th>Subject</th>
+                                        <th>Teacher</th>
+                                        <th>Requested Date & Time</th>
+                                        <th>Deadline</th>
+                                        <th>Cancelled Date & Time</th>
+                                        <th>Cancellation Reason</th>
+                                        <th>Teacher Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($cancelled_requests as $request): ?>
+                                        <tr style="opacity: 0.7; background-color: #f9f9f9;">
+                                            <td><?php echo htmlspecialchars($request['student_id']); ?></td>
+                                            <td><?php echo htmlspecialchars($request['student_name']); ?></td>
+                                            <td><?php echo htmlspecialchars($request['guardian_name'] ?? ''); ?></td>
+                                            <td><?php echo htmlspecialchars($request['subject_no'] . ' - ' . $request['subject_name']); ?></td>
+                                            <td><?php echo htmlspecialchars($request['teacher_name']); ?></td>
+                                            <td><?php echo formatDate($request['drop_date']); ?></td>
+                                            <td><?php echo formatDate($request['deadline']); ?></td>
+                                            <td><?php echo formatDate($request['cancelled_date']); ?></td>
+                                            <td><?php echo htmlspecialchars($request['cancellation_reason'] ?? '-'); ?></td>
+                                            <td><?php echo htmlspecialchars(substr($request['remarks'], 0, 40)); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php else: ?>
+                        <p class="no-data">No cancelled requests.</p>
+                    <?php endif; ?>
+                </section>
             </div>
         </main>
     </div>
@@ -275,7 +364,54 @@ $message = getMessage();
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             liveTableFilter('liveSearch', 'approvedTable');
+            startCountdownTimers();
         });
+
+        // Update countdown timers every second
+        function startCountdownTimers() {
+            updateAllCountdowns();
+            setInterval(updateAllCountdowns, 1000);
+        }
+
+        function updateAllCountdowns() {
+            const countdowns = document.querySelectorAll('.countdown');
+            countdowns.forEach(function(el) {
+                const deadline = el.getAttribute('data-deadline');
+                if (!deadline) return;
+
+                const now = new Date();
+                const deadlineDate = new Date(deadline);
+                const diff = Math.floor((deadlineDate - now) / 1000); // seconds
+
+                if (diff <= 0) {
+                    el.innerHTML = '<span style="color: #dc3545; font-weight: bold;">OVERDUE</span>';
+                    el.style.color = '#dc3545';
+                } else {
+                    const hours = Math.floor(diff / 3600);
+                    const minutes = Math.floor((diff % 3600) / 60);
+                    const seconds = diff % 60;
+
+                    let timeStr = '';
+                    if (hours > 0) {
+                        timeStr = hours + 'h ' + minutes + 'm ' + seconds + 's';
+                    } else {
+                        timeStr = minutes + 'm ' + seconds + 's';
+                    }
+
+                    // Change color based on remaining time
+                    if (diff < 3600) { // Less than 1 hour
+                        el.style.color = '#dc3545';
+                        el.style.fontWeight = 'bold';
+                    } else if (diff < 7200) { // Less than 2 hours
+                        el.style.color = '#ff9800';
+                    } else {
+                        el.style.color = 'inherit';
+                    }
+
+                    el.innerHTML = timeStr;
+                }
+            });
+        }
     </script>
 </body>
 </html>
