@@ -152,7 +152,6 @@ $message = getMessage();
                                         <th>Subject</th>
                                         <th>Drop Date & Time</th>
                                         <th>Class Card Status</th>
-                                        <th>Student Status</th>
                                         <th>Teacher Remarks</th>
                                     </tr>
                                 </thead>
@@ -165,7 +164,6 @@ $message = getMessage();
                                             <td><?php echo htmlspecialchars($drop['subject_no'] . ' - ' . $drop['subject_name']); ?></td>
                                             <td><?php echo formatDate($drop['drop_date']); ?></td>
                                             <td><span class="status status-<?php echo strtolower($drop['status']); ?>"><?php echo htmlspecialchars($drop['status']); ?></span></td>
-                                            <td><span class="status status-<?php echo strtolower($drop['student_status']); ?>"><?php echo ucfirst(htmlspecialchars($drop['student_status'])); ?></span></td>
                                             <td><?php echo htmlspecialchars(substr($drop['remarks'], 0, 50)); ?></td>
                                         </tr>
                                     <?php endforeach; ?>
