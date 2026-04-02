@@ -145,11 +145,44 @@ $message = getMessage();
                     </div>
                 <?php endif; ?>
                 
-                <!-- Live Search -->
+                <!-- Advanced Filter Section -->
                 <section class="section">
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <input type="text" id="liveSearch" data-live-filter="dropHistoryTable" placeholder="Search student..." style="width: 250px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('liveSearch').value=''; filterDropHistoryTable();" style="padding: 8px 16px;">Clear</button>
+                    <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 1.1em;">Filter Drops</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: flex-end;">
+                        <!-- Search by Student -->
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9em; color: #333;">Search Student</label>
+                            <input type="text" id="liveSearch" data-live-filter="dropHistoryTable" placeholder="Name or ID..." style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.95em;">
+                        </div>
+                        
+                        <!-- Filter by Course -->
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9em; color: #333;">Course</label>
+                            <select id="courseFilter" onchange="filterDropHistoryTable()" style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.95em;">
+                                <option value="">All Courses</option>
+                                <option value="BS Information Technology">BS Information Technology</option>
+                                <option value="BS Computer Science">BS Computer Science</option>
+                                <option value="BS Information Systems">BS Information Systems</option>
+                                <option value="BS Computer Engineering">BS Computer Engineering</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Filter by Date Range -->
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9em; color: #333;">From Date</label>
+                            <input type="date" id="filterFromDate" onchange="filterDropHistoryTable()" style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.95em;">
+                        </div>
+                        
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9em; color: #333;">To Date</label>
+                            <input type="date" id="filterToDate" onchange="filterDropHistoryTable()" style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.95em;">
+                        </div>
+                        
+                        <!-- Clear Filters Button -->
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" class="btn btn-secondary" onclick="clearAllFilters()" style="flex: 1; padding: 8px 12px; font-size: 0.95em;">Clear All</button>
+                            <button type="button" class="btn btn-primary" onclick="filterDropHistoryTable()" style="flex: 1; padding: 8px 12px; font-size: 0.95em;">Apply</button>
+                        </div>
                     </div>
                 </section>
                 
@@ -204,35 +237,78 @@ $message = getMessage();
     <script>
         function filterDropHistoryTable() {
             var search = document.getElementById('liveSearch').value.toLowerCase().trim();
+            var statusFilter = document.getElementById('statusFilter').value.toLowerCase().trim();
             var fromDate = document.getElementById('filterFromDate').value;
             var toDate = document.getElementById('filterToDate').value;
             var table = document.getElementById('dropHistoryTable');
             if (!table) return;
             var rows = table.querySelector('tbody').querySelectorAll('tr');
+            var visibleCount = 0;
 
             rows.forEach(function(row) {
                 var cells = row.querySelectorAll('td');
-                var textMatch = false;
-                cells.forEach(function(cell) {
-                    if (cell.textContent.toLowerCase().includes(search)) textMatch = true;
-                });
-
-                // Date filter: column index 4 is "Drop Date & Time"
-                var dateMatch = true;
-                if (fromDate || toDate) {
-                    var dateCell = cells[4] ? cells[4].textContent.trim() : '';
-                    var rowDate = new Date(dateCell);
-                    if (isNaN(rowDate.getTime())) {
-                        dateMatch = false;
-                    } else {
-                        var rowDateStr = rowDate.toISOString().split('T')[0];
-                        if (fromDate && rowDateStr < fromDate) dateMatch = false;
-                        if (toDate && rowDateStr > toDate) dateMatch = false;
+                
+                // Text search (Student ID, Name, Subject)
+                var textMatch = !search;
+                if (search) {
+                    for (let i = 0; i < Math.min(4, cells.length); i++) {
+                        if (cells[i].textContent.toLowerCase().includes(search)) {
+                            textMatch = true;
+                            break;
+                        }
                     }
                 }
 
-                row.style.display = (textMatch && dateMatch) ? '' : 'none';
+                // Course filter (column 2 is "Course")
+                var courseMatch = true;
+                var courseFilter = document.getElementById('courseFilter').value.toLowerCase().trim();
+                if (courseFilter) {
+                    var courseCell = cells[2] ? cells[2].textContent.toLowerCase().trim() : '';
+                    courseMatch = courseCell.includes(courseFilter);
+                }
+
+                // Date filter (column 0 is used, checking drop date)
+                var dateMatch = true;
+                if (fromDate || toDate) {
+                    // Try to find date in various columns
+                    var dateStr = '';
+                    for (let i = 0; i < cells.length; i++) {
+                        var content = cells[i].textContent.trim();
+                        if (content.match(/\d{1,2}\/\d{1,2}\/\d{4}/)) {
+                            dateStr = content.split(',')[0];
+                            break;
+                        }
+                    }
+                    
+                    if (dateStr) {
+                        var parts = dateStr.split('/');
+                        if (parts.length === 3) {
+                            var rowDate = new Date(parts[2], parts[0] - 1, parts[1]);
+                            var rowDateStr = rowDate.toISOString().split('T')[0];
+                            if (fromDate && rowDateStr < fromDate) dateMatch = false;
+                            if (toDate && rowDateStr > toDate) dateMatch = false;
+                        }
+                    }
+                }
+
+                var show = textMatch && courseMatch && dateMatch;
+                row.style.display = show ? '' : 'none';
+                if (show) visibleCount++;
             });
+            
+            // Update count
+            var countSpan = document.getElementById('dropHistoryTable-count');
+            if (countSpan) {
+                countSpan.textContent = visibleCount;
+            }
+        }
+
+        function clearAllFilters() {
+            document.getElementById('liveSearch').value = '';
+            document.getElementById('courseFilter').value = '';
+            document.getElementById('filterFromDate').value = '';
+            document.getElementById('filterToDate').value = '';
+            filterDropHistoryTable();
         }
 
         function toggleSubmenu(trigger) {

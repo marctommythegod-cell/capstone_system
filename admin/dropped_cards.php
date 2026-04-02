@@ -33,8 +33,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php');
         }
 
-        $stmt = $pdo->prepare('UPDATE class_card_drops SET status = ?, retrieve_date = NOW(), undrop_remarks = ?, undrop_certificates = ? WHERE id = ?');
-        $stmt->execute(['Undropped', $undrop_remarks, $undrop_certificates, $drop_id]);
+        // Update status to Undropped in class_card_drops (without retrieve_date as it's now in separate table)
+        $stmt = $pdo->prepare('UPDATE class_card_drops SET status = ? WHERE id = ?');
+        $stmt->execute(['Undropped', $drop_id]);
+
+        // Insert undrop record into separate philcst_undrop_records table
+        $stmt = $pdo->prepare('
+            INSERT INTO philcst_undrop_records 
+            (drop_id, student_id, subject_no, subject_name, teacher_id, retrieve_date, undrop_remarks, undrop_certificates)
+            VALUES (?, ?, ?, ?, ?, NOW(), ?, ?)
+        ');
+        $stmt->execute([
+            $drop_id,
+            $drop['student_id'],
+            $drop['subject_no'],
+            $drop['subject_name'],
+            $drop['teacher_id'],
+            $undrop_remarks,
+            $undrop_certificates
+        ]);
 
         // Get student and teacher info for email notification
         $stmt = $pdo->prepare('SELECT student_id, name, email FROM students WHERE id = ?');

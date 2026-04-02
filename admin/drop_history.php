@@ -153,9 +153,42 @@ $message = getMessage();
                 
                 <!-- Live Search -->
                 <section class="section">
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <input type="text" id="liveSearch" data-live-filter="historyTable" placeholder="Search student..." style="width: 250px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('liveSearch').value=''; filterHistoryTable();" style="padding: 8px 16px;">Clear</button>
+                    <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 1.1em;">Filter History</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: flex-end;">
+                        <!-- Search by Student/Teacher -->
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9em; color: #333;">Search</label>
+                            <input type="text" id="liveSearch" data-live-filter="historyTable" placeholder="Student or Teacher..." style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.95em;">
+                        </div>
+                        
+                        <!-- Filter by Status -->
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9em; color: #333;">Status</label>
+                            <select id="statusFilter" onchange="filterHistoryTable()" style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.95em;">
+                                <option value="">All Status</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Dropped">Approved</option>
+                                <option value="Undropped">Undropped</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Filter by Date Range -->
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9em; color: #333;">From Date</label>
+                            <input type="date" id="filterFromDate" onchange="filterHistoryTable()" style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.95em;">
+                        </div>
+                        
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9em; color: #333;">To Date</label>
+                            <input type="date" id="filterToDate" onchange="filterHistoryTable()" style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.95em;">
+                        </div>
+                        
+                        <!-- Clear Filters Button -->
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" class="btn btn-secondary" onclick="clearAllFiltersHistory()" style="flex: 1; padding: 8px 12px; font-size: 0.95em;">Clear All</button>
+                            <button type="button" class="btn btn-primary" onclick="filterHistoryTable()" style="flex: 1; padding: 8px 12px; font-size: 0.95em;">Apply</button>
+                        </div>
                     </div>
                 </section>
                 
@@ -223,6 +256,7 @@ $message = getMessage();
     <script>
         function filterHistoryTable() {
             var search = document.getElementById('liveSearch').value.toLowerCase().trim();
+            var statusFilter = document.getElementById('statusFilter').value.toLowerCase().trim();
             var fromDate = document.getElementById('filterFromDate').value;
             var toDate = document.getElementById('filterToDate').value;
             var table = document.getElementById('historyTable');
@@ -232,15 +266,29 @@ $message = getMessage();
 
             rows.forEach(function(row) {
                 var cells = row.querySelectorAll('td');
-                var textMatch = false;
-                cells.forEach(function(cell) {
-                    if (cell.textContent.toLowerCase().includes(search)) textMatch = true;
-                });
+                
+                // Text search (Student ID, Name, Subject, Teacher)
+                var textMatch = !search;
+                if (search) {
+                    for (let i = 0; i < Math.min(5, cells.length); i++) {
+                        if (cells[i].textContent.toLowerCase().includes(search)) {
+                            textMatch = true;
+                            break;
+                        }
+                    }
+                }
 
-                // Date filter: column index 5 is "Drop Date & Time"
+                // Status filter (column 9 is "Class Card Status")
+                var statusMatch = true;
+                if (statusFilter) {
+                    var statusCell = cells[9] ? cells[9].textContent.toLowerCase().trim() : '';
+                    statusMatch = statusCell.includes(statusFilter);
+                }
+
+                // Date filter (column 7 is "Drop Date & Time")
                 var dateMatch = true;
                 if (fromDate || toDate) {
-                    var dateCell = cells[5] ? cells[5].textContent.trim() : '';
+                    var dateCell = cells[7] ? cells[7].textContent.trim() : '';
                     var rowDate = new Date(dateCell);
                     if (isNaN(rowDate.getTime())) {
                         dateMatch = false;
@@ -251,13 +299,21 @@ $message = getMessage();
                     }
                 }
 
-                var show = textMatch && dateMatch;
+                var show = textMatch && statusMatch && dateMatch;
                 row.style.display = show ? '' : 'none';
                 if (show) visibleCount++;
             });
 
             var countEl = document.getElementById('historyTable-count');
             if (countEl) countEl.textContent = visibleCount;
+        }
+
+        function clearAllFiltersHistory() {
+            document.getElementById('liveSearch').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('filterFromDate').value = '';
+            document.getElementById('filterToDate').value = '';
+            filterHistoryTable();
         }
 
         function toggleSubmenu(trigger) {

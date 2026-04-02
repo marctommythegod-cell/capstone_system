@@ -93,12 +93,12 @@ if ($action === 'drop_class_card') {
     $drop_year = date('Y');
     
     // Check if student has already dropped this subject with Pending or Dropped status (per student validation)
-    // Cannot drop again unless the previous drop has been undropped (has a valid retrieve_date)
+    // Cannot drop again if status is still Pending or Dropped
+    // If status is Undropped (which means it's been processed), no record will match and student can drop again
     $stmt = $pdo->prepare('
         SELECT id, status FROM class_card_drops 
         WHERE student_id = ? AND subject_no = ? 
         AND status IN ("Pending", "Dropped")
-        AND (retrieve_date IS NULL OR retrieve_date = "0000-00-00 00:00:00")
         LIMIT 1
     ');
     $stmt->execute([$student_id, $subject_no]);
