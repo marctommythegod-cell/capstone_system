@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 <div class="login-brand-bottom">
                     <h2>Class Card Dropping System</h2>
-                    <p>Streamlined academic management for teachers and administrators.</p>
+                    <p>A modern approach to managing class card dropping in educational institutions.</p>
                 </div>
             </div>
         </div>
@@ -87,8 +87,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="login-right-panel">
             <div class="login-form-wrapper">
                 <div class="login-header">
-                    <h1>Welcome back</h1>
-                    <p>Sign in to your account to continue</p>
+                    <h1>Welcome</h1>
+                    <p>Enter your credentials to access your account</p>
                 </div>
 
                 <?php if ($error): ?>
