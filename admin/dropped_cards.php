@@ -82,7 +82,16 @@ $stmt = $pdo->prepare($pending_query);
 $stmt->execute();
 $pending_drops = $stmt->fetchAll();
 
-// Fetch approved/undropped cards
+// Fetch approved/undropped cards with pagination
+$stmt = $pdo->prepare('
+    SELECT COUNT(*) as total FROM class_card_drops
+    WHERE status IN ("Dropped", "Undropped")
+');
+$stmt->execute();
+$total_approved_drops = $stmt->fetch()['total'];
+
+$pagination = getPaginationData($total_approved_drops, 15); // 15 items per page
+
 $query = '
     SELECT ccd.*, s.name as student_name, s.guardian_name, s.student_id, u.name as teacher_name
     FROM class_card_drops ccd
@@ -90,6 +99,7 @@ $query = '
     JOIN users u ON ccd.teacher_id = u.id
     WHERE ccd.status IN ("Dropped", "Undropped")
     ORDER BY ccd.drop_date DESC
+    LIMIT ' . intval($pagination['limit']) . ' OFFSET ' . intval($pagination['offset']) . '
 ';
 
 $stmt = $pdo->prepare($query);
@@ -238,7 +248,7 @@ $message = getMessage();
 
                 <!-- Approved/Dropped Cards Table -->
                 <section class="section">
-                    <h2>Approved Dropped Cards (<span id="approvedTable-count"><?php echo count($drops); ?></span> records)</h2>
+                    <h2>Approved Dropped Cards <span style="font-weight: normal; font-size: 0.9em; color: #666;">(<span id="approvedTable-count"><?php echo $pagination['total_items']; ?></span> total, page <?php echo $pagination['current_page']; ?> of <?php echo max(1, $pagination['total_pages']); ?>)</span></h2>
                     <?php if (count($drops) > 0): ?>
                         <div class="table-responsive">
                             <table class="table" id="approvedTable">
@@ -294,6 +304,7 @@ $message = getMessage();
                                 </tbody>
                             </table>
                         </div>
+                        <?php echo renderPaginationControls($pagination, '/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php'); ?>
                     <?php else: ?>
                         <p class="no-data">No dropped cards found.</p>
                     <?php endif; ?>
@@ -412,6 +423,26 @@ $message = getMessage();
                 }
             });
         }
+
+        // Prevent scroll to top on pagination click
+        document.addEventListener('DOMContentLoaded', function() {
+            const paginationLinks = document.querySelectorAll('.pagination-link');
+            paginationLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const scrollPosition = window.scrollY || window.pageYOffset;
+                    sessionStorage.setItem('scrollPosition', scrollPosition);
+                });
+            });
+
+            // Restore scroll position if coming from pagination
+            const savedScrollPosition = sessionStorage.getItem('scrollPosition');
+            if (savedScrollPosition !== null) {
+                setTimeout(() => {
+                    window.scrollTo(0, parseInt(savedScrollPosition));
+                    sessionStorage.removeItem('scrollPosition');
+                }, 100);
+            }
+        });
     </script>
 </body>
 </html>

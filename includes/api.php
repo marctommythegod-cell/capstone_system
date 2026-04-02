@@ -653,7 +653,142 @@ if ($action === 'update_admin_password') {
     redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/settings.php');
 }
 
+// Get drops by type (total, month, week) for statistics modal
+if ($action === 'get_drops') {
+    header('Content-Type: application/json');
+    
+    // Check if user is admin
+    if ($_SESSION['user_role'] !== 'admin') {
+        echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+        exit;
+    }
+    
+    $type = $_GET['type'] ?? 'total';
+    $drops = [];
+    
+    try {
+        if ($type === 'total') {
+            $stmt = $pdo->prepare('
+                SELECT ccd.*, s.name as student_name, s.student_id, u.name as teacher_name
+                FROM class_card_drops ccd
+                JOIN students s ON ccd.student_id = s.id
+                JOIN users u ON ccd.teacher_id = u.id
+                ORDER BY ccd.drop_date DESC
+            ');
+            $stmt->execute();
+        } elseif ($type === 'month') {
+            $current_month = date('m');
+            $current_year = date('Y');
+            $stmt = $pdo->prepare('
+                SELECT ccd.*, s.name as student_name, s.student_id, u.name as teacher_name
+                FROM class_card_drops ccd
+                JOIN students s ON ccd.student_id = s.id
+                JOIN users u ON ccd.teacher_id = u.id
+                WHERE MONTH(ccd.drop_date) = ? AND YEAR(ccd.drop_date) = ?
+                ORDER BY ccd.drop_date DESC
+            ');
+            $stmt->execute([$current_month, $current_year]);
+        } elseif ($type === 'week') {
+            $stmt = $pdo->prepare('
+                SELECT ccd.*, s.name as student_name, s.student_id, u.name as teacher_name
+                FROM class_card_drops ccd
+                JOIN students s ON ccd.student_id = s.id
+                JOIN users u ON ccd.teacher_id = u.id
+                WHERE WEEK(ccd.drop_date) = WEEK(NOW()) AND YEAR(ccd.drop_date) = YEAR(NOW())
+                ORDER BY ccd.drop_date DESC
+            ');
+            $stmt->execute();
+        }
+        
+        $results = $stmt->fetchAll();
+        
+        foreach ($results as $drop) {
+            $drops[] = [
+                'id' => $drop['id'],
+                'student_id' => $drop['student_id'],
+                'student_name' => $drop['student_name'],
+                'subject_no' => $drop['subject_no'],
+                'subject_name' => $drop['subject_name'],
+                'teacher_name' => $drop['teacher_name'],
+                'drop_date_formatted' => formatDate($drop['drop_date']),
+                'status' => $drop['status']
+            ];
+        }
+        
+        echo json_encode(['success' => true, 'drops' => $drops]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// Get teacher's drops by type (total, month, week) for statistics modal
+if ($action === 'get_teacher_drops') {
+    header('Content-Type: application/json');
+    
+    // Check if user is teacher
+    if ($_SESSION['user_role'] !== 'teacher') {
+        echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+        exit;
+    }
+    
+    $teacher_id = $_SESSION['user_id'];
+    $type = $_GET['type'] ?? 'total';
+    $drops = [];
+    
+    try {
+        if ($type === 'total') {
+            $stmt = $pdo->prepare('
+                SELECT ccd.*, s.name as student_name, s.student_id
+                FROM class_card_drops ccd
+                JOIN students s ON ccd.student_id = s.id
+                WHERE ccd.teacher_id = ?
+                ORDER BY ccd.drop_date DESC
+            ');
+            $stmt->execute([$teacher_id]);
+        } elseif ($type === 'month') {
+            $current_month = date('m');
+            $current_year = date('Y');
+            $stmt = $pdo->prepare('
+                SELECT ccd.*, s.name as student_name, s.student_id
+                FROM class_card_drops ccd
+                JOIN students s ON ccd.student_id = s.id
+                WHERE ccd.teacher_id = ? AND MONTH(ccd.drop_date) = ? AND YEAR(ccd.drop_date) = ?
+                ORDER BY ccd.drop_date DESC
+            ');
+            $stmt->execute([$teacher_id, $current_month, $current_year]);
+        } elseif ($type === 'week') {
+            $stmt = $pdo->prepare('
+                SELECT ccd.*, s.name as student_name, s.student_id
+                FROM class_card_drops ccd
+                JOIN students s ON ccd.student_id = s.id
+                WHERE ccd.teacher_id = ? AND WEEK(ccd.drop_date) = WEEK(NOW()) AND YEAR(ccd.drop_date) = YEAR(NOW())
+                ORDER BY ccd.drop_date DESC
+            ');
+            $stmt->execute([$teacher_id]);
+        }
+        
+        $results = $stmt->fetchAll();
+        
+        foreach ($results as $drop) {
+            $drops[] = [
+                'id' => $drop['id'],
+                'student_id' => $drop['student_id'],
+                'student_name' => $drop['student_name'],
+                'subject_no' => $drop['subject_no'],
+                'subject_name' => $drop['subject_name'],
+                'drop_date_formatted' => formatDate($drop['drop_date']),
+                'status' => $drop['status']
+            ];
+        }
+        
+        echo json_encode(['success' => true, 'drops' => $drops]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    exit;
+}
+
 // If no valid action
 redirect('/CLASS_CARD_DROPPING_SYSTEM/index.php');
 ?>
-

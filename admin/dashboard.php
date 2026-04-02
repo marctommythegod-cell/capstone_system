@@ -26,7 +26,34 @@ $stmt = $pdo->prepare('SELECT COUNT(*) as total FROM users WHERE role = "teacher
 $stmt->execute();
 $total_teachers = $stmt->fetch()['total'];
 
-// Approved dropped cards
+// This month's drops
+$current_month = date('m');
+$current_year = date('Y');
+$stmt = $pdo->prepare('
+    SELECT COUNT(*) as total FROM class_card_drops
+    WHERE MONTH(drop_date) = ? AND YEAR(drop_date) = ?
+');
+$stmt->execute([$current_month, $current_year]);
+$this_month_drops = $stmt->fetch()['total'];
+
+// This week's drops
+$stmt = $pdo->prepare('
+    SELECT COUNT(*) as total FROM class_card_drops
+    WHERE WEEK(drop_date) = WEEK(NOW()) AND YEAR(drop_date) = YEAR(NOW())
+');
+$stmt->execute();
+$this_week_drops = $stmt->fetch()['total'];
+
+// Approved dropped cards with pagination
+$stmt = $pdo->prepare('
+    SELECT COUNT(*) as total FROM class_card_drops
+    WHERE status IN ("Dropped", "Undropped")
+');
+$stmt->execute();
+$total_approved_drops = $stmt->fetch()['total'];
+
+$pagination = getPaginationData($total_approved_drops, 10); // 10 items per page
+
 $stmt = $pdo->prepare('
     SELECT ccd.*, s.name as student_name, s.guardian_name, s.student_id, u.name as teacher_name
     FROM class_card_drops ccd
@@ -34,7 +61,7 @@ $stmt = $pdo->prepare('
     JOIN users u ON ccd.teacher_id = u.id
     WHERE ccd.status IN ("Dropped", "Undropped")
     ORDER BY ccd.drop_date DESC
-    LIMIT 10
+    LIMIT ' . intval($pagination['limit']) . ' OFFSET ' . intval($pagination['offset']) . '
 ');
 $stmt->execute();
 $approved_drops = $stmt->fetchAll();
@@ -109,24 +136,37 @@ $message = getMessage();
                 <section class="section">
                     <h2>System Overview</h2>
                     <div class="stats-grid">
-                        <div class="stat-card">
+                        <div class="stat-card clickable-stat" onclick="showDropsModal('total', 'Total Class Card Drops')">
                             <h3><?php echo $total_drops; ?></h3>
                             <p>Total Class Cards Dropped</p>
+                            <small>Click to view records</small>
                         </div>
-                        <div class="stat-card">
+                        <div class="stat-card clickable-stat" onclick="showDropsModal('month', 'Class Card Drops - This Month')">
+                            <h3><?php echo $this_month_drops; ?></h3>
+                            <p>This Month's Drops</p>
+                            <small>Click to view records</small>
+                        </div>
+                        <div class="stat-card clickable-stat" onclick="showDropsModal('week', 'Class Card Drops - This Week')">
+                            <h3><?php echo $this_week_drops; ?></h3>
+                            <p>This Week's Drops</p>
+                            <small>Click to view records</small>
+                        </div>
+                        <div class="stat-card clickable-stat" onclick="window.location.href='/CLASS_CARD_DROPPING_SYSTEM/admin/students.php'" style="cursor: pointer;">
                             <h3><?php echo $total_students; ?></h3>
                             <p>Total Students</p>
+                            <small>Click to manage</small>
                         </div>
-                        <div class="stat-card">
+                        <div class="stat-card clickable-stat" onclick="window.location.href='/CLASS_CARD_DROPPING_SYSTEM/admin/teachers.php'" style="cursor: pointer;">
                             <h3><?php echo $total_teachers; ?></h3>
                             <p>Total Teachers</p>
+                            <small>Click to manage</small>
                         </div>
                     </div>
                 </section>
                 
                 <!-- Approved Dropped Cards Section -->
                 <section class="section">
-                    <h2>Approved Dropped Cards</h2>
+                    <h2>Approved Dropped Cards <span style="font-weight: normal; font-size: 0.9em; color: #666;">(<span id="dropsTable-count"><?php echo $pagination['total_items']; ?></span> total, page <?php echo $pagination['current_page']; ?> of <?php echo max(1, $pagination['total_pages']); ?>)</span></h2>
                     <?php if (count($approved_drops) > 0): ?>
                         <div class="table-responsive">
                             <table class="table">
@@ -164,6 +204,7 @@ $message = getMessage();
                                 </tbody>
                             </table>
                         </div>
+                        <?php echo renderPaginationControls($pagination, '/CLASS_CARD_DROPPING_SYSTEM/admin/dashboard.php'); ?>
                     <?php else: ?>
                         <p class="no-data">No approved dropped cards yet.</p>
                     <?php endif; ?>
@@ -172,5 +213,114 @@ $message = getMessage();
         </main>
     </div>
     <script src="/CLASS_CARD_DROPPING_SYSTEM/js/functions.js"></script>
+    <script>
+        // Get drops modal data via AJAX
+        function showDropsModal(type, title) {
+            // Fetch data from server
+            fetch('/CLASS_CARD_DROPPING_SYSTEM/includes/api.php?action=get_drops&type=' + encodeURIComponent(type))
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayDropsModal(data.drops, title, type);
+                    } else {
+                        alert('Error loading data: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error loading data');
+                });
+        }
+
+        function displayDropsModal(drops, title, type) {
+            // Remove existing modal if any
+            const existing = document.getElementById('dropsModal');
+            if (existing) existing.remove();
+
+            const modal = document.createElement('div');
+            modal.id = 'dropsModal';
+            modal.className = 'drops-modal';
+            
+            let dropsTableHTML = '';
+            if (drops.length > 0) {
+                dropsTableHTML = '<table class="drops-modal-table"><thead><tr><th>Student ID</th><th>Student Name</th><th>Subject</th><th>Teacher</th><th>Drop Date</th><th>Status</th></tr></thead><tbody>';
+                drops.forEach(drop => {
+                    dropsTableHTML += `<tr>
+                        <td>${escapeHtml(drop.student_id)}</td>
+                        <td>${escapeHtml(drop.student_name)}</td>
+                        <td>${escapeHtml(drop.subject_no)} - ${escapeHtml(drop.subject_name)}</td>
+                        <td>${escapeHtml(drop.teacher_name)}</td>
+                        <td>${escapeHtml(drop.drop_date_formatted)}</td>
+                        <td><span class="status status-${drop.status.toLowerCase()}">${escapeHtml(drop.status)}</span></td>
+                    </tr>`;
+                });
+                dropsTableHTML += '</tbody></table>';
+            } else {
+                dropsTableHTML = '<p class="no-drops-message">No records found.</p>';
+            }
+
+            modal.innerHTML = `
+                <div class="drops-modal-box">
+                    <div class="drops-modal-header">
+                        <h3>${escapeHtml(title)}</h3>
+                        <button class="drops-modal-close" onclick="closeDropsModal()">×</button>
+                    </div>
+                    <div class="drops-modal-body">
+                        <div class="drops-modal-count">Total: <strong>${drops.length}</strong></div>
+                        ${dropsTableHTML}
+                    </div>
+                    <div class="drops-modal-footer">
+                        <button class="btn-close-drops-modal" onclick="closeDropsModal()">Close</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            // Close on backdrop click
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) closeDropsModal();
+            });
+
+            // Close on Escape key
+            document.addEventListener('keydown', function handler(e) {
+                if (e.key === 'Escape') {
+                    closeDropsModal();
+                    document.removeEventListener('keydown', handler);
+                }
+            });
+        }
+
+        function closeDropsModal() {
+            const modal = document.getElementById('dropsModal');
+            if (modal) modal.remove();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Prevent scroll to top on pagination click
+        document.addEventListener('DOMContentLoaded', function() {
+            const paginationLinks = document.querySelectorAll('.pagination-link');
+            paginationLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const scrollPosition = window.scrollY || window.pageYOffset;
+                    sessionStorage.setItem('scrollPosition', scrollPosition);
+                });
+            });
+
+            // Restore scroll position if coming from pagination
+            const savedScrollPosition = sessionStorage.getItem('scrollPosition');
+            if (savedScrollPosition !== null) {
+                setTimeout(() => {
+                    window.scrollTo(0, parseInt(savedScrollPosition));
+                    sessionStorage.removeItem('scrollPosition');
+                }, 100);
+            }
+        });
+    </script>
 </body>
 </html>

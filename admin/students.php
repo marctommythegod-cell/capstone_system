@@ -372,10 +372,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
-// Fetch all students
-$stmt = $pdo->prepare('SELECT * FROM students ORDER BY name');
-$stmt->execute();
+// Get course and year filters from query parameters
+$course_filter = isset($_GET['course']) ? trim($_GET['course']) : null;
+$year_filter = isset($_GET['year']) ? intval($_GET['year']) : null;
+
+// Get total count and pagination data
+$count_query = 'SELECT COUNT(*) as total FROM students';
+$count_params = [];
+
+if ($course_filter || $year_filter) {
+    $count_query .= ' WHERE 1=1';
+    if ($course_filter) {
+        $count_query .= ' AND course = ?';
+        $count_params[] = $course_filter;
+    }
+    if ($year_filter) {
+        $count_query .= ' AND year = ?';
+        $count_params[] = $year_filter;
+    }
+}
+
+$stmt = $pdo->prepare($count_query);
+$stmt->execute($count_params);
+$total_students = $stmt->fetch()['total'];
+
+$pagination = getPaginationData($total_students, 15); // 15 items per page
+
+// Fetch paginated students
+$query = 'SELECT * FROM students';
+$query_params = [];
+
+if ($course_filter || $year_filter) {
+    $query .= ' WHERE 1=1';
+    if ($course_filter) {
+        $query .= ' AND course = ?';
+        $query_params[] = $course_filter;
+    }
+    if ($year_filter) {
+        $query .= ' AND year = ?';
+        $query_params[] = $year_filter;
+    }
+}
+
+$query .= ' ORDER BY name LIMIT ' . intval($pagination['limit']) . ' OFFSET ' . intval($pagination['offset']);
+
+$stmt = $pdo->prepare($query);
+$stmt->execute($query_params);
 $students = $stmt->fetchAll();
+
+// Get distinct courses for submenu
+$course_stmt = $pdo->prepare('SELECT DISTINCT course FROM students WHERE course IS NOT NULL AND course != "" ORDER BY course');
+$course_stmt->execute();
+$courses = $course_stmt->fetchAll();
 
 $message = getMessage();
 ?>
@@ -406,9 +454,21 @@ $message = getMessage();
                 <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php" class="nav-item">
                     <span>Dropped Cards</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/students.php" class="nav-item active">
+                <div class="nav-item submenu-trigger active" onclick="toggleSubmenu(this)">
                     <span>Manage Students</span>
-                </a>
+                </div>
+                <div class="submenu active" id="studentSubmenu">
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/students.php" class="submenu-item <?php echo !$course_filter && !$year_filter ? 'active' : ''; ?>">All Students</a>
+                    <div style="padding: 8px 16px; color: rgba(255, 255, 255, 0.6); font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; border-top: 1px solid rgba(255, 255, 255, 0.1);">Courses</div>
+                    <?php foreach ($courses as $course): ?>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/students.php?course=<?php echo urlencode($course['course']); ?>" class="submenu-item" style="padding-left: 40px; <?php echo $course_filter === $course['course'] && !$year_filter ? 'background-color: rgba(167, 139, 250, 0.25); color: #c4b5fd;' : ''; ?>"><?php echo htmlspecialchars($course['course']); ?></a>
+                    <?php endforeach; ?>
+                    <div style="padding: 8px 16px; color: rgba(255, 255, 255, 0.6); font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; border-top: 1px solid rgba(255, 255, 255, 0.1);">Year Level</div>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/students.php?year=1" class="submenu-item" style="padding-left: 40px; <?php echo $year_filter === 1 && !$course_filter ? 'background-color: rgba(167, 139, 250, 0.25); color: #c4b5fd;' : ''; ?>">1st Year</a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/students.php?year=2" class="submenu-item" style="padding-left: 40px; <?php echo $year_filter === 2 && !$course_filter ? 'background-color: rgba(167, 139, 250, 0.25); color: #c4b5fd;' : ''; ?>">2nd Year</a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/students.php?year=3" class="submenu-item" style="padding-left: 40px; <?php echo $year_filter === 3 && !$course_filter ? 'background-color: rgba(167, 139, 250, 0.25); color: #c4b5fd;' : ''; ?>">3rd Year</a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/students.php?year=4" class="submenu-item" style="padding-left: 40px; <?php echo $year_filter === 4 && !$course_filter ? 'background-color: rgba(167, 139, 250, 0.25); color: #c4b5fd;' : ''; ?>">4th Year</a>
+                </div>
                 <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/teachers.php" class="nav-item">
                     <span>Manage Teachers</span>
                 </a>
@@ -432,7 +492,20 @@ $message = getMessage();
         <!-- Main Content -->
         <main class="main-content">
             <header class="top-bar">
-                <h1>Manage Students</h1>
+                <h1>
+                    Manage Students
+                    <?php 
+                    if ($course_filter || $year_filter) {
+                        echo ' - ';
+                        if ($course_filter) echo htmlspecialchars($course_filter);
+                        if ($course_filter && $year_filter) echo ' / ';
+                        if ($year_filter) {
+                            $year_labels = [1 => '1st Year', 2 => '2nd Year', 3 => '3rd Year', 4 => '4th Year'];
+                            echo $year_labels[$year_filter];
+                        }
+                    }
+                    ?>
+                </h1>
                 <div class="user-info">
                     <span><?php echo htmlspecialchars($admin_name); ?> (Administrator)</span>
                 </div>
@@ -954,7 +1027,7 @@ $message = getMessage();
 
                 <!-- Students List -->
                 <section class="section">
-                    <h2>All Students (<span id="studentsTable-count"><?php echo count($students); ?></span>)</h2>
+                    <h2>All Students <span style="font-weight: normal; font-size: 0.9em; color: #666;">(<span id="studentsTable-count"><?php echo $pagination['total_items']; ?></span> total, page <?php echo $pagination['current_page']; ?> of <?php echo max(1, $pagination['total_pages']); ?>)</span></h2>
                     <div class="form-group" style="max-width: 400px; margin-bottom: 15px;">
                         <input type="text" id="liveSearchStudents" data-live-filter="studentsTable" placeholder="Search by ID, name, email, course..." style="width: 100%;">
                     </div>
@@ -1012,6 +1085,7 @@ $message = getMessage();
                                 </tbody>
                             </table>
                         </div>
+                        <?php echo renderPaginationControls($pagination, '/CLASS_CARD_DROPPING_SYSTEM/admin/students.php'); ?>
                     <?php else: ?>
                         <p class="no-data">No students registered yet.</p>
                     <?php endif; ?>
@@ -1019,6 +1093,36 @@ $message = getMessage();
             </div>
         </main>
     </div>
+
+    <script>
+        function toggleSubmenu(trigger) {
+            const submenu = trigger.nextElementSibling;
+            if (submenu && submenu.classList.contains('submenu')) {
+                submenu.classList.toggle('active');
+                trigger.classList.toggle('active');
+            }
+        }
+
+        // Prevent scroll to top on pagination click
+        document.addEventListener('DOMContentLoaded', function() {
+            const paginationLinks = document.querySelectorAll('.pagination-link');
+            paginationLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const scrollPosition = window.scrollY || window.pageYOffset;
+                    sessionStorage.setItem('scrollPosition', scrollPosition);
+                });
+            });
+
+            // Restore scroll position if coming from pagination
+            const savedScrollPosition = sessionStorage.getItem('scrollPosition');
+            if (savedScrollPosition !== null) {
+                setTimeout(() => {
+                    window.scrollTo(0, parseInt(savedScrollPosition));
+                    sessionStorage.removeItem('scrollPosition');
+                }, 100);
+            }
+        });
+    </script>
 
     <script src="/CLASS_CARD_DROPPING_SYSTEM/js/functions.js"></script>
 </body>

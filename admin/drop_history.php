@@ -12,15 +12,47 @@ if ($_SESSION['user_role'] !== 'admin') {
 $admin_name = getUserName($pdo, $_SESSION['user_id']);
 $user_info = getUserInfo($pdo, $_SESSION['user_id']);
 
-// Fetch all drop history
-$stmt = $pdo->prepare('
+// Get year filter from query parameter
+$year_filter = isset($_GET['year']) ? intval($_GET['year']) : null;
+
+// Fetch all drop history with pagination and year filter
+$count_query = '
+    SELECT COUNT(*) as total FROM class_card_drops ccd
+    JOIN students s ON ccd.student_id = s.id
+    JOIN users u ON ccd.teacher_id = u.id
+';
+$count_params = [];
+
+if ($year_filter) {
+    $count_query .= ' WHERE s.year = ?';
+    $count_params[] = $year_filter;
+}
+
+$stmt = $pdo->prepare($count_query);
+$stmt->execute($count_params);
+$total_history = $stmt->fetch()['total'];
+
+$pagination = getPaginationData($total_history, 10); // 10 items per page
+
+$query = '
     SELECT ccd.*, s.student_id, s.name as student_name, s.guardian_name, s.course as student_course, s.status as student_status, s.year as student_year, u.name as teacher_name
     FROM class_card_drops ccd
     JOIN students s ON ccd.student_id = s.id
     JOIN users u ON ccd.teacher_id = u.id
-    ORDER BY s.year, s.name, ccd.drop_date DESC
-');
-$stmt->execute();
+';
+$query_params = [];
+
+if ($year_filter) {
+    $query .= ' WHERE s.year = ?';
+    $query_params[] = $year_filter;
+}
+
+$query .= ' ORDER BY s.year, s.name, ccd.drop_date DESC
+    LIMIT ' . intval($pagination['limit']) . ' OFFSET ' . intval($pagination['offset']) . '
+';
+
+$stmt = $pdo->prepare($query);
+$stmt->execute($query_params);
 $all_history = $stmt->fetchAll();
 
 // Group drops by year level
@@ -66,9 +98,16 @@ $message = getMessage();
                 <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/teachers.php" class="nav-item">
                     <span>Manage Teachers</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/drop_history.php" class="nav-item active">
+                <div class="nav-item submenu-trigger active" onclick="toggleSubmenu(this)">
                     <span>Drop History</span>
-                </a>
+                </div>
+                <div class="submenu active" id="historySubmenu">
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/drop_history.php" class="submenu-item <?php echo !$year_filter ? 'active' : ''; ?>">All Records</a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/drop_history.php?year=1" class="submenu-item <?php echo $year_filter === 1 ? 'active' : ''; ?>">1st Year</a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/drop_history.php?year=2" class="submenu-item <?php echo $year_filter === 2 ? 'active' : ''; ?>">2nd Year</a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/drop_history.php?year=3" class="submenu-item <?php echo $year_filter === 3 ? 'active' : ''; ?>">3rd Year</a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/drop_history.php?year=4" class="submenu-item <?php echo $year_filter === 4 ? 'active' : ''; ?>">4th Year</a>
+                </div>
                 <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/settings.php" class="nav-item">
                     <span>Settings</span>
                 </a>
@@ -86,7 +125,15 @@ $message = getMessage();
         <!-- Main Content -->
         <main class="main-content">
             <header class="top-bar">
-                <h1>Student Drop History</h1>
+                <h1>
+                    Student Drop History
+                    <?php 
+                    if ($year_filter) {
+                        $year_labels = [1 => '1st Year', 2 => '2nd Year', 3 => '3rd Year', 4 => '4th Year'];
+                        echo ' - ' . $year_labels[$year_filter];
+                    }
+                    ?>
+                </h1>
                 <div class="user-info">
                     <span><?php echo htmlspecialchars($admin_name); ?> (Administrator)</span>
                 </div>
@@ -122,58 +169,56 @@ $message = getMessage();
                 
                 <!-- History Display -->
                 <section class="section">
-                    <h2>Drop History (<span id="historyTable-count"><?php echo count($all_history); ?></span> records)</h2>
+                    <h2>Drop History <span style="font-weight: normal; font-size: 0.9em; color: #666;">(<span id="historyTable-count"><?php echo $pagination['total_items']; ?></span> total, page <?php echo $pagination['current_page']; ?> of <?php echo max(1, $pagination['total_pages']); ?>)</span></h2>
                     
                     <?php if (count($all_history) > 0): ?>
+                        <div class="table-responsive">
+                            <table class="table" id="historyTable">
+                                <thead>
+                                    <tr>
+                                        <th>Student ID</th>
+                                        <th>Student Name</th>
+                                        <th>Guardian Name</th>
+                                        <th>Course</th>
+                                        <th>Subject</th>
+                                        <th>Teacher</th>
+                                        <th>Year</th>
+                                        <th>Drop Date & Time</th>
+                                        <th>Retrieve Date & Time</th>
+                                        <th>Class Card Status</th>
+                                        <th>Student Status</th>
+                                        <th>Teacher Remarks</th>
+                                        <th>Admin Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($all_history as $record): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($record['student_id']); ?></td>
+                                            <td><?php echo htmlspecialchars($record['student_name']); ?></td>
+                                            <td><?php echo htmlspecialchars($record['guardian_name'] ?? ''); ?></td>
+                                            <td><?php echo htmlspecialchars($record['student_course']); ?></td>
+                                            <td><?php echo htmlspecialchars($record['subject_no'] . ' - ' . $record['subject_name']); ?></td>
+                                            <td><?php echo htmlspecialchars($record['teacher_name']); ?></td>
+                                            <td><?php echo $record['student_year']; ?></td>
+                                            <td><?php echo formatDate($record['drop_date']); ?></td>
+                                            <td><?php echo $record['retrieve_date'] ? formatDate($record['retrieve_date']) : '-'; ?></td>
+                                            <td><span class="status status-<?php echo strtolower($record['status']); ?>"><?php echo htmlspecialchars($record['status']); ?></span></td>
+                                            <td><span class="status status-<?php echo strtolower($record['student_status']); ?>"><?php echo ucfirst(htmlspecialchars($record['student_status'])); ?></span></td>
+                                            <td><?php echo htmlspecialchars(substr($record['remarks'], 0, 50)); ?></td>
+                                            <td><?php echo !empty($record['undrop_remarks']) ? htmlspecialchars($record['undrop_remarks']) : '-'; ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
                         <?php 
-                        $yearLabels = [1 => '1st Year', 2 => '2nd Year', 3 => '3rd Year', 4 => '4th Year'];
-                        foreach ([1, 2, 3, 4] as $year):
-                            if (empty($historyByYear[$year])) continue;
+                        $pagination_url = '/CLASS_CARD_DROPPING_SYSTEM/admin/drop_history.php';
+                        if ($year_filter) {
+                            $pagination_url .= '?year=' . $year_filter;
+                        }
+                        echo renderPaginationControls($pagination, $pagination_url); 
                         ?>
-                            <div style="margin-bottom: 30px;">
-                                <h3 style="color: #333; padding: 15px; background-color: #f0f0f0; border-left: 4px solid #7f3fc6; margin-bottom: 15px;">
-                                    <?php echo $yearLabels[$year]; ?> (<?php echo count($historyByYear[$year]); ?> drop<?php echo count($historyByYear[$year]) !== 1 ? 's' : ''; ?>)
-                                </h3>
-                                <div class="table-responsive">
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th>Student ID</th>
-                                                <th>Student Name</th>
-                                                <th>Guardian Name</th>
-                                                <th>Course</th>
-                                                <th>Subject</th>
-                                                <th>Teacher</th>
-                                                <th>Drop Date & Time</th>
-                                                <th>Retrieve Date & Time</th>
-                                                <th>Class Card Status</th>
-                                                <th>Student Status</th>
-                                                <th>Teacher Remarks</th>
-                                                <th>Admin Remarks</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($historyByYear[$year] as $record): ?>
-                                                <tr>
-                                                    <td><?php echo htmlspecialchars($record['student_id']); ?></td>
-                                                    <td><?php echo htmlspecialchars($record['student_name']); ?></td>
-                                                    <td><?php echo htmlspecialchars($record['guardian_name'] ?? ''); ?></td>
-                                                    <td><?php echo htmlspecialchars($record['student_course']); ?></td>
-                                                    <td><?php echo htmlspecialchars($record['subject_no'] . ' - ' . $record['subject_name']); ?></td>
-                                                    <td><?php echo htmlspecialchars($record['teacher_name']); ?></td>
-                                                    <td><?php echo formatDate($record['drop_date']); ?></td>
-                                                    <td><?php echo $record['retrieve_date'] ? formatDate($record['retrieve_date']) : '-'; ?></td>
-                                                    <td><span class="status status-<?php echo strtolower($record['status']); ?>"><?php echo htmlspecialchars($record['status']); ?></span></td>
-                                                    <td><span class="status status-<?php echo strtolower($record['student_status']); ?>"><?php echo ucfirst(htmlspecialchars($record['student_status'])); ?></span></td>
-                                                    <td><?php echo htmlspecialchars(substr($record['remarks'], 0, 50)); ?></td>
-                                                    <td><?php echo !empty($record['undrop_remarks']) ? htmlspecialchars($record['undrop_remarks']) : '-'; ?></td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
                     <?php else: ?>
                         <p class="no-data">No drop history found.</p>
                     <?php endif; ?>
@@ -223,10 +268,36 @@ $message = getMessage();
             if (countEl) countEl.textContent = visibleCount;
         }
 
+        function toggleSubmenu(trigger) {
+            const submenu = trigger.nextElementSibling;
+            if (submenu && submenu.classList.contains('submenu')) {
+                submenu.classList.toggle('active');
+                trigger.classList.toggle('active');
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('liveSearch').addEventListener('input', filterHistoryTable);
             document.getElementById('filterFromDate').addEventListener('input', filterHistoryTable);
             document.getElementById('filterToDate').addEventListener('input', filterHistoryTable);
+
+            // Prevent scroll to top on pagination click
+            const paginationLinks = document.querySelectorAll('.pagination-link');
+            paginationLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const scrollPosition = window.scrollY || window.pageYOffset;
+                    sessionStorage.setItem('scrollPosition', scrollPosition);
+                });
+            });
+
+            // Restore scroll position if coming from pagination
+            const savedScrollPosition = sessionStorage.getItem('scrollPosition');
+            if (savedScrollPosition !== null) {
+                setTimeout(() => {
+                    window.scrollTo(0, parseInt(savedScrollPosition));
+                    sessionStorage.removeItem('scrollPosition');
+                }, 100);
+            }
         });
     </script>
 </body>

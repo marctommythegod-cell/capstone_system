@@ -34,14 +34,22 @@ $stmt = $pdo->prepare('SELECT COUNT(*) as this_week FROM class_card_drops WHERE 
 $stmt->execute([$user_id]);
 $this_week = $stmt->fetch()['this_week'];
 
-// Get recent drops (last 5)
+// Get recent drops with pagination
 $stmt = $pdo->prepare('
-    SELECT ccd.*, s.name as student_name, s.student_id as student_id_number, s.course as student_course, s.status as student_status
+    SELECT COUNT(*) as total FROM class_card_drops WHERE teacher_id = ?
+');
+$stmt->execute([$user_id]);
+$total_recent_drops = $stmt->fetch()['total'];
+
+$pagination = getPaginationData($total_recent_drops, 10); // 10 items per page
+
+$stmt = $pdo->prepare('
+    SELECT ccd.*, s.name as student_name, s.student_id as student_id_number, s.course as student_course, s.status as student_status, s.year as student_year
     FROM class_card_drops ccd
     JOIN students s ON ccd.student_id = s.id
     WHERE ccd.teacher_id = ?
     ORDER BY ccd.drop_date DESC
-    LIMIT 5
+    LIMIT ' . intval($pagination['limit']) . ' OFFSET ' . intval($pagination['offset']) . '
 ');
 $stmt->execute([$user_id]);
 $recent_drops = $stmt->fetchAll();
@@ -73,9 +81,16 @@ $message = getMessage();
                 <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php" class="nav-item">
                     <span>Drop Class Card</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php" class="nav-item">
+                <div class="nav-item submenu-trigger" onclick="toggleSubmenu(this)">
                     <span>Drop History</span>
-                </a>
+                </div>
+                <div class="submenu" id="historySubmenu">
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php" class="submenu-item">All Records</a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php?year=1" class="submenu-item">1st Year</a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php?year=2" class="submenu-item">2nd Year</a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php?year=3" class="submenu-item">3rd Year</a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php?year=4" class="submenu-item">4th Year</a>
+                </div>
                 <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/settings.php" class="nav-item">
                     <span>Settings</span>
                 </a>
@@ -110,37 +125,27 @@ $message = getMessage();
                 <section class="section">
                     <h2>Statistics</h2>
                     <div class="stats-grid">
-                        <div class="stat-card">
+                        <div class="stat-card clickable-stat" onclick="showTeacherDropsModal('total', 'Your Total Class Card Drops')">
                             <div class="stat-value"><?php echo $total_drops; ?></div>
                             <div class="stat-label">Total Class Card Drops</div>
+                            <small>Click to view records</small>
                         </div>
-                        <div class="stat-card">
+                        <div class="stat-card clickable-stat" onclick="showTeacherDropsModal('month', 'Your Drops - This Month')">
                             <div class="stat-value"><?php echo $this_month; ?></div>
                             <div class="stat-label">This Month</div>
+                            <small>Click to view records</small>
                         </div>
-                        <div class="stat-card">
+                        <div class="stat-card clickable-stat" onclick="showTeacherDropsModal('week', 'Your Drops - This Week')">
                             <div class="stat-value"><?php echo $this_week; ?></div>
                             <div class="stat-label">This Week</div>
+                            <small>Click to view records</small>
                         </div>
-                    </div>
-                </section>
-                
-                <!-- Quick Actions Section -->
-                <section class="section">
-                    <h2>Quick Actions</h2>
-                    <div class="action-buttons">
-                        <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php" class="btn btn-primary btn-large">
-                            Drop Student Class Card
-                        </a>
-                        <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php" class="btn btn-secondary btn-large">
-                            View Drop History
-                        </a>
                     </div>
                 </section>
                 
                 <!-- Recent Drops Section -->
                 <section class="section">
-                    <h2>Recent Class Card Drops</h2>
+                    <h2>Recent Class Card Drops <span style="font-weight: normal; font-size: 0.9em; color: #666;">(<span id="recentDropsTable-count"><?php echo $pagination['total_items']; ?></span> total, page <?php echo $pagination['current_page']; ?> of <?php echo max(1, $pagination['total_pages']); ?>)</span></h2>
                     <?php if (count($recent_drops) > 0): ?>
                         <div class="table-responsive">
                             <table class="table">
@@ -149,10 +154,12 @@ $message = getMessage();
                                         <th>Student ID</th>
                                         <th>Student Name</th>
                                         <th>Course</th>
+                                        <th>Year</th>
                                         <th>Subject</th>
                                         <th>Drop Date & Time</th>
                                         <th>Class Card Status</th>
                                         <th>Teacher Remarks</th>
+                                        <th>Detail</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -161,15 +168,18 @@ $message = getMessage();
                                             <td><?php echo htmlspecialchars($drop['student_id_number']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['student_name']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['student_course']); ?></td>
+                                            <td><?php echo htmlspecialchars($drop['student_year'] ?? 'N/A'); ?></td>
                                             <td><?php echo htmlspecialchars($drop['subject_no'] . ' - ' . $drop['subject_name']); ?></td>
                                             <td><?php echo formatDate($drop['drop_date']); ?></td>
                                             <td><span class="status status-<?php echo strtolower($drop['status']); ?>"><?php echo htmlspecialchars($drop['status']); ?></span></td>
                                             <td><?php echo htmlspecialchars(substr($drop['remarks'], 0, 50)); ?></td>
+                                            <td style="text-align: center;"><button class="detail-btn" onclick="showDropDetailModal(<?php echo htmlspecialchars(json_encode($drop)); ?>)" title="View Details"><span style="font-weight: 700; color: #a78bfa;">i</span></button></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
                             </table>
                         </div>
+                        <?php echo renderPaginationControls($pagination, '/CLASS_CARD_DROPPING_SYSTEM/teacher/dashboard.php'); ?>
                         <div style="text-align: center; margin-top: 15px;">
                             <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php" class="btn btn-secondary">View All Drops</a>
                         </div>
@@ -372,6 +382,203 @@ $message = getMessage();
             // but doesn't work perfectly - the form submission will work fine
         });
         <?php endif; ?>
+
+        // Toggle submenu function
+        function toggleSubmenu(trigger) {
+            const submenu = trigger.nextElementSibling;
+            if (submenu && submenu.classList.contains('submenu')) {
+                submenu.classList.toggle('active');
+                trigger.classList.toggle('active');
+            }
+        }
+
+        // Teacher drops modal functions
+        function showTeacherDropsModal(type, title) {
+            fetch('/CLASS_CARD_DROPPING_SYSTEM/includes/api.php?action=get_teacher_drops&type=' + encodeURIComponent(type))
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayTeacherDropsModal(data.drops, title, type);
+                    } else {
+                        alert('Error loading data: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error loading data');
+                });
+        }
+
+        function displayTeacherDropsModal(drops, title, type) {
+            const existing = document.getElementById('dropsModal');
+            if (existing) existing.remove();
+
+            const modal = document.createElement('div');
+            modal.id = 'dropsModal';
+            modal.className = 'drops-modal';
+            
+            let dropsTableHTML = '';
+            if (drops.length > 0) {
+                dropsTableHTML = '<table class="drops-modal-table"><thead><tr><th>Student ID</th><th>Student Name</th><th>Subject</th><th>Drop Date</th><th>Status</th></tr></thead><tbody>';
+                drops.forEach(drop => {
+                    dropsTableHTML += `<tr>
+                        <td>${escapeHtml(drop.student_id)}</td>
+                        <td>${escapeHtml(drop.student_name)}</td>
+                        <td>${escapeHtml(drop.subject_no)} - ${escapeHtml(drop.subject_name)}</td>
+                        <td>${escapeHtml(drop.drop_date_formatted)}</td>
+                        <td><span class="status status-${drop.status.toLowerCase()}">${escapeHtml(drop.status)}</span></td>
+                    </tr>`;
+                });
+                dropsTableHTML += '</tbody></table>';
+            } else {
+                dropsTableHTML = '<p class="no-drops-message">No records found.</p>';
+            }
+
+            modal.innerHTML = `
+                <div class="drops-modal-box">
+                    <div class="drops-modal-header">
+                        <h3>${escapeHtml(title)}</h3>
+                        <button class="drops-modal-close" onclick="closeTeacherDropsModal()">×</button>
+                    </div>
+                    <div class="drops-modal-body">
+                        <div class="drops-modal-count">Total: <strong>${drops.length}</strong></div>
+                        ${dropsTableHTML}
+                    </div>
+                    <div class="drops-modal-footer">
+                        <button class="btn-close-drops-modal" onclick="closeTeacherDropsModal()">Close</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) closeTeacherDropsModal();
+            });
+
+            document.addEventListener('keydown', function handler(e) {
+                if (e.key === 'Escape') {
+                    closeTeacherDropsModal();
+                    document.removeEventListener('keydown', handler);
+                }
+            });
+        }
+
+        function closeTeacherDropsModal() {
+            const modal = document.getElementById('dropsModal');
+            if (modal) modal.remove();
+        }
+
+        // Detail modal for individual drop record
+        function showDropDetailModal(drop) {
+            const modal = document.createElement('div');
+            modal.className = 'detail-modal';
+            modal.id = 'dropDetailModal';
+            
+            const yearLabels = {1: '1st Year', 2: '2nd Year', 3: '3rd Year', 4: '4th Year'};
+            const yearDisplay = yearLabels[drop.student_year] || drop.student_year;
+            
+            modal.innerHTML = `
+                <div class="detail-modal-box">
+                    <div class="detail-modal-header">
+                        <h3>Class Card Drop Details</h3>
+                        <button class="detail-modal-close" onclick="closeDropDetailModal()">×</button>
+                    </div>
+                    <div class="detail-modal-body">
+                        <div class="detail-section">
+                            <h4>Student Information</h4>
+                            <div class="detail-grid">
+                                <div class="detail-item">
+                                    <label>Student ID:</label>
+                                    <p>${escapeHtml(drop.student_id_number)}</p>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Name:</label>
+                                    <p>${escapeHtml(drop.student_name)}</p>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Course:</label>
+                                    <p>${escapeHtml(drop.student_course)}</p>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Year Level:</label>
+                                    <p>${escapeHtml(yearDisplay)}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h4>Drop Information</h4>
+                            <div class="detail-grid">
+                                <div class="detail-item">
+                                    <label>Subject:</label>
+                                    <p>${escapeHtml(drop.subject_no)} - ${escapeHtml(drop.subject_name)}</p>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Drop Date & Time:</label>
+                                    <p>${escapeHtml(drop.drop_date)}</p>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Status:</label>
+                                    <p><span class="status status-${drop.status.toLowerCase()}">${escapeHtml(drop.status)}</span></p>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Teacher Remarks:</label>
+                                    <p>${escapeHtml(drop.remarks)}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="detail-modal-footer">
+                        <button class="btn-close-detail-modal" onclick="closeDropDetailModal()">Close</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) closeDropDetailModal();
+            });
+            
+            document.addEventListener('keydown', function handler(e) {
+                if (e.key === 'Escape') {
+                    closeDropDetailModal();
+                    document.removeEventListener('keydown', handler);
+                }
+            });
+        }
+
+        function closeDropDetailModal() {
+            const modal = document.getElementById('dropDetailModal');
+            if (modal) modal.remove();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Prevent scroll to top on pagination click
+        document.addEventListener('DOMContentLoaded', function() {
+            const paginationLinks = document.querySelectorAll('.pagination-link');
+            paginationLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const scrollPosition = window.scrollY || window.pageYOffset;
+                    sessionStorage.setItem('scrollPosition', scrollPosition);
+                });
+            });
+
+            // Restore scroll position if coming from pagination
+            const savedScrollPosition = sessionStorage.getItem('scrollPosition');
+            if (savedScrollPosition !== null) {
+                setTimeout(() => {
+                    window.scrollTo(0, parseInt(savedScrollPosition));
+                    sessionStorage.removeItem('scrollPosition');
+                }, 100);
+            }
+        });
     </script>
     
     <script src="/CLASS_CARD_DROPPING_SYSTEM/js/functions.js"></script>
