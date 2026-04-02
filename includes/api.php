@@ -92,11 +92,12 @@ if ($action === 'drop_class_card') {
     $drop_month = date('F Y');
     $drop_year = date('Y');
     
-    // Check if student has already dropped this subject and it hasn't been undropped
+    // Check if student has already dropped this subject with Pending or Dropped status (per student validation)
+    // Cannot drop again unless the previous drop has been undropped (has a valid retrieve_date)
     $stmt = $pdo->prepare('
         SELECT id, status FROM class_card_drops 
         WHERE student_id = ? AND subject_no = ? 
-        AND (status = "Pending" OR status = "Dropped")
+        AND status IN ("Pending", "Dropped")
         AND (retrieve_date IS NULL OR retrieve_date = "0000-00-00 00:00:00")
         LIMIT 1
     ');
@@ -104,7 +105,7 @@ if ($action === 'drop_class_card') {
     $existing_drop = $stmt->fetch();
     
     if ($existing_drop) {
-        setMessage('error', 'This student has already dropped this subject.');
+        setMessage('error', 'This subject is already in the system with ' . $existing_drop['status'] . ' status. You cannot drop it again until it has been undropped.');
         redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php');
     }
     
@@ -198,17 +199,24 @@ if ($action === 'approve_drop') {
         ];
         
         // Send email to student if they have an email address
-        if ($student['email']) {
+        if ($student && $student['email']) {
+            error_log("Attempting to send approval email to student: " . $student['email']);
             $emailNotifier->notifyStudentApproved($student['email'], $emailData);
+        } else {
+            error_log("Student has no email address: " . ($student['student_id'] ?? 'unknown'));
         }
         
         // Send email to teacher
-        if ($teacher['email']) {
+        if ($teacher && $teacher['email']) {
+            error_log("Attempting to send approval email to teacher: " . $teacher['email']);
             $emailNotifier->notifyTeacherApproved($teacher['email'], $emailData);
+        } else {
+            error_log("Teacher has no email address");
         }
         
         setMessage('success', 'Class card drop has been approved. Student and teacher have been notified.');
     } catch (Exception $e) {
+        error_log("Exception in approve_drop: " . $e->getMessage());
         setMessage('error', 'Error approving class card drop: ' . $e->getMessage());
     }
     

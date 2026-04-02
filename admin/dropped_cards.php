@@ -47,6 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
         // Send email notification to teacher
         if ($teacher && $teacher['email']) {
+            error_log("Attempting to send undrop email to teacher: " . $teacher['email']);
             $emailNotifier = new EmailNotifier();
             $emailData = [
                 'student_id' => $student['student_id'],
@@ -59,10 +60,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 'undrop_certificates' => $undrop_certificates
             ];
             $emailNotifier->notifyTeacherUndropped($teacher['email'], $emailData);
+        } else {
+            error_log("Teacher has no email address for undrop notification");
         }
 
         setMessage('success', 'Class card has been undropped. The teacher has been notified.');
     } catch (Exception $e) {
+        error_log("Exception in undrop action: " . $e->getMessage());
         setMessage('error', 'Error undropping class card: ' . $e->getMessage());
     }
     redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php');

@@ -153,22 +153,9 @@ $message = getMessage();
                 
                 <!-- Live Search -->
                 <section class="section">
-                    <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;">
-                        <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
-                            <label for="liveSearch">Search by Student ID, Name, Subject, or Teacher</label>
-                            <input type="text" id="liveSearch" data-live-filter="historyTable" placeholder="Type to filter..." style="width: 100%;">
-                        </div>
-                        <div class="form-group" style="min-width: 160px; margin-bottom: 0;">
-                            <label for="filterFromDate">From Date</label>
-                            <input type="date" id="filterFromDate" style="width: 100%;">
-                        </div>
-                        <div class="form-group" style="min-width: 160px; margin-bottom: 0;">
-                            <label for="filterToDate">To Date</label>
-                            <input type="date" id="filterToDate" style="width: 100%;">
-                        </div>
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <button type="button" class="btn btn-secondary" onclick="document.getElementById('liveSearch').value=''; document.getElementById('filterFromDate').value=''; document.getElementById('filterToDate').value=''; filterHistoryTable();">Clear</button>
-                        </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="text" id="liveSearch" data-live-filter="historyTable" placeholder="Search student..." style="width: 250px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('liveSearch').value=''; filterHistoryTable();" style="padding: 8px 16px;">Clear</button>
                     </div>
                 </section>
                 

@@ -12,6 +12,12 @@ class EmailNotifier {
     private $config;
     
     public function __construct() {
+        // Load environment variables
+        if (!isset($_ENV['MAIL_FROM_EMAIL']) || empty($_ENV['MAIL_FROM_EMAIL'])) {
+            $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
+            $dotenv->load();
+        }
+        
         // Load email configuration
         $this->config = require __DIR__ . '/../config/email.php';
     }
@@ -38,7 +44,14 @@ class EmailNotifier {
     }
     
     private function sendEmail($recipient_email, $subject, $message) {
+        $mail = null;
         try {
+            // Validate config
+            if (!$this->config['smtp_host'] || !$this->config['from_email']) {
+                error_log("EMAIL CONFIG ERROR: Missing SMTP configuration");
+                return false;
+            }
+            
             $mail = new PHPMailer(true);
             
             // Server settings
@@ -64,7 +77,8 @@ class EmailNotifier {
             error_log("EMAIL SENT: $subject to $recipient_email");
             return true;
         } catch (Exception $e) {
-            error_log("EMAIL ERROR: {$mail->ErrorInfo}");
+            $error_msg = $mail ? $mail->ErrorInfo : $e->getMessage();
+            error_log("EMAIL ERROR: {$error_msg}");
             
             // Fallback to basic mail function
             $headers = "MIME-Version: 1.0\r\n";
