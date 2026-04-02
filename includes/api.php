@@ -92,6 +92,22 @@ if ($action === 'drop_class_card') {
     $drop_month = date('F Y');
     $drop_year = date('Y');
     
+    // Check if student has already dropped this subject and it hasn't been undropped
+    $stmt = $pdo->prepare('
+        SELECT id, status FROM class_card_drops 
+        WHERE student_id = ? AND subject_no = ? 
+        AND (status = "Pending" OR status = "Dropped")
+        AND (retrieve_date IS NULL OR retrieve_date = "0000-00-00 00:00:00")
+        LIMIT 1
+    ');
+    $stmt->execute([$student_id, $subject_no]);
+    $existing_drop = $stmt->fetch();
+    
+    if ($existing_drop) {
+        setMessage('error', 'This student has already dropped this subject.');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php');
+    }
+    
     try {
         // Set deadline to end of the same day (11:59 PM)
         $deadline = date('Y-m-d 23:59:59');

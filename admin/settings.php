@@ -78,6 +78,11 @@ $message = getMessage();
         <!-- Main Content -->
         <main class="main-content">
             <header class="top-bar">
+                <button class="sidebar-toggle" onclick="toggleSidebar()" id="sidebarToggleBtn">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
                 <h1>Settings</h1>
                 <div class="user-info">
                     <span><?php echo htmlspecialchars($admin_name); ?> (Administrator)</span>

@@ -1,5 +1,66 @@
 // js/functions.js - JavaScript Functionality
 
+// Sidebar toggle functionality for all screen sizes
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const container = document.querySelector('.dashboard-container');
+    const toggleBtn = document.getElementById('sidebarToggleBtn');
+    
+    if (sidebar && container) {
+        sidebar.classList.toggle('hidden');
+        container.classList.toggle('sidebar-collapsed');
+        toggleBtn.classList.toggle('active');
+        
+        // Save sidebar state to localStorage
+        if (sidebar.classList.contains('hidden')) {
+            localStorage.setItem('sidebarHidden', 'true');
+        } else {
+            localStorage.removeItem('sidebarHidden');
+        }
+    }
+}
+
+// Restore sidebar hidden state on page load (for mobile/tablets)
+document.addEventListener('DOMContentLoaded', function() {
+    // Only apply on mobile/tablet (max-width: 768px)
+    if (window.innerWidth <= 768) {
+        const sidebar = document.querySelector('.sidebar');
+        const container = document.querySelector('.dashboard-container');
+        const toggleBtn = document.getElementById('sidebarToggleBtn');
+        
+        // Check if sidebar should be hidden
+        if (localStorage.getItem('sidebarHidden') === 'true') {
+            if (sidebar) sidebar.classList.add('hidden');
+            if (container) container.classList.add('sidebar-collapsed');
+            if (toggleBtn) toggleBtn.classList.remove('active');
+        }
+    }
+    
+    // Close sidebar when clicking on navigation links (on mobile and tablets only)
+    const sidebarNav = document.querySelector('.sidebar-nav');
+    
+    if (sidebarNav) {
+        sidebarNav.addEventListener('click', function(e) {
+            // Only close on mobile/tablet (max-width: 768px)
+            if (window.innerWidth <= 768) {
+                const sidebar = document.querySelector('.sidebar');
+                const container = document.querySelector('.dashboard-container');
+                const toggleBtn = document.getElementById('sidebarToggleBtn');
+                
+                // Close sidebar on ANY click in the nav (all links and items)
+                if (sidebar && !sidebar.classList.contains('hidden')) {
+                    sidebar.classList.add('hidden');
+                    container.classList.add('sidebar-collapsed');
+                    toggleBtn.classList.remove('active');
+                    
+                    // Save sidebar state
+                    localStorage.setItem('sidebarHidden', 'true');
+                }
+            }
+        });
+    }
+});
+
 // Logout confirmation modal
 function showLogoutModal() {
     // Remove existing modal if any
@@ -11,11 +72,15 @@ function showLogoutModal() {
     modal.className = 'logout-modal';
     modal.innerHTML = `
         <div class="logout-modal-box">
-            <h3>Confirm Logout</h3>
-            <p>Are you sure you want to log out of the system?</p>
-            <div class="logout-modal-actions">
-                <button class="btn-cancel-logout" onclick="closeLogoutModal()">Cancel</button>
-                <button class="btn-confirm-logout" onclick="window.location.href='/CLASS_CARD_DROPPING_SYSTEM/includes/logout.php'">Logout</button>
+            <div class="logout-modal-header">
+                <h3>Confirm Logout</h3>
+            </div>
+            <div class="logout-modal-body">
+                <p>Are you sure you want to log out of the system?</p>
+            </div>
+            <div class="logout-modal-footer">
+                <button class="btn btn-secondary" onclick="closeLogoutModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="window.location.href='/CLASS_CARD_DROPPING_SYSTEM/includes/logout.php'">Yes, Logout</button>
             </div>
         </div>
     `;

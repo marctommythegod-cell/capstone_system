@@ -108,6 +108,11 @@ $message = getMessage();
         <!-- Main Content -->
         <main class="main-content">
             <header class="top-bar">
+                <button class="sidebar-toggle" onclick="toggleSidebar()" id="sidebarToggleBtn">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
                 <h1>Dashboard Overview</h1>
                 <div class="user-info">
                     <span><?php echo htmlspecialchars($teacher_name); ?> (Teacher)</span>
@@ -172,7 +177,7 @@ $message = getMessage();
                                             <td><?php echo htmlspecialchars($drop['subject_no'] . ' - ' . $drop['subject_name']); ?></td>
                                             <td><?php echo formatDate($drop['drop_date']); ?></td>
                                             <td><span class="status status-<?php echo strtolower($drop['status']); ?>"><?php echo htmlspecialchars($drop['status']); ?></span></td>
-                                            <td><?php echo htmlspecialchars(substr($drop['remarks'], 0, 50)); ?></td>
+                                            <td><span class="remarks-cell" style="word-break: break-word;"><?php $remarks_text = htmlspecialchars($drop['remarks']); echo strlen($remarks_text) > 50 ? substr($remarks_text, 0, 50) . '... <a href="javascript:void(0)" onclick="showRemarksModal(\'' . addslashes($remarks_text) . '\', \'Teacher Remarks\')" style="color: #a78bfa; font-weight: 600;">See More</a>' : $remarks_text; ?></span></td>
                                             <td style="text-align: center;"><button class="detail-btn" onclick="showDropDetailModal(<?php echo htmlspecialchars(json_encode($drop)); ?>)" title="View Details"><span style="font-weight: 700; color: #a78bfa;">i</span></button></td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -551,6 +556,46 @@ $message = getMessage();
 
         function closeDropDetailModal() {
             const modal = document.getElementById('dropDetailModal');
+            if (modal) modal.remove();
+        }
+
+        // Remarks modal function
+        function showRemarksModal(remarksText, remarksTitle) {
+            const modal = document.createElement('div');
+            modal.className = 'remarks-modal';
+            modal.id = 'remarksModal';
+            
+            modal.innerHTML = `
+                <div class="remarks-modal-box">
+                    <div class="remarks-modal-header">
+                        <h3>${remarksTitle}</h3>
+                        <button class="remarks-modal-close" onclick="closeRemarksModal()">×</button>
+                    </div>
+                    <div class="remarks-modal-body">
+                        <p>${remarksText}</p>
+                    </div>
+                    <div class="remarks-modal-footer">
+                        <button class="btn-close-remarks-modal" onclick="closeRemarksModal()">Close</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) closeRemarksModal();
+            });
+            
+            document.addEventListener('keydown', function handler(e) {
+                if (e.key === 'Escape') {
+                    closeRemarksModal();
+                    document.removeEventListener('keydown', handler);
+                }
+            });
+        }
+
+        function closeRemarksModal() {
+            const modal = document.getElementById('remarksModal');
             if (modal) modal.remove();
         }
 
