@@ -23,9 +23,6 @@ $show_password_modal = !$password_changed;
 
 // Get statistics
 $stmt = $pdo->prepare('SELECT COUNT(*) as total_drops FROM class_card_drops WHERE teacher_id = ?');
-$stmt->execute([$user_id]);
-$total_drops = $stmt->fetch()['total_drops'];
-
 $stmt = $pdo->prepare('SELECT COUNT(*) as this_month FROM class_card_drops WHERE teacher_id = ? AND MONTH(drop_date) = MONTH(NOW()) AND YEAR(drop_date) = YEAR(NOW())');
 $stmt->execute([$user_id]);
 $this_month = $stmt->fetch()['this_month'];
@@ -33,6 +30,10 @@ $this_month = $stmt->fetch()['this_month'];
 $stmt = $pdo->prepare('SELECT COUNT(*) as this_week FROM class_card_drops WHERE teacher_id = ? AND WEEK(drop_date) = WEEK(NOW()) AND YEAR(drop_date) = YEAR(NOW())');
 $stmt->execute([$user_id]);
 $this_week = $stmt->fetch()['this_week'];
+
+$stmt = $pdo->prepare('SELECT COUNT(*) as this_day FROM class_card_drops WHERE teacher_id = ? AND DATE(drop_date) = DATE(NOW())');
+$stmt->execute([$user_id]);
+$this_day = $stmt->fetch()['this_day'];
 
 // Get recent drops with pagination
 $stmt = $pdo->prepare('
@@ -120,6 +121,17 @@ $message = getMessage();
             </header>
             
             <div class="content-wrapper">
+                <!-- Global Header - Above Everything -->
+                <div class="global-header">
+                    <div class="header-left">
+                        <button class="sidebar-toggle" onclick="toggleSidebar()" id="sidebarToggleBtn" title="Toggle Sidebar">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </button>
+                    </div>
+                </div>
+
                 <?php if ($message): ?>
                     <div class="alert alert-<?php echo $message['type']; ?>">
                         <?php echo htmlspecialchars($message['text']); ?>
@@ -130,19 +142,19 @@ $message = getMessage();
                 <section class="section">
                     <h2>Statistics</h2>
                     <div class="stats-grid">
-                        <div class="stat-card clickable-stat" onclick="showTeacherDropsModal('total', 'Your Total Class Card Drops')">
-                            <div class="stat-value"><?php echo $total_drops; ?></div>
-                            <div class="stat-label">Total Class Card Drops</div>
-                            <small>Click to view records</small>
-                        </div>
-                        <div class="stat-card clickable-stat" onclick="showTeacherDropsModal('month', 'Your Drops - This Month')">
-                            <div class="stat-value"><?php echo $this_month; ?></div>
-                            <div class="stat-label">This Month</div>
+                        <div class="stat-card clickable-stat" onclick="showTeacherDropsModal('day', 'Your Drops - Today')">
+                            <div class="stat-value"><?php echo $this_day; ?></div>
+                            <div class="stat-label">This Day</div>
                             <small>Click to view records</small>
                         </div>
                         <div class="stat-card clickable-stat" onclick="showTeacherDropsModal('week', 'Your Drops - This Week')">
                             <div class="stat-value"><?php echo $this_week; ?></div>
                             <div class="stat-label">This Week</div>
+                            <small>Click to view records</small>
+                        </div>
+                        <div class="stat-card clickable-stat" onclick="showTeacherDropsModal('month', 'Your Drops - This Month')">
+                            <div class="stat-value"><?php echo $this_month; ?></div>
+                            <div class="stat-label">This Month</div>
                             <small>Click to view records</small>
                         </div>
                     </div>

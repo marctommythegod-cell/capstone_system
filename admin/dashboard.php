@@ -118,19 +118,18 @@ $message = getMessage();
         
         <!-- Main Content -->
         <main class="main-content">
-            <header class="top-bar">
-                <button class="sidebar-toggle" onclick="toggleSidebar()" id="sidebarToggleBtn">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
-                <h1>Admin Dashboard</h1>
-                <div class="user-info">
-                    <span><?php echo htmlspecialchars($admin_name); ?> (Administrator)</span>
-                </div>
-            </header>
-            
             <div class="content-wrapper">
+                <!-- Global Header - Above Everything -->
+                <div class="global-header">
+                    <div class="header-left">
+                        <button class="sidebar-toggle" onclick="toggleSidebar()" id="sidebarToggleBtn" title="Toggle Sidebar">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </button>
+                    </div>
+                </div>
+
                 <?php if ($message): ?>
                     <div class="alert alert-<?php echo $message['type']; ?>">
                         <?php echo htmlspecialchars($message['text']); ?>

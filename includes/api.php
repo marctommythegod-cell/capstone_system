@@ -770,6 +770,15 @@ if ($action === 'get_teacher_drops') {
                 ORDER BY ccd.drop_date DESC
             ');
             $stmt->execute([$teacher_id]);
+        } elseif ($type === 'day') {
+            $stmt = $pdo->prepare('
+                SELECT ccd.*, s.name as student_name, s.student_id
+                FROM class_card_drops ccd
+                JOIN students s ON ccd.student_id = s.id
+                WHERE ccd.teacher_id = ? AND DATE(ccd.drop_date) = DATE(NOW())
+                ORDER BY ccd.drop_date DESC
+            ');
+            $stmt->execute([$teacher_id]);
         } elseif ($type === 'month') {
             $current_month = date('m');
             $current_year = date('Y');

@@ -11,6 +11,36 @@
     --border-color: #ddd;
     --text-color: #333;
     --sidebar-width: 250px;
+    
+    /* Light Mode */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f5;
+    --bg-tertiary: #e8e8e8;
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --text-tertiary: #999999;
+    --card-bg: #ffffff;
+    --card-border: #ddd;
+    --input-bg: #f9fafb;
+    --input-border: #e5e7eb;
+    --input-text: #1f2937;
+    --button-hover: #6a2fa8;
+}
+
+/* Dark Mode - Facebook Style */
+body.dark-mode {
+    --bg-primary: #fff;
+    --bg-secondary: #0a0a0a;
+    --bg-tertiary: #131313;
+    --text-primary: #e4e6eb;
+    --text-secondary: #b0bcc4;
+    --text-tertiary: #8a8d91;
+    --card-bg: #242526;
+    --card-border: #3a3b3c;
+    --input-bg: #131313;
+    --input-border: #3a3b3c;
+    --input-text: #e4e6eb;
+    --button-hover: #b497d6;
 }
 
 * {
@@ -1328,13 +1358,7 @@ html, body {
 }
 
 .top-bar {
-    background-color: white;
-    padding: 20px 30px;
-    border-bottom: 1px solid var(--border-color);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    display: none;
 }
 
 .top-bar h1 {
@@ -1349,6 +1373,7 @@ html, body {
 
 .content-wrapper {
     padding: 30px;
+    padding-top: 20px;
     flex: 1;
 }
 
@@ -1357,6 +1382,7 @@ html, body {
     background-color: white;
     padding: 25px;
     border-radius: 8px;
+    margin-top: 15px;
     margin-bottom: 25px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
