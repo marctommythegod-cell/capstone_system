@@ -79,8 +79,8 @@ $message = getMessage();
                 <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php" class="nav-item">
                     <span>Drop History</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/settings.php" class="nav-item">
-                    <span>Settings</span>
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/profile.php" class="nav-item">
+                    <span>Profile</span>
                 </a>
                 <a href="#" class="nav-item logout-item" onclick="showLogoutModal(); return false;">
                     <span>Logout</span>

@@ -389,12 +389,12 @@ if ($action === 'change_password') {
 
 if ($action === 'update_profile') {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/settings.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/profile.php');
     }
     
     if ($_SESSION['user_role'] !== 'teacher') {
         setMessage('error', 'Unauthorized action.');
-        redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/settings.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/profile.php');
     }
     
     $user_id = $_SESSION['user_id'];
@@ -448,17 +448,17 @@ if ($action === 'update_profile') {
         }
     }
     
-    redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/settings.php');
+    redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/profile.php');
 }
 
 if ($action === 'update_password') {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/settings.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/profile.php');
     }
     
     if ($_SESSION['user_role'] !== 'teacher') {
         setMessage('error', 'Unauthorized action.');
-        redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/settings.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/profile.php');
     }
     
     $user_id = $_SESSION['user_id'];
@@ -475,7 +475,7 @@ if ($action === 'update_password') {
     
     if (!$user) {
         setMessage('error', 'User not found.');
-        redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/settings.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/profile.php');
     }
     
     // Verify current password
@@ -529,17 +529,17 @@ if ($action === 'update_password') {
         }
     }
     
-    redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/settings.php');
+    redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/profile.php');
 }
 
 if ($action === 'update_admin_profile') {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/settings.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/profile.php');
     }
     
     if ($_SESSION['user_role'] !== 'admin') {
         setMessage('error', 'Unauthorized action.');
-        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/settings.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/profile.php');
     }
     
     $user_id = $_SESSION['user_id'];
@@ -593,17 +593,17 @@ if ($action === 'update_admin_profile') {
         }
     }
     
-    redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/settings.php');
+    redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/profile.php');
 }
 
 if ($action === 'update_admin_password') {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/settings.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/profile.php');
     }
     
     if ($_SESSION['user_role'] !== 'admin') {
         setMessage('error', 'Unauthorized action.');
-        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/settings.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/profile.php');
     }
     
     $user_id = $_SESSION['user_id'];
@@ -620,7 +620,7 @@ if ($action === 'update_admin_password') {
     
     if (!$user) {
         setMessage('error', 'User not found.');
-        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/settings.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/profile.php');
     }
     
     // Verify current password
@@ -674,7 +674,7 @@ if ($action === 'update_admin_password') {
         }
     }
     
-    redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/settings.php');
+    redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/profile.php');
 }
 
 // Get drops by type (total, month, week) for statistics modal
