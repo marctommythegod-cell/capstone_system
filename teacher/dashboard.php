@@ -189,8 +189,12 @@ $message = getMessage();
                                             <td><?php echo htmlspecialchars($drop['subject_no'] . ' - ' . $drop['subject_name']); ?></td>
                                             <td><?php echo formatDate($drop['drop_date']); ?></td>
                                             <td><span class="status status-<?php echo strtolower($drop['status']); ?>"><?php echo htmlspecialchars($drop['status']); ?></span></td>
+<<<<<<< HEAD
                                             <td><span class="remarks-cell" style="word-break: break-word;"><?php $remarks_text = htmlspecialchars($drop['remarks']); echo strlen($remarks_text) > 50 ? substr($remarks_text, 0, 50) . '... <a href="javascript:void(0)" onclick="showRemarksModal(\'' . addslashes($remarks_text) . '\', \'Teacher Remarks\')" style="color: #a78bfa; font-weight: 600;">See More</a>' : $remarks_text; ?></span></td>
                                             <td style="text-align: center;"><button class="detail-btn" onclick="showDropDetailModal(<?php echo htmlspecialchars(json_encode($drop)); ?>)" title="View Details"><span style="font-weight: 700; color: #a78bfa;">i</span></button></td>
+=======
+                                            <td><?php echo htmlspecialchars(substr($drop['remarks'], 0, 50)); ?></td>
+>>>>>>> 7f4528f55d6b185bb1e8b811957bcc67d4219bdb
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>

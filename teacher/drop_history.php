@@ -38,11 +38,16 @@ $total_drops_count = $stmt->fetch()['total'];
 $pagination = getPaginationData($total_drops_count, 20); // 20 items per page
 
 $query = '
+<<<<<<< HEAD
     SELECT ccd.*, s.name as student_name, s.guardian_name, s.student_id as student_id_number, s.course as student_course, s.status as student_status, s.year as student_year, s.address as student_address, u.name as teacher_name
+=======
+    SELECT ccd.*, s.name as student_name, s.guardian_name, s.student_id as student_id_number, s.course as student_course, s.status as student_status, s.year as student_year, u.name as teacher_name
+>>>>>>> 7f4528f55d6b185bb1e8b811957bcc67d4219bdb
     FROM class_card_drops ccd
     JOIN students s ON ccd.student_id = s.id
     JOIN users u ON ccd.teacher_id = u.id
     WHERE ccd.teacher_id = ?
+<<<<<<< HEAD
 ';
 $query_params = [$user_id];
 
@@ -53,11 +58,24 @@ if ($year_filter) {
 
 $query .= ' ORDER BY s.year, ccd.drop_date DESC
     LIMIT ' . intval($pagination['limit']) . ' OFFSET ' . intval($pagination['offset']) . '
+=======
+    ORDER BY s.year, ccd.drop_date DESC
+>>>>>>> 7f4528f55d6b185bb1e8b811957bcc67d4219bdb
 ';
 
 $stmt = $pdo->prepare($query);
 $stmt->execute($query_params);
 $drops = $stmt->fetchAll();
+
+// Group drops by year level
+$dropsByYear = [1 => [], 2 => [], 3 => [], 4 => []];
+foreach ($drops as $drop) {
+    $year = $drop['student_year'] ?: 1;
+    if (!isset($dropsByYear[$year])) {
+        $dropsByYear[$year] = [];
+    }
+    $dropsByYear[$year][] = $drop;
+}
 
 // Get statistics
 $stats_query = 'SELECT COUNT(*) as total_drops FROM class_card_drops WHERE teacher_id = ?';
@@ -190,6 +208,7 @@ $message = getMessage();
                 <section class="section">
                     <h2>My Class Card Drops <span style="font-weight: normal; font-size: 0.9em; color: #666;">(<span id="dropHistoryTable-count"><?php echo $pagination['total_items']; ?></span> total, page <?php echo $pagination['current_page']; ?> of <?php echo max(1, $pagination['total_pages']); ?>)</span></h2>
                     <?php if (count($drops) > 0): ?>
+<<<<<<< HEAD
                         <div class="table-responsive">
                             <table class="table" id="dropHistoryTable">
                                 <thead>
@@ -225,6 +244,55 @@ $message = getMessage();
                             </table>
                         </div>
                         <?php echo renderPaginationControls($pagination, '/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php'); ?>
+=======
+                        <?php 
+                        $yearLabels = [1 => '1st Year', 2 => '2nd Year', 3 => '3rd Year', 4 => '4th Year'];
+                        foreach ([1, 2, 3, 4] as $year):
+                            if (empty($dropsByYear[$year])) continue;
+                        ?>
+                            <div style="margin-bottom: 30px;">
+                                <h3 style="color: #333; padding: 15px; background-color: #f0f0f0; border-left: 4px solid #7f3fc6; margin-bottom: 15px;">
+                                    <?php echo $yearLabels[$year]; ?> (<?php echo count($dropsByYear[$year]); ?> drop<?php echo count($dropsByYear[$year]) !== 1 ? 's' : ''; ?>)
+                                </h3>
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Student ID</th>
+                                                <th>Student Name</th>
+                                                <th>Guardian Name</th>
+                                                <th>Course</th>
+                                                <th>Subject</th>
+                                                <th>Drop Date & Time</th>
+                                                <th>Retrieve Date & Time</th>
+                                                <th>Class Card Status</th>
+                                                <th>Student Status</th>
+                                                <th>Teacher Remarks</th>
+                                                <th>Admin Remarks</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($dropsByYear[$year] as $drop): ?>
+                                                <tr>
+                                                    <td><?php echo htmlspecialchars($drop['student_id_number']); ?></td>
+                                                    <td><?php echo htmlspecialchars($drop['student_name']); ?></td>
+                                                    <td><?php echo htmlspecialchars($drop['guardian_name'] ?? ''); ?></td>
+                                                    <td><?php echo htmlspecialchars($drop['student_course']); ?></td>
+                                                    <td><?php echo htmlspecialchars($drop['subject_no'] . ' - ' . $drop['subject_name']); ?></td>
+                                                    <td><?php echo formatDate($drop['drop_date']); ?></td>
+                                                    <td><?php echo $drop['retrieve_date'] ? formatDate($drop['retrieve_date']) : '-'; ?></td>
+                                                    <td><span class="status status-<?php echo strtolower($drop['status']); ?>"><?php echo htmlspecialchars($drop['status']); ?></span></td>
+                                                    <td><span class="status status-<?php echo strtolower($drop['student_status']); ?>"><?php echo ucfirst(htmlspecialchars($drop['student_status'])); ?></span></td>
+                                                    <td><?php echo htmlspecialchars(substr($drop['remarks'], 0, 50)); ?></td>
+                                                    <td><?php echo !empty($drop['undrop_remarks']) ? htmlspecialchars($drop['undrop_remarks']) : '-'; ?></td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+>>>>>>> 7f4528f55d6b185bb1e8b811957bcc67d4219bdb
                     <?php else: ?>
                         <p class="no-data">No class cards dropped yet.</p>
                     <?php endif; ?>
