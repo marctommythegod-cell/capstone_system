@@ -129,23 +129,6 @@ $message = getMessage();
         <!-- Main Content -->
         <main class="main-content">
             <header class="top-bar">
-                <button class="sidebar-toggle" onclick="toggleSidebar()" id="sidebarToggleBtn">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
-                <h1>
-                    Class Card Drop History
-                    <?php 
-                    if ($year_filter) {
-                        $year_labels = [1 => '1st Year', 2 => '2nd Year', 3 => '3rd Year', 4 => '4th Year'];
-                        echo ' - ' . $year_labels[$year_filter];
-                    }
-                    ?>
-                </h1>
-                <div class="user-info">
-                    <span><?php echo htmlspecialchars($teacher_name); ?> (Teacher)</span>
-                </div>
             </header>
             
             <div class="content-wrapper">

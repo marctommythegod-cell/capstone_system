@@ -121,14 +121,6 @@ $message = getMessage();
             <div class="content-wrapper">
                 <!-- Global Header - Above Everything -->
                 <div class="global-header">
-                    <div class="header-left">
-                        <button class="sidebar-toggle" onclick="toggleSidebar()" id="sidebarToggleBtn" title="Toggle Sidebar">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </button>
-                    </div>
-                </div>
 
                 <?php if ($message): ?>
                     <div class="alert alert-<?php echo $message['type']; ?>">
