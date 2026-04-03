@@ -43,6 +43,10 @@ class EmailNotifier {
         return $this->sendEmail($teacher_email, $subject, $message);
     }
     
+    public function sendPasswordResetEmail($recipient_email, $subject, $message) {
+        return $this->sendEmail($recipient_email, $subject, $message);
+    }
+    
     private function sendEmail($recipient_email, $subject, $message) {
         $mail = null;
         try {

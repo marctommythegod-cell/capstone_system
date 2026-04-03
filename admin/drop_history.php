@@ -246,7 +246,7 @@ $message = getMessage();
                         ?>
                     <?php else: ?>
                         <p class="no-data">No drop history found.</p>
-                    <?php endif: ?>
+                    <?php endif; ?>
                 </section>
             </div>
         </main>
