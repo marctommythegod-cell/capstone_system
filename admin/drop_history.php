@@ -12,7 +12,6 @@ if ($_SESSION['user_role'] !== 'admin') {
 $admin_name = getUserName($pdo, $_SESSION['user_id']);
 $user_info = getUserInfo($pdo, $_SESSION['user_id']);
 
-<<<<<<< HEAD
 // Get year filter from query parameter
 $year_filter = isset($_GET['year']) ? intval($_GET['year']) : null;
 
@@ -36,15 +35,10 @@ $total_history = $stmt->fetch()['total'];
 $pagination = getPaginationData($total_history, 10); // 10 items per page
 
 $query = '
-=======
-// Fetch all drop history
-$stmt = $pdo->prepare('
->>>>>>> 7f4528f55d6b185bb1e8b811957bcc67d4219bdb
     SELECT ccd.*, s.student_id, s.name as student_name, s.guardian_name, s.course as student_course, s.status as student_status, s.year as student_year, u.name as teacher_name
     FROM class_card_drops ccd
     JOIN students s ON ccd.student_id = s.id
     JOIN users u ON ccd.teacher_id = u.id
-<<<<<<< HEAD
 ';
 $query_params = [];
 
@@ -59,11 +53,6 @@ $query .= ' ORDER BY s.year, s.name, ccd.drop_date DESC
 
 $stmt = $pdo->prepare($query);
 $stmt->execute($query_params);
-=======
-    ORDER BY s.year, s.name, ccd.drop_date DESC
-');
-$stmt->execute();
->>>>>>> 7f4528f55d6b185bb1e8b811957bcc67d4219bdb
 $all_history = $stmt->fetchAll();
 
 // Group drops by year level
@@ -208,7 +197,6 @@ $message = getMessage();
                     <h2>Drop History <span style="font-weight: normal; font-size: 0.9em; color: #666;">(<span id="historyTable-count"><?php echo $pagination['total_items']; ?></span> total, page <?php echo $pagination['current_page']; ?> of <?php echo max(1, $pagination['total_pages']); ?>)</span></h2>
                     
                     <?php if (count($all_history) > 0): ?>
-<<<<<<< HEAD
                         <div class="table-responsive">
                             <table class="table" id="historyTable">
                                 <thead>
@@ -256,60 +244,9 @@ $message = getMessage();
                         }
                         echo renderPaginationControls($pagination, $pagination_url); 
                         ?>
-=======
-                        <?php 
-                        $yearLabels = [1 => '1st Year', 2 => '2nd Year', 3 => '3rd Year', 4 => '4th Year'];
-                        foreach ([1, 2, 3, 4] as $year):
-                            if (empty($historyByYear[$year])) continue;
-                        ?>
-                            <div style="margin-bottom: 30px;">
-                                <h3 style="color: #333; padding: 15px; background-color: #f0f0f0; border-left: 4px solid #7f3fc6; margin-bottom: 15px;">
-                                    <?php echo $yearLabels[$year]; ?> (<?php echo count($historyByYear[$year]); ?> drop<?php echo count($historyByYear[$year]) !== 1 ? 's' : ''; ?>)
-                                </h3>
-                                <div class="table-responsive">
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th>Student ID</th>
-                                                <th>Student Name</th>
-                                                <th>Guardian Name</th>
-                                                <th>Course</th>
-                                                <th>Subject</th>
-                                                <th>Teacher</th>
-                                                <th>Drop Date & Time</th>
-                                                <th>Retrieve Date & Time</th>
-                                                <th>Class Card Status</th>
-                                                <th>Student Status</th>
-                                                <th>Teacher Remarks</th>
-                                                <th>Admin Remarks</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($historyByYear[$year] as $record): ?>
-                                                <tr>
-                                                    <td><?php echo htmlspecialchars($record['student_id']); ?></td>
-                                                    <td><?php echo htmlspecialchars($record['student_name']); ?></td>
-                                                    <td><?php echo htmlspecialchars($record['guardian_name'] ?? ''); ?></td>
-                                                    <td><?php echo htmlspecialchars($record['student_course']); ?></td>
-                                                    <td><?php echo htmlspecialchars($record['subject_no'] . ' - ' . $record['subject_name']); ?></td>
-                                                    <td><?php echo htmlspecialchars($record['teacher_name']); ?></td>
-                                                    <td><?php echo formatDate($record['drop_date']); ?></td>
-                                                    <td><?php echo $record['retrieve_date'] ? formatDate($record['retrieve_date']) : '-'; ?></td>
-                                                    <td><span class="status status-<?php echo strtolower($record['status']); ?>"><?php echo htmlspecialchars($record['status']); ?></span></td>
-                                                    <td><span class="status status-<?php echo strtolower($record['student_status']); ?>"><?php echo ucfirst(htmlspecialchars($record['student_status'])); ?></span></td>
-                                                    <td><?php echo htmlspecialchars(substr($record['remarks'], 0, 50)); ?></td>
-                                                    <td><?php echo !empty($record['undrop_remarks']) ? htmlspecialchars($record['undrop_remarks']) : '-'; ?></td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
->>>>>>> 7f4528f55d6b185bb1e8b811957bcc67d4219bdb
                     <?php else: ?>
                         <p class="no-data">No drop history found.</p>
-                    <?php endif; ?>
+                    <?php endif: ?>
                 </section>
             </div>
         </main>
