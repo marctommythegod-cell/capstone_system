@@ -84,10 +84,10 @@ $message = getMessage();
                     </div>
                 <?php endif; ?>
 
-                <!-- Profile Header -->
-                <div style="margin-bottom: 40px;">
-                    <h2 style="margin: 0 0 5px 0; font-size: 1.8em; color: #333;">My Profile</h2>
-                    <p style="margin: 0; color: #999; font-size: 0.95em;">Manage your profile information and password</p>
+                <!-- Profile Header Container -->
+                <div style="background: linear-gradient(135deg, #7f3fc6 0%, #a78bfa 100%); border-radius: 12px; padding: 25px 20px; margin-bottom: 30px; box-shadow: 0 6px 20px rgba(127, 63, 198, 0.2);">
+                    <h1 style="margin: 0 0 5px 0; font-size: 1.5em; color: white; font-weight: 700;">My Profile</h1>
+                    <p style="margin: 0; color: rgba(255, 255, 255, 0.9); font-size: 0.9em; font-weight: 500;">Manage your profile information and password</p>
                 </div>
 
                 <!-- Profile Information Card -->
