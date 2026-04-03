@@ -37,6 +37,9 @@ $message = getMessage();
 </head>
 <body>
     <div class="dashboard-container">
+        <!-- Sidebar Toggle Button -->
+        <button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Toggle Sidebar">≡</button>
+        
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">

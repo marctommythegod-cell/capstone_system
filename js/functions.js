@@ -1,5 +1,47 @@
 // js/functions.js - JavaScript Functionality
 
+// Sidebar toggle functionality
+function toggleSidebar() {
+    const container = document.querySelector('.dashboard-container');
+    container.classList.toggle('sidebar-collapsed');
+    
+    // Store the state in localStorage
+    const isCollapsed = container.classList.contains('sidebar-collapsed');
+    localStorage.setItem('sidebarCollapsed', isCollapsed);
+}
+
+// Close sidebar on mobile/tablet when nav item is clicked
+function closeSidebarOnMobile() {
+    // Only close sidebar on mobile and tablet (screen width <= 768px)
+    if (window.innerWidth <= 768) {
+        const container = document.querySelector('.dashboard-container');
+        container.classList.add('sidebar-collapsed');
+        localStorage.setItem('sidebarCollapsed', true);
+    }
+}
+
+// Initialize sidebar state on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.querySelector('.dashboard-container');
+    const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+    
+    if (isCollapsed && container) {
+        container.classList.add('sidebar-collapsed');
+    }
+    
+    // Add click event listeners to submenu items only (not submenu-trigger)
+    const submenuItems = document.querySelectorAll('.submenu-item');
+    submenuItems.forEach(item => {
+        item.addEventListener('click', closeSidebarOnMobile);
+    });
+    
+    // Add click event listeners to regular nav items (excluding submenu-trigger)
+    const navItems = document.querySelectorAll('.nav-item:not(.submenu-trigger)');
+    navItems.forEach(item => {
+        item.addEventListener('click', closeSidebarOnMobile);
+    });
+});
+
 // Logout confirmation modal
 function showLogoutModal() {
     // Remove existing modal if any

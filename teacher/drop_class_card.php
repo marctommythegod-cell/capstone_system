@@ -95,6 +95,9 @@ $message = getMessage();
         
         <!-- Main Content -->
         <main class="main-content">
+            <!-- Sidebar Toggle Button -->
+            <button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Toggle Sidebar">≡</button>
+            
             <header class="top-bar">
             </header>
             
