@@ -45,9 +45,11 @@ $total_recent_drops = $stmt->fetch()['total'];
 $pagination = getPaginationData($total_recent_drops, 10); // 10 items per page
 
 $stmt = $pdo->prepare('
-    SELECT ccd.*, s.name as student_name, s.student_id as student_id_number, s.course as student_course, s.status as student_status, s.year as student_year
+    SELECT ccd.*, s.name as student_name, s.student_id as student_id_number, s.course as student_course, s.status as student_status, s.year as student_year, s.guardian_name, s.address as student_address, u.name as teacher_name, pur.retrieve_date as undrop_retrieve_date, pur.undrop_remarks
     FROM class_card_drops ccd
     JOIN students s ON ccd.student_id = s.id
+    JOIN users u ON ccd.teacher_id = u.id
+    LEFT JOIN philcst_undrop_records pur ON ccd.id = pur.drop_id
     WHERE ccd.teacher_id = ?
     ORDER BY ccd.drop_date DESC
     LIMIT ' . intval($pagination['limit']) . ' OFFSET ' . intval($pagination['offset']) . '
@@ -483,75 +485,176 @@ $message = getMessage();
         // Detail modal for individual drop record
         function showDropDetailModal(drop) {
             const modal = document.createElement('div');
-            modal.className = 'detail-modal';
             modal.id = 'dropDetailModal';
-            
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.6);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+                backdrop-filter: blur(5px);
+                padding: 20px;
+            `;
+
             const yearLabels = {1: '1st Year', 2: '2nd Year', 3: '3rd Year', 4: '4th Year'};
             const yearDisplay = yearLabels[drop.student_year] || drop.student_year;
             
             modal.innerHTML = `
-                <div class="detail-modal-box">
-                    <div class="detail-modal-header">
-                        <h3>Class Card Drop Details</h3>
-                        <button class="detail-modal-close" onclick="closeDropDetailModal()">×</button>
+                <div style="
+                    background: white;
+                    border-radius: 16px;
+                    width: 100%;
+                    max-width: 850px;
+                    max-height: 85vh;
+                    overflow-y: auto;
+                    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+                ">
+                    <div style="
+                        background: linear-gradient(135deg, var(--primary-color), #9b59b6);
+                        color: white;
+                        padding: 28px 32px;
+                        border-radius: 16px 16px 0 0;
+                        font-size: 1.4em;
+                        font-weight: 700;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        letter-spacing: 0.3px;
+                    ">
+                        <span>Student Information & Class Card Dropping Information</span>
+                        <button onclick="closeDropDetailModal()" style="
+                            background: rgba(255, 255, 255, 0.25);
+                            border: none;
+                            color: white;
+                            font-size: 28px;
+                            cursor: pointer;
+                            width: 40px;
+                            height: 40px;
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            transition: all 0.3s;
+                            line-height: 1;
+                        " onmouseover="this.style.backgroundColor='rgba(255, 255, 255, 0.35); this.style.transform='scale(1.1)'" onmouseout="this.style.backgroundColor='rgba(255, 255, 255, 0.25); this.style.transform='scale(1)'">×</button>
                     </div>
-                    <div class="detail-modal-body">
-                        <div class="detail-section">
-                            <h4>Student Information</h4>
-                            <div class="detail-grid">
-                                <div class="detail-item">
-                                    <label>Student ID:</label>
-                                    <p>${escapeHtml(drop.student_id_number)}</p>
+                    <div style="padding: 40px 32px; background: #f8f6ff;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+                            <div>
+                                <div style="
+                                    background: linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(155, 89, 182, 0.05));
+                                    padding: 24px;
+                                    border-radius: 14px;
+                                    border-left: 5px solid var(--primary-color);
+                                ">
+                                    <h3 style="
+                                        color: var(--primary-color);
+                                        margin: 0 0 24px 0;
+                                        font-size: 1.25em;
+                                        font-weight: 700;
+                                    ">
+                                        Student Information
+                                    </h3>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Student ID</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${escapeHtml(drop.student_id_number)}</p>
+                                    </div>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Full Name</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${escapeHtml(drop.student_name)}</p>
+                                    </div>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Course</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${escapeHtml(drop.student_course)}</p>
+                                    </div>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Year Level</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${escapeHtml(yearDisplay)}</p>
+                                    </div>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Guardian Name</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${escapeHtml(drop.guardian_name || 'N/A')}</p>
+                                    </div>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Address</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600; word-break: break-word; line-height: 1.5;">${escapeHtml(drop.student_address || 'N/A')}</p>
+                                    </div>
+                                    <div>
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Student Status</label>
+                                        <p style="margin: 0; color: #1f2937;">
+                                            <span class="status status-${drop.student_status.toLowerCase()}" style="padding: 6px 12px; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 0.95em;">${escapeHtml(drop.student_status.charAt(0).toUpperCase() + drop.student_status.slice(1))}</span>
+                                        </p>
+                                    </div>
                                 </div>
-                                <div class="detail-item">
-                                    <label>Name:</label>
-                                    <p>${escapeHtml(drop.student_name)}</p>
-                                </div>
-                                <div class="detail-item">
-                                    <label>Course:</label>
-                                    <p>${escapeHtml(drop.student_course)}</p>
-                                </div>
-                                <div class="detail-item">
-                                    <label>Year Level:</label>
-                                    <p>${escapeHtml(yearDisplay)}</p>
+                            </div>
+                            <div>
+                                <div style="
+                                    background: linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(155, 89, 182, 0.05));
+                                    padding: 24px;
+                                    border-radius: 14px;
+                                    border-left: 5px solid #9b59b6;
+                                ">
+                                    <h3 style="
+                                        color: #9b59b6;
+                                        margin: 0 0 24px 0;
+                                        font-size: 1.25em;
+                                        font-weight: 700;
+                                    ">
+                                        Class Card Dropping Information
+                                    </h3>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Teacher Name</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${escapeHtml(drop.teacher_name || 'N/A')}</p>
+                                    </div>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Subject</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${escapeHtml(drop.subject_no)} - ${escapeHtml(drop.subject_name)}</p>
+                                    </div>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Class Card Status</label>
+                                        <p style="margin: 0; color: #1f2937;">
+                                            <span class="status status-${drop.status.toLowerCase()}" style="padding: 6px 12px; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 0.95em;">${escapeHtml(drop.status)}</span>
+                                        </p>
+                                    </div>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Dropped Date & Time</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${new Date(drop.drop_date).toLocaleString()}</p>
+                                    </div>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Undropped Date & Time</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${drop.undrop_retrieve_date && drop.undrop_retrieve_date !== '0000-00-00 00:00:00' ? new Date(drop.undrop_retrieve_date).toLocaleString() : 'N/A'}</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        
-                        <div class="detail-section">
-                            <h4>Drop Information</h4>
-                            <div class="detail-grid">
-                                <div class="detail-item">
-                                    <label>Subject:</label>
-                                    <p>${escapeHtml(drop.subject_no)} - ${escapeHtml(drop.subject_name)}</p>
-                                </div>
-                                <div class="detail-item">
-                                    <label>Drop Date & Time:</label>
-                                    <p>${escapeHtml(drop.drop_date)}</p>
-                                </div>
-                                <div class="detail-item">
-                                    <label>Status:</label>
-                                    <p><span class="status status-${drop.status.toLowerCase()}">${escapeHtml(drop.status)}</span></p>
-                                </div>
-                                <div class="detail-item">
-                                    <label>Teacher Remarks:</label>
-                                    <p>${escapeHtml(drop.remarks)}</p>
-                                </div>
-                            </div>
-                        </div>
                     </div>
-                    <div class="detail-modal-footer">
-                        <button class="btn-close-detail-modal" onclick="closeDropDetailModal()">Close</button>
+                    <div style="padding: 24px 32px; border-top: 2px solid #e9d5ff; display: flex; gap: 12px; justify-content: flex-end; background: white;">
+                        <button onclick="closeDropDetailModal()" style="
+                            padding: 12px 28px;
+                            background-color: #e9d5ff;
+                            color: var(--primary-color);
+                            border: none;
+                            border-radius: 10px;
+                            cursor: pointer;
+                            font-weight: 700;
+                            transition: all 0.3s;
+                            font-size: 1em;
+                        " onmouseover="this.style.backgroundColor='#ddd6fe'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 16px rgba(167, 139, 250, 0.3)'" onmouseout="this.style.backgroundColor='#e9d5ff'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">Close</button>
                     </div>
                 </div>
             `;
             
             document.body.appendChild(modal);
-            
+
             modal.addEventListener('click', function(e) {
                 if (e.target === modal) closeDropDetailModal();
             });
-            
+
             document.addEventListener('keydown', function handler(e) {
                 if (e.key === 'Escape') {
                     closeDropDetailModal();

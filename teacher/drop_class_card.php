@@ -26,9 +26,11 @@ $subjects = $stmt->fetchAll();
 
 // Fetch recent drops (last 5)
 $stmt = $pdo->prepare('
-    SELECT ccd.*, s.name as student_name, s.guardian_name, s.student_id as student_id_number, s.course as student_course, s.status as student_status, s.year as student_year, s.address as student_address
+    SELECT ccd.*, s.name as student_name, s.guardian_name, s.student_id as student_id_number, s.course as student_course, s.status as student_status, s.year as student_year, s.address as student_address, u.name as teacher_name, pur.retrieve_date as undrop_retrieve_date, pur.undrop_remarks
     FROM class_card_drops ccd
     JOIN students s ON ccd.student_id = s.id
+    JOIN users u ON ccd.teacher_id = u.id
+    LEFT JOIN philcst_undrop_records pur ON ccd.id = pur.drop_id
     WHERE ccd.teacher_id = ?
     ORDER BY ccd.drop_date DESC
     LIMIT 5
@@ -446,7 +448,7 @@ $message = getMessage();
                 padding: 20px;
             `;
 
-            const undropDate = dropData.retrieve_date && dropData.retrieve_date !== '0000-00-00 00:00:00' ? dropData.retrieve_date : 'N/A';
+            const undropDate = dropData.undrop_retrieve_date && dropData.undrop_retrieve_date !== '0000-00-00 00:00:00' ? dropData.undrop_retrieve_date : 'N/A';
             
             modal.innerHTML = `
                 <div style="
@@ -470,7 +472,7 @@ $message = getMessage();
                         align-items: center;
                         letter-spacing: 0.3px;
                     ">
-                        <span>Student Information & Drop Details</span>
+                        <span>Student Information & Class Card Dropping Information</span>
                         <button onclick="closeStudentDetailModal()" style="
                             background: rgba(255, 255, 255, 0.25);
                             border: none;
@@ -527,9 +529,15 @@ $message = getMessage();
                                         <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Guardian Name</label>
                                         <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${dropData.guardian_name || 'N/A'}</p>
                                     </div>
-                                    <div>
+                                    <div style="margin-bottom: 22px;">
                                         <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Address</label>
                                         <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600; word-break: break-word; line-height: 1.5;">${dropData.student_address || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Student Status</label>
+                                        <p style="margin: 0; color: #1f2937;">
+                                            <span class="status status-${dropData.student_status.toLowerCase()}" style="padding: 6px 12px; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 0.95em;">${dropData.student_status.charAt(0).toUpperCase() + dropData.student_status.slice(1)}</span>
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -549,11 +557,21 @@ $message = getMessage();
                                         align-items: center;
                                         gap: 10px;
                                     ">
-                                        Drop Information
+                                        Class Card Dropping Information
                                     </h3>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Teacher Name</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${dropData.teacher_name || 'N/A'}</p>
+                                    </div>
                                     <div style="margin-bottom: 22px;">
                                         <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Subject</label>
                                         <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${dropData.subject_no} - ${dropData.subject_name}</p>
+                                    </div>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Class Card Status</label>
+                                        <p style="margin: 0; color: #1f2937;">
+                                            <span class="status status-${dropData.status.toLowerCase()}" style="padding: 6px 12px; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 0.95em;">${dropData.status}</span>
+                                        </p>
                                     </div>
                                     <div style="margin-bottom: 22px;">
                                         <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Dropped Date & Time</label>
@@ -562,18 +580,6 @@ $message = getMessage();
                                     <div style="margin-bottom: 22px;">
                                         <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Undropped Date & Time</label>
                                         <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${undropDate !== 'N/A' ? new Date(undropDate).toLocaleString() : 'N/A'}</p>
-                                    </div>
-                                    <div style="margin-bottom: 22px;">
-                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Class Card Status</label>
-                                        <p style="margin: 0; color: #1f2937;">
-                                            <span class="status status-${dropData.status.toLowerCase()}" style="padding: 6px 12px; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 0.95em;">${dropData.status}</span>
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Student Status</label>
-                                        <p style="margin: 0; color: #1f2937;">
-                                            <span class="status status-${dropData.student_status.toLowerCase()}" style="padding: 6px 12px; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 0.95em;">${dropData.student_status.charAt(0).toUpperCase() + dropData.student_status.slice(1)}</span>
-                                        </p>
                                     </div>
                                 </div>
                             </div>

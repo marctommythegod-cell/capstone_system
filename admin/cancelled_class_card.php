@@ -432,7 +432,7 @@ $message = getMessage();
                         align-items: center;
                         letter-spacing: 0.3px;
                     ">
-                        <span>Student Information & Drop Details</span>
+                        <span>Student Information & Class Card Dropping Information</span>
                         <button onclick="closeStudentDetailModal()" style="
                             background: rgba(255, 255, 255, 0.25);
                             border: none;
@@ -509,7 +509,7 @@ $message = getMessage();
                                         font-size: 1.25em;
                                         font-weight: 700;
                                     ">
-                                        Drop Information
+                                        Class Card Dropping Information
                                     </h3>
                                     <div style="margin-bottom: 22px;">
                                         <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Subject</label>

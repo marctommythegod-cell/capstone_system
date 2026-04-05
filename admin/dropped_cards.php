@@ -429,7 +429,7 @@ $message = getMessage();
                         align-items: center;
                         letter-spacing: 0.3px;
                     ">
-                        <span>Student Information & Drop Details</span>
+                        <span>Student Information & Class Card Dropping Information</span>
                         <button onclick="closeStudentDetailModal()" style="
                             background: rgba(255, 255, 255, 0.25);
                             border: none;
@@ -487,9 +487,15 @@ $message = getMessage();
                                         <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Address</label>
                                         <p style="margin: 0; color: #1f2937; font-size: 1.1em; font-weight: 600; word-break: break-word; line-height: 1.5;">${recordData.address || 'N/A'}</p>
                                     </div>
-                                    <div>
+                                    <div style="margin-bottom: 26px;">
                                         <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Email Address</label>
                                         <p style="margin: 0; color: #1f2937; font-size: 1.1em; font-weight: 600; word-break: break-word;">${recordData.email || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Student Status</label>
+                                        <p style="margin: 0; color: #1f2937;">
+                                            <span style="padding: 6px 12px; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 0.95em; background-color: #e0e7ff; color: #3730a3;">${recordData.student_status ? recordData.student_status.charAt(0).toUpperCase() + recordData.student_status.slice(1) : 'N/A'}</span>
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -506,7 +512,7 @@ $message = getMessage();
                                         font-size: 1.35em;
                                         font-weight: 700;
                                     ">
-                                        Drop Information
+                                        Class Card Dropping Information
                                     </h3>
                                     <div style="margin-bottom: 26px;">
                                         <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Teacher</label>
@@ -526,15 +532,9 @@ $message = getMessage();
                                         <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Dropped Date & Time</label>
                                         <p style="margin: 0; color: #1f2937; font-size: 1.1em; font-weight: 600;">${new Date(recordData.drop_date).toLocaleString()}</p>
                                     </div>
-                                    <div style="margin-bottom: 26px;">
+                                    <div>
                                         <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Retrieved Date & Time</label>
                                         <p style="margin: 0; color: #1f2937; font-size: 1.1em; font-weight: 600;">${retrieveDate !== 'N/A' ? new Date(retrieveDate).toLocaleString() : 'N/A'}</p>
-                                    </div>
-                                    <div>
-                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Student Status</label>
-                                        <p style="margin: 0; color: #1f2937;">
-                                            <span style="padding: 6px 12px; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 0.95em; background-color: #e0e7ff; color: #3730a3;">${recordData.student_status ? recordData.student_status.charAt(0).toUpperCase() + recordData.student_status.slice(1) : 'N/A'}</span>
-                                        </p>
                                     </div>
                                 </div>
                             </div>
