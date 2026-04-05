@@ -453,111 +453,124 @@ $message = getMessage();
                 </div>
                 
                 <!-- Register Modal -->
-                <div id="registerModal" class="modal" style="display: none;">
-                    <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
-                        <div class="modal-header">
-                            <h2>Register New Teacher</h2>
-                            <button type="button" class="modal-close" onclick="closeRegisterModal()">&times;</button>
+                <div id="registerModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.6); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+                    <div class="modal-content" style="background: white; border-radius: 16px; width: 100%; max-width: 900px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);">
+                        <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-color), #9b59b6); color: white; padding: 28px 32px; border-radius: 16px 16px 0 0; font-size: 1.4em; font-weight: 700; display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.3px;">
+                            <span>Register New Teacher</span>
+                            <button type="button" class="modal-close" onclick="closeRegisterModal()" style="background: rgba(255, 255, 255, 0.25); border: none; color: white; font-size: 28px; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s; line-height: 1;" onmouseover="this.style.backgroundColor='rgba(255, 255, 255, 0.35); this.style.transform='scale(1.1)'" onmouseout="this.style.backgroundColor='rgba(255, 255, 255, 0.25); this.style.transform='scale(1)'">&times;</button>
                         </div>
-                        <form method="POST" class="teacher-form" id="teacherForm">
+                        <form method="POST" class="teacher-form" id="teacherForm" onsubmit="return validateTeacherForm()">
                             <input type="hidden" name="action" value="add">
-                            <div class="modal-body" style="padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                                <div class="form-group">
-                                    <label for="teacher_id">Teacher ID</label>
-                                    <input type="text" id="teacher_id" name="teacher_id" required placeholder="Enter teacher ID">
+                            <div class="modal-body" style="padding: 40px 32px; background: #f8f6ff; display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                                <div style="grid-column: 1 / 2;">
+                                    <div class="form-group" style="margin-bottom: 24px;">
+                                        <label for="teacher_id" style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Teacher ID</label>
+                                        <input type="text" id="teacher_id" name="teacher_id" required placeholder="Enter teacher ID (8 digits)" oninput="validateTeacherId()" style="width: 100%; padding: 12px 16px; border: 2px solid #e9d5ff; border-radius: 10px; font-size: 1em; transition: all 0.3s;" onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='#e9d5ff'">
+                                        <div id="teacher_id_error" style="color: #ef4444; font-size: 0.9em; margin-top: 8px; display: none;"></div>
+                                    </div>
+                                    
+                                    <div class="form-group" style="margin-bottom: 24px;">
+                                        <label for="firstname" style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">First Name</label>
+                                        <input type="text" id="firstname" name="firstname" required placeholder="Letters only" oninput="validateLettersOnly(this, 'firstname_error'); this.value = this.value.toUpperCase()" style="width: 100%; padding: 12px 16px; border: 2px solid #e9d5ff; border-radius: 10px; font-size: 1em; transition: all 0.3s;" onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='#e9d5ff'">
+                                        <div id="firstname_error" style="color: #ef4444; font-size: 0.9em; margin-top: 8px; display: none;"></div>
+                                    </div>
+                                    
+                                    <div class="form-group" style="margin-bottom: 24px;">
+                                        <label for="middlename" style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Middle Name</label>
+                                        <input type="text" id="middlename" name="middlename" required placeholder="Letters only" oninput="validateLettersOnly(this, 'middlename_error'); this.value = this.value.toUpperCase()" style="width: 100%; padding: 12px 16px; border: 2px solid #e9d5ff; border-radius: 10px; font-size: 1em; transition: all 0.3s;" onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='#e9d5ff'">
+                                        <div id="middlename_error" style="color: #ef4444; font-size: 0.9em; margin-top: 8px; display: none;"></div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="email" style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Email Address</label>
+                                        <input type="text" id="email" name="email" required placeholder="example@gmail.com" oninput="validateGmailOnly()" style="width: 100%; padding: 12px 16px; border: 2px solid #e9d5ff; border-radius: 10px; font-size: 1em; transition: all 0.3s;" onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='#e9d5ff'">
+                                        <div id="email_error" style="color: #ef4444; font-size: 0.9em; margin-top: 8px; display: none;"></div>
+                                    </div>
                                 </div>
-                                
-                                <div class="form-group">
-                                    <label for="lastname">Last Name</label>
-                                    <input type="text" id="lastname" name="lastname" required placeholder="Letters only" pattern="[a-zA-Z\s\-']+" oninput="validateNameInput(this); this.value = this.value.toUpperCase()" title="Last name must contain only letters, spaces, hyphens, and apostrophes">
+
+                                <div style="grid-column: 2 / 3;">
+                                    <div class="form-group" style="margin-bottom: 24px;">
+                                        <label for="lastname" style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Last Name</label>
+                                        <input type="text" id="lastname" name="lastname" required placeholder="Letters only" oninput="validateLettersOnly(this, 'lastname_error'); this.value = this.value.toUpperCase()" style="width: 100%; padding: 12px 16px; border: 2px solid #e9d5ff; border-radius: 10px; font-size: 1em; transition: all 0.3s;" onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='#e9d5ff'">
+                                        <div id="lastname_error" style="color: #ef4444; font-size: 0.9em; margin-top: 8px; display: none;"></div>
+                                    </div>
+                                    
+                                    <div class="form-group" style="margin-bottom: 24px;">
+                                        <label for="address" style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Complete Address</label>
+                                        <textarea id="address" name="address" required placeholder="Enter complete address" rows="2" style="width: 100%; padding: 12px 16px; border: 2px solid #e9d5ff; border-radius: 10px; font-size: 1em; transition: all 0.3s; font-family: inherit; resize: vertical;" onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='#e9d5ff'"></textarea>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="department" style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Department</label>
+                                        <select id="department" name="department" required style="width: 100%; padding: 12px 16px; border: 2px solid #e9d5ff; border-radius: 10px; font-size: 1em; transition: all 0.3s;" onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='#e9d5ff'">
+                                            <option value="">-- Select Department --</option>
+                                            <optgroup label="College of Engineering and Architecture">
+                                                <option value="BS in Civil Engineering (BSCE)">BS in Civil Engineering (BSCE)</option>
+                                                <option value="BS in Electrical Engineering (BSEE)">BS in Electrical Engineering (BSEE)</option>
+                                                <option value="BS in Mechanical Engineering (BSME)">BS in Mechanical Engineering (BSME)</option>
+                                            </optgroup>
+                                            <optgroup label="College of Criminology">
+                                                <option value="BS in Criminology (BSCrim)">BS in Criminology (BSCrim)</option>
+                                            </optgroup>
+                                            <optgroup label="College of Information Technology">
+                                                <option value="BS in Information Technology (BSIT)">BS in Information Technology (BSIT)</option>
+                                                <option value="BS in Computer Science (BSCS)">BS in Computer Science (BSCS)</option>
+                                            </optgroup>
+                                            <optgroup label="College of Education">
+                                                <option value="Bachelor of Elementary Education (BEEd)">Bachelor of Elementary Education (BEEd)</option>
+                                                <option value="Bachelor of Secondary Education (BSEd)">Bachelor of Secondary Education (BSEd)</option>
+                                            </optgroup>
+                                            <optgroup label="College of Business and Management">
+                                                <option value="BS in Business Administration (BSBA)">BS in Business Administration (BSBA)</option>
+                                                <option value="BS in Hospitality Management (BSHM)">BS in Hospitality Management (BSHM)</option>
+                                            </optgroup>
+                                        </select>
+                                    </div>
                                 </div>
-                                
-                                <div class="form-group">
-                                    <label for="firstname">First Name</label>
-                                    <input type="text" id="firstname" name="firstname" required placeholder="Letters only" pattern="[a-zA-Z\s\-']+" oninput="validateNameInput(this); this.value = this.value.toUpperCase()" title="First name must contain only letters, spaces, hyphens, and apostrophes">
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="middlename">Middle Name</label>
-                                    <input type="text" id="middlename" name="middlename" required placeholder="Letters only" pattern="[a-zA-Z\s\-']+" oninput="validateNameInput(this); this.value = this.value.toUpperCase()" title="Middle name must contain only letters, spaces, hyphens, and apostrophes">
-                                </div>
-                                
-                                <div class="form-group" style="grid-column: 1 / -1;">
-                                    <label for="address">Complete Address</label>
-                                    <textarea id="address" name="address" required placeholder="Enter complete address" rows="3"></textarea>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="email">Email Address</label>
-                                    <input type="email" id="email" name="email" required placeholder="example@gmail.com">
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="department">Department</label>
-                                    <select id="department" name="department" required>
-                                        <option value="">-- Select Department --</option>
-                                        <optgroup label="College of Engineering and Architecture">
-                                            <option value="BS in Civil Engineering (BSCE)">BS in Civil Engineering (BSCE)</option>
-                                            <option value="BS in Electrical Engineering (BSEE)">BS in Electrical Engineering (BSEE)</option>
-                                            <option value="BS in Mechanical Engineering (BSME)">BS in Mechanical Engineering (BSME)</option>
-                                        </optgroup>
-                                        <optgroup label="College of Criminology">
-                                            <option value="BS in Criminology (BSCrim)">BS in Criminology (BSCrim)</option>
-                                        </optgroup>
-                                        <optgroup label="College of Information Technology">
-                                            <option value="BS in Information Technology (BSIT)">BS in Information Technology (BSIT)</option>
-                                            <option value="BS in Computer Science (BSCS)">BS in Computer Science (BSCS)</option>
-                                        </optgroup>
-                                        <optgroup label="College of Education">
-                                            <option value="Bachelor of Elementary Education (BEEd)">Bachelor of Elementary Education (BEEd)</option>
-                                            <option value="Bachelor of Secondary Education (BSEd)">Bachelor of Secondary Education (BSEd)</option>
-                                        </optgroup>
-                                        <optgroup label="College of Business and Management">
-                                            <option value="BS in Business Administration (BSBA)">BS in Business Administration (BSBA)</option>
-                                            <option value="BS in Hospitality Management (BSHM)">BS in Hospitality Management (BSHM)</option>
-                                        </optgroup>
-                                    </select>
-                                </div>
-                                
-                                <div class="form-group" style="grid-column: 1 / -1;">
-                                    <label for="password">Password</label>
-                                    <div style="display: flex; gap: 10px; align-items: flex-start;">
-                                        <div class="password-input-wrapper" style="flex: 1;">
-                                            <input type="password" id="password" name="password" required minlength="6" placeholder="Put a strong password here" oninput="checkPasswordStrength(this.value)">
-                                            <button type="button" class="password-toggle" onclick="togglePassword('password')">
-                                                <svg class="eye-icon eye-show" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                                <svg class="eye-icon eye-hide" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-                                            </button>
+
+                                <div style="grid-column: 1 / -1;">
+                                    <div style="background: linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(155, 89, 182, 0.05)); padding: 24px; border-radius: 14px; border-left: 5px solid var(--primary-color);">
+                                        <h3 style="color: var(--primary-color); margin: 0 0 20px 0; font-size: 1.2em; font-weight: 700;">Security Credentials</h3>
+                                        <div class="form-group" style="margin-bottom: 20px;">
+                                            <label for="password" style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Password</label>
+                                            <div style="display: flex; gap: 10px; align-items: flex-start;">
+                                                <div class="password-input-wrapper" style="flex: 1;">
+                                                    <input type="password" id="password" name="password" required minlength="6" placeholder="Put a strong password here" oninput="checkPasswordStrength(this.value)" style="width: 100%; padding: 12px 16px; border: 2px solid #e9d5ff; border-radius: 10px; font-size: 1em; transition: all 0.3s;" onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='#e9d5ff'">
+                                                    <button type="button" class="password-toggle" onclick="togglePassword('password')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6b7280;">
+                                                        <svg class="eye-icon eye-show" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                                        <svg class="eye-icon eye-hide" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                                                    </button>
+                                                </div>
+                                                <button type="button" class="btn btn-secondary" onclick="generatePassword()" style="padding: 12px 20px; font-size: 0.9em; background-color: #e9d5ff; color: var(--primary-color); border: none; border-radius: 10px; cursor: pointer; font-weight: 700; transition: all 0.3s;" onmouseover="this.style.backgroundColor='#ddd6fe'" onmouseout="this.style.backgroundColor='#e9d5ff'">Generate</button>
+                                            </div>
+                                            <small id="password-requirements" style="display: block; margin-top: 10px; color: #666; font-size: 0.9em;">
+                                                <strong>Password Requirements:</strong><br>
+                                                • At least 6–8 characters long<br>
+                                                • At least one uppercase letter (A–Z)<br>
+                                                • At least one lowercase letter (a–z)<br>
+                                                • At least one number (0–9)<br>
+                                                • At least one special character (!, @, #, $, %)
+                                            </small>
+                                            <div id="password-strength" style="margin-top: 10px; font-size: 0.85em;"></div>
                                         </div>
-                                        <button type="button" class="btn btn-secondary" onclick="generatePassword()" style="padding: 8px 16px; font-size: 0.9em; margin-top: 0;">Generate</button>
+                                        
+                                        <div class="form-group">
+                                            <label for="confirm_password" style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Confirm Password</label>
+                                            <div class="password-input-wrapper" style="position: relative;">
+                                                <input type="password" id="confirm_password" name="confirm_password" required placeholder="Re-enter your password" style="width: 100%; padding: 12px 16px; border: 2px solid #e9d5ff; border-radius: 10px; font-size: 1em; transition: all 0.3s;" onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='#e9d5ff'">
+                                                <button type="button" class="password-toggle" onclick="togglePassword('confirm_password')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6b7280;">
+                                                    <svg class="eye-icon eye-show" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                                    <svg class="eye-icon eye-hide" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                                                </button>
+                                            </div>
+                                            <div id="confirm-match" style="margin-top: 10px; font-size: 0.85em;"></div>
+                                        </div>
                                     </div>
-                                    <small id="password-requirements" style="display: none; display: block; margin-top: 5px; color: #666;">
-                                        <strong>Password Requirements:</strong><br>
-                                        • At least 6–8 characters long<br>
-                                        • At least one uppercase letter (A–Z)<br>
-                                        • At least one lowercase letter (a–z)<br>
-                                        • At least one number (0–9)<br>
-                                        • At least one special character (!, @, #, $, %)
-                                    </small>
-                                    <!-- Live strength indicator -->
-                                    <div id="password-strength" style="margin-top: 6px; font-size: 0.85em;"></div>
-                                </div>
-                                
-                                <div class="form-group" style="grid-column: 1 / -1;">
-                                    <label for="confirm_password">Confirm Password</label>
-                                    <div class="password-input-wrapper">
-                                        <input type="password" id="confirm_password" name="confirm_password" required placeholder="Re-enter your password">
-                                        <button type="button" class="password-toggle" onclick="togglePassword('confirm_password')">
-                                            <svg class="eye-icon eye-show" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                            <svg class="eye-icon eye-hide" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-                                        </button>
-                                    </div>
-                                    <div id="confirm-match" style="margin-top: 5px; font-size: 0.85em; display: none;"></div>
                                 </div>
                             </div>
-                            <div class="modal-footer" style="padding: 15px 20px; border-top: 1px solid #ddd; display: flex; gap: 10px; justify-content: flex-end;">
-                                <button type="button" class="btn btn-secondary" onclick="closeRegisterModal()">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Register Teacher</button>
+                            <div class="modal-footer" style="padding: 24px 32px; border-top: 2px solid #e9d5ff; display: flex; gap: 12px; justify-content: flex-end; background: white; border-radius: 0 0 16px 16px;">
+                                <button type="button" class="btn btn-secondary" onclick="closeRegisterModal()" style="padding: 12px 28px; background-color: #e9d5ff; color: var(--primary-color); border: none; border-radius: 10px; cursor: pointer; font-weight: 700; transition: all 0.3s; font-size: 1em;" onmouseover="this.style.backgroundColor='#ddd6fe'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 16px rgba(167, 139, 250, 0.3)'" onmouseout="this.style.backgroundColor='#e9d5ff'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">Cancel</button>
+                                <button type="submit" class="btn btn-primary" style="padding: 12px 28px; background-color: var(--primary-color); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; transition: all 0.3s; font-size: 1em;" onmouseover="this.style.backgroundColor='#9b59b6'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 16px rgba(167, 139, 250, 0.4)'" onmouseout="this.style.backgroundColor='var(--primary-color)'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">Register Teacher</button>
                             </div>
                         </form>
                     </div>
@@ -610,6 +623,18 @@ $message = getMessage();
                     
                     function closeRegisterModal() {
                         document.getElementById('registerModal').style.display = 'none';
+                        // Clear all error messages
+                        document.getElementById('teacher_id_error').style.display = 'none';
+                        document.getElementById('firstname_error').style.display = 'none';
+                        document.getElementById('lastname_error').style.display = 'none';
+                        document.getElementById('middlename_error').style.display = 'none';
+                        document.getElementById('email_error').style.display = 'none';
+                        // Reset borders
+                        document.getElementById('teacher_id').style.borderColor = '#e9d5ff';
+                        document.getElementById('firstname').style.borderColor = '#e9d5ff';
+                        document.getElementById('lastname').style.borderColor = '#e9d5ff';
+                        document.getElementById('middlename').style.borderColor = '#e9d5ff';
+                        document.getElementById('email').style.borderColor = '#e9d5ff';
                     }
                 </script>
                 
@@ -1080,6 +1105,332 @@ $message = getMessage();
             document.getElementById('confirm_password').value = '';
             document.getElementById('confirm-match').innerHTML = '';
             document.getElementById('confirm-match').style.display = 'none';
+        }
+
+        function validateTeacherId() {
+            const input = document.getElementById('teacher_id');
+            const errorDiv = document.getElementById('teacher_id_error');
+            
+            // Filter to only numbers
+            input.value = input.value.replace(/[^\d]/g, '');
+            
+            if (input.value.length === 8) {
+                input.style.borderColor = '#10b981';
+                errorDiv.style.display = 'none';
+            } else if (input.value.length > 0) {
+                input.style.borderColor = '#ef4444';
+                errorDiv.textContent = 'Teacher ID must be exactly 8 digits';
+                errorDiv.style.display = 'block';
+            } else {
+                input.style.borderColor = '#e9d5ff';
+                errorDiv.style.display = 'none';
+            }
+        }
+
+        function validateLettersOnly(input, errorId) {
+            const errorDiv = document.getElementById(errorId);
+            const validValue = input.value.replace(/[^a-zA-Z\s\-']/g, '');
+            input.value = validValue;
+            
+            if (input.value && !/^[a-zA-Z\s\-']+$/.test(input.value)) {
+                input.style.borderColor = '#ef4444';
+                errorDiv.textContent = 'Letters only (no numbers or symbols)';
+                errorDiv.style.display = 'block';
+            } else if (input.value) {
+                input.style.borderColor = '#10b981';
+                errorDiv.style.display = 'none';
+            } else {
+                input.style.borderColor = '#e9d5ff';
+                errorDiv.style.display = 'none';
+            }
+        }
+
+        function validateGmailOnly() {
+            const input = document.getElementById('email');
+            const errorDiv = document.getElementById('email_error');
+            const email = input.value.trim();
+            
+            if (!email.endsWith('@gmail.com')) {
+                input.style.borderColor = '#ef4444';
+                errorDiv.textContent = 'Email must be @gmail.com only';
+                errorDiv.style.display = 'block';
+            } else if (!/^[a-zA-Z0-9._%-]+@gmail\.com$/.test(email)) {
+                input.style.borderColor = '#ef4444';
+                errorDiv.textContent = 'Invalid email format';
+                errorDiv.style.display = 'block';
+            } else if (email) {
+                input.style.borderColor = '#10b981';
+                errorDiv.style.display = 'none';
+            } else {
+                input.style.borderColor = '#e9d5ff';
+                errorDiv.style.display = 'none';
+            }
+        }
+
+        function validateTeacherForm() {
+            const teacherId = document.getElementById('teacher_id').value.trim();
+            const firstName = document.getElementById('firstname').value.trim();
+            const lastName = document.getElementById('lastname').value.trim();
+            const middleName = document.getElementById('middlename').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const address = document.getElementById('address').value.trim();
+            const department = document.getElementById('department').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const confirmPassword = document.getElementById('confirm_password').value.trim();
+
+            const errorMessages = [];
+
+            // Validate Teacher ID
+            if (!teacherId) {
+                errorMessages.push('• Teacher ID is required');
+            } else if (!/^\d{8}$/.test(teacherId)) {
+                errorMessages.push('• Teacher ID must be exactly 8 digits');
+            }
+
+            // Validate names
+            if (!firstName) {
+                errorMessages.push('• First Name is required');
+            } else if (!/^[a-zA-Z\s\-']+$/.test(firstName)) {
+                errorMessages.push('• First Name must contain letters only');
+            }
+
+            if (!lastName) {
+                errorMessages.push('• Last Name is required');
+            } else if (!/^[a-zA-Z\s\-']+$/.test(lastName)) {
+                errorMessages.push('• Last Name must contain letters only');
+            }
+
+            if (!middleName) {
+                errorMessages.push('• Middle Name is required');
+            } else if (!/^[a-zA-Z\s\-']+$/.test(middleName)) {
+                errorMessages.push('• Middle Name must contain letters only');
+            }
+
+            // Validate email
+            if (!email) {
+                errorMessages.push('• Email Address is required');
+            } else if (!email.endsWith('@gmail.com')) {
+                errorMessages.push('• Email must be @gmail.com only');
+            } else if (!/^[a-zA-Z0-9._%-]+@gmail\.com$/.test(email)) {
+                errorMessages.push('• Email format is invalid');
+            }
+
+            // Validate address
+            if (!address) {
+                errorMessages.push('• Complete Address is required');
+            }
+
+            // Validate department
+            if (!department) {
+                errorMessages.push('• Department is required');
+            }
+
+            // Validate password
+            if (!password) {
+                errorMessages.push('• Password is required');
+            } else if (password.length < 6) {
+                errorMessages.push('• Password must be at least 6 characters long');
+            }
+
+            // Validate confirm password
+            if (!confirmPassword) {
+                errorMessages.push('• Confirm Password is required');
+            } else if (password !== confirmPassword) {
+                errorMessages.push('• Passwords do not match');
+            }
+
+            if (errorMessages.length > 0) {
+                showValidationError(errorMessages);
+                return false;
+            }
+
+            return true;
+        }
+
+        // Show custom validation error modal
+        function showValidationError(errorMessages) {
+            const errorModal = document.createElement('div');
+            errorModal.id = 'validationErrorModal';
+            errorModal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 2000;
+                backdrop-filter: blur(8px);
+                animation: fadeIn 0.3s ease-out;
+            `;
+
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = `
+                background: white;
+                border-radius: 20px;
+                width: 100%;
+                max-width: 520px;
+                box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
+                overflow: hidden;
+                animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            `;
+
+            modalContent.innerHTML = `
+                <div style="
+                    position: relative;
+                    padding: 0;
+                    background: linear-gradient(135deg, #f3e8ff, #ede9fe);
+                    border-bottom: 3px solid #e9d5ff;
+                ">
+                    <div style="
+                        padding: 36px 40px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                    ">
+                        <div style="flex: 1;">
+                            <h2 style="
+                                margin: 0 0 8px 0;
+                                color: #6b21a8;
+                                font-size: 1.4em;
+                                font-weight: 800;
+                                letter-spacing: -0.5px;
+                            ">Validation Error</h2>
+                            <p style="
+                                margin: 0;
+                                color: #7e22ce;
+                                font-size: 0.95em;
+                                font-weight: 500;
+                            ">Please review and correct the errors below</p>
+                        </div>
+                        <button onclick="document.getElementById('validationErrorModal').remove()" style="
+                            background: rgba(167, 139, 250, 0.15);
+                            border: none;
+                            color: #7e22ce;
+                            font-size: 24px;
+                            cursor: pointer;
+                            width: 38px;
+                            height: 38px;
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            transition: all 0.3s;
+                            line-height: 1;
+                            flex-shrink: 0;
+                            margin-left: 20px;
+                        " onmouseover="this.style.backgroundColor='rgba(167, 139, 250, 0.25); this.style.transform='rotate(90deg)'" onmouseout="this.style.backgroundColor='rgba(167, 139, 250, 0.15); this.style.transform='rotate(0deg)'">×</button>
+                    </div>
+                </div>
+
+                <div style="padding: 32px 40px; background: white;">
+                    <ul style="
+                        margin: 0;
+                        padding: 0;
+                        list-style: none;
+                    ">
+                        ${errorMessages.map((msg, idx) => `
+                            <li style="
+                                color: #6b21a8;
+                                font-size: 1.02em;
+                                margin-bottom: ${idx === errorMessages.length - 1 ? '0' : '14px'};
+                                padding-left: 28px;
+                                position: relative;
+                                line-height: 1.6;
+                                font-weight: 500;
+                                animation: slideInLeft 0.4s ease-out ${0.1 * (idx + 1)}s backwards;
+                            ">
+                                <span style="
+                                    position: absolute;
+                                    left: 0;
+                                    top: 5px;
+                                    width: 8px;
+                                    height: 8px;
+                                    background: linear-gradient(135deg, #c084fc, #a78bfa);
+                                    border-radius: 50%;
+                                "></span>
+                                ${msg.replace('• ', '')}
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+
+                <div style="
+                    padding: 24px 40px;
+                    background: linear-gradient(135deg, #f3e8ff, #ede9fe);
+                    border-top: 2px solid #e9d5ff;
+                    display: flex;
+                    gap: 12px;
+                    justify-content: flex-end;
+                ">
+                    <button onclick="document.getElementById('validationErrorModal').remove()" style="
+                        padding: 14px 36px;
+                        background: linear-gradient(135deg, #a78bfa, #9b59b6);
+                        color: white;
+                        border: none;
+                        border-radius: 12px;
+                        cursor: pointer;
+                        font-weight: 700;
+                        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                        font-size: 1.05em;
+                        letter-spacing: 0.3px;
+                        box-shadow: 0 6px 16px rgba(167, 139, 250, 0.3);
+                    " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 12px 28px rgba(167, 139, 250, 0.45)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 6px 16px rgba(167, 139, 250, 0.3)'">Got it</button>
+                </div>
+            `;
+
+            errorModal.appendChild(modalContent);
+            document.body.appendChild(errorModal);
+
+            // Add animations
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeIn {
+                    from {
+                        opacity: 0;
+                    }
+                    to {
+                        opacity: 1;
+                    }
+                }
+                @keyframes slideUp {
+                    from {
+                        transform: translateY(30px);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateY(0);
+                        opacity: 1;
+                    }
+                }
+                @keyframes slideInLeft {
+                    from {
+                        transform: translateX(-20px);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+
+            errorModal.addEventListener('click', function(e) {
+                if (e.target === errorModal) {
+                    errorModal.remove();
+                }
+            });
+
+            document.addEventListener('keydown', function handler(e) {
+                if (e.key === 'Escape') {
+                    const modal = document.getElementById('validationErrorModal');
+                    if (modal) modal.remove();
+                    document.removeEventListener('keydown', handler);
+                }
+            });
         }
 
         function validateNameInput(input) {

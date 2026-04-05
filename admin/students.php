@@ -528,88 +528,94 @@ $message = getMessage();
                 </div>
 
                 <!-- Register Modal -->
-                <div id="registerModal" class="modal" style="display: none;">
-                    <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
-                        <div class="modal-header">
-                            <h2>Register New Student</h2>
-                            <button type="button" class="modal-close" onclick="closeRegisterModal()">&times;</button>
+                <div id="registerModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.6); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+                    <div class="modal-content" style="background: white; border-radius: 16px; width: 100%; max-width: 900px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);">
+                        <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-color), #9b59b6); color: white; padding: 28px 32px; border-radius: 16px 16px 0 0; font-size: 1.4em; font-weight: 700; display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.3px;">
+                            <span>Register New Student</span>
+                            <button type="button" class="modal-close" onclick="closeRegisterModal()" style="background: rgba(255, 255, 255, 0.25); border: none; color: white; font-size: 28px; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s; line-height: 1;" onmouseover="this.style.backgroundColor='rgba(255, 255, 255, 0.35); this.style.transform='scale(1.1)'" onmouseout="this.style.backgroundColor='rgba(255, 255, 255, 0.25); this.style.transform='scale(1)'">&times;</button>
                         </div>
-                        <form method="POST" class="student-form">
+                        <form method="POST" class="student-form" onsubmit="return validateStudentForm()">
                             <input type="hidden" name="action" value="add">
-                            <div class="modal-body" style="padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                                <div class="form-group">
-                                    <label for="student_id">Student ID</label>
-                                    <input type="text" id="student_id" name="student_id" required
-                                        placeholder="ex: 000*****" maxlength="8" inputmode="numeric">
+                            <div class="modal-body" style="padding: 40px 32px; background: #f8f6ff; display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                                <div style="grid-column: 1 / 2;">
+                                    <div class="form-group" style="margin-bottom: 24px;">
+                                        <label for="student_id" style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Student ID</label>
+                                        <input type="text" id="student_id" name="student_id" required placeholder="ex: 00000000" maxlength="8" inputmode="numeric" style="width: 100%; padding: 12px 16px; border: 2px solid #e9d5ff; border-radius: 10px; font-size: 1em; transition: all 0.3s;" onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='#e9d5ff'; validateStudentId()" oninput="validateStudentId()">
+                                        <small id="student_id_error" style="color: #ef4444; font-size: 0.85em; margin-top: 5px; display: none;"></small>
+                                    </div>
+
+                                    <div class="form-group" style="margin-bottom: 24px;">
+                                        <label for="firstname" style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">First Name</label>
+                                        <input type="text" id="firstname" name="firstname" required placeholder="Enter first name" oninput="validateLettersOnly(this, 'firstname_error'); this.value = this.value.toUpperCase()" onblur="validateLettersOnly(this, 'firstname_error')" style="width: 100%; padding: 12px 16px; border: 2px solid #e9d5ff; border-radius: 10px; font-size: 1em; transition: all 0.3s;" onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='#e9d5ff'">
+                                        <small id="firstname_error" style="color: #ef4444; font-size: 0.85em; margin-top: 5px; display: none;"></small>
+                                    </div>
+
+                                    <div class="form-group" style="margin-bottom: 24px;">
+                                        <label for="middlename" style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Middle Name</label>
+                                        <input type="text" id="middlename" name="middlename" required placeholder="Enter middle name" oninput="validateLettersOnly(this, 'middlename_error'); this.value = this.value.toUpperCase()" onblur="validateLettersOnly(this, 'middlename_error')" style="width: 100%; padding: 12px 16px; border: 2px solid #e9d5ff; border-radius: 10px; font-size: 1em; transition: all 0.3s;" onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='#e9d5ff'">
+                                        <small id="middlename_error" style="color: #ef4444; font-size: 0.85em; margin-top: 5px; display: none;"></small>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="email" style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Email Address</label>
+                                        <input type="email" id="email" name="email" placeholder="example@gmail.com" required oninput="validateGmailOnly()" onblur="validateGmailOnly()" style="width: 100%; padding: 12px 16px; border: 2px solid #e9d5ff; border-radius: 10px; font-size: 1em; transition: all 0.3s;" onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='#e9d5ff'">
+                                        <small id="email_error" style="color: #ef4444; font-size: 0.85em; margin-top: 5px; display: none;"></small>
+                                    </div>
                                 </div>
 
-                                <div class="form-group">
-                                    <label for="lastname">Last Name</label>
-                                    <input type="text" id="lastname" name="lastname" required
-                                        placeholder="Enter last name" oninput="this.value = this.value.toUpperCase()">
+                                <div style="grid-column: 2 / 3;">
+                                    <div class="form-group" style="margin-bottom: 24px;">
+                                        <label for="lastname" style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Last Name</label>
+                                        <input type="text" id="lastname" name="lastname" required placeholder="Enter last name" oninput="validateLettersOnly(this, 'lastname_error'); this.value = this.value.toUpperCase()" onblur="validateLettersOnly(this, 'lastname_error')" style="width: 100%; padding: 12px 16px; border: 2px solid #e9d5ff; border-radius: 10px; font-size: 1em; transition: all 0.3s;" onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='#e9d5ff'">
+                                        <small id="lastname_error" style="color: #ef4444; font-size: 0.85em; margin-top: 5px; display: none;"></small>
+                                    </div>
+
+                                    <div class="form-group" style="margin-bottom: 24px;">
+                                        <label for="address" style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Complete Address</label>
+                                        <textarea id="address" name="address" required placeholder="Enter complete address" rows="2" style="width: 100%; padding: 12px 16px; border: 2px solid #e9d5ff; border-radius: 10px; font-size: 1em; transition: all 0.3s; font-family: inherit; resize: vertical;" onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='#e9d5ff'"></textarea>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="guardian_name" style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Guardian Name</label>
+                                        <input type="text" id="guardian_name" name="guardian_name" required placeholder="Enter guardian name" oninput="validateLettersOnly(this, 'guardian_name_error'); this.value = this.value.toUpperCase()" onblur="validateLettersOnly(this, 'guardian_name_error')" style="width: 100%; padding: 12px 16px; border: 2px solid #e9d5ff; border-radius: 10px; font-size: 1em; transition: all 0.3s;" onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='#e9d5ff'">
+                                        <small id="guardian_name_error" style="color: #ef4444; font-size: 0.85em; margin-top: 5px; display: none;"></small>
+                                    </div>
                                 </div>
 
-                                <div class="form-group">
-                                    <label for="firstname">First Name</label>
-                                    <input type="text" id="firstname" name="firstname" required
-                                        placeholder="Enter first name" oninput="this.value = this.value.toUpperCase()">
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="middlename">Middle Name</label>
-                                    <input type="text" id="middlename" name="middlename" required
-                                        placeholder="Enter middle name" oninput="this.value = this.value.toUpperCase()">
-                                </div>
-
-                                <div class="form-group" style="grid-column: 1 / -1;">
-                                    <label for="address">Complete Address</label>
-                                    <textarea id="address" name="address" required placeholder="Enter complete address"
-                                        rows="3"></textarea>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="email">Email Address</label>
-                                    <input type="email" id="email" name="email" placeholder="example@gmail.com"
-                                        required>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="guardian_name">Guardian Name</label>
-                                    <input type="text" id="guardian_name" name="guardian_name" required placeholder="Enter guardian name" oninput="this.value = this.value.toUpperCase()">
-                                </div>
-
-                                <div class="form-group" style="grid-column: 1 / -1;">
-                                    <label for="course">Course</label>
-                                    <select id="course" name="course" required>
-                                        <option value="">-- Select Course --</option>
-                                        <?php foreach ($courses_by_category as $category => $course_list): ?>
-                                            <optgroup label="<?php echo htmlspecialchars($category); ?>">
-                                                <?php foreach ($course_list as $course_name): ?>
-                                                    <option value="<?php echo htmlspecialchars($course_name); ?>">
-                                                        <?php echo htmlspecialchars($course_name); ?>
-                                                    </option>
+                                <div style="grid-column: 1 / -1;">
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                                        <div>
+                                            <label for="course" style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Course</label>
+                                            <select id="course" name="course" required style="width: 100%; padding: 12px 16px; border: 2px solid #e9d5ff; border-radius: 10px; font-size: 1em; transition: all 0.3s;" onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='#e9d5ff'">
+                                                <option value="">-- Select Course --</option>
+                                                <?php foreach ($courses_by_category as $category => $course_list): ?>
+                                                    <optgroup label="<?php echo htmlspecialchars($category); ?>">
+                                                        <?php foreach ($course_list as $course_name): ?>
+                                                            <option value="<?php echo htmlspecialchars($course_name); ?>">
+                                                                <?php echo htmlspecialchars($course_name); ?>
+                                                            </option>
+                                                        <?php endforeach; ?>
+                                                    </optgroup>
                                                 <?php endforeach; ?>
-                                            </optgroup>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
+                                            </select>
+                                        </div>
 
-                                <div class="form-group">
-                                    <label for="year">Year Level</label>
-                                    <select id="year" name="year" required>
-                                        <option value="">-- Select Year --</option>
-                                        <option value="1">1st Year</option>
-                                        <option value="2">2nd Year</option>
-                                        <option value="3">3rd Year</option>
-                                        <option value="4">4th Year</option>
-                                    </select>
+                                        <div>
+                                            <label for="year" style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Year Level</label>
+                                            <select id="year" name="year" required style="width: 100%; padding: 12px 16px; border: 2px solid #e9d5ff; border-radius: 10px; font-size: 1em; transition: all 0.3s;" onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='#e9d5ff'">
+                                                <option value="">-- Select Year --</option>
+                                                <option value="1">1st Year</option>
+                                                <option value="2">2nd Year</option>
+                                                <option value="3">3rd Year</option>
+                                                <option value="4">4th Year</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="modal-footer"
-                                style="padding: 15px 20px; border-top: 1px solid #ddd; display: flex; gap: 10px; justify-content: flex-end;">
-                                <button type="button" class="btn btn-secondary"
-                                    onclick="closeRegisterModal()">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Register Student</button>
+                            <div class="modal-footer" style="padding: 24px 32px; border-top: 2px solid #e9d5ff; display: flex; gap: 12px; justify-content: flex-end; background: white; border-radius: 0 0 16px 16px;">
+                                <button type="button" class="btn btn-secondary" onclick="closeRegisterModal()" style="padding: 12px 28px; background-color: #e9d5ff; color: var(--primary-color); border: none; border-radius: 10px; cursor: pointer; font-weight: 700; transition: all 0.3s; font-size: 1em;" onmouseover="this.style.backgroundColor='#ddd6fe'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 16px rgba(167, 139, 250, 0.3)'" onmouseout="this.style.backgroundColor='#e9d5ff'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">Cancel</button>
+                                <button type="submit" class="btn btn-primary" style="padding: 12px 28px; background-color: var(--primary-color); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; transition: all 0.3s; font-size: 1em;" onmouseover="this.style.backgroundColor='#9b59b6'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 16px rgba(167, 139, 250, 0.4)'" onmouseout="this.style.backgroundColor='var(--primary-color)'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">Register Student</button>
                             </div>
                         </form>
                     </div>
@@ -667,6 +673,463 @@ $message = getMessage();
 
                     function closeRegisterModal() {
                         document.getElementById('registerModal').style.display = 'none';
+                        // Clear all error messages when closing
+                        document.getElementById('student_id_error').style.display = 'none';
+                        document.getElementById('firstname_error').style.display = 'none';
+                        document.getElementById('lastname_error').style.display = 'none';
+                        document.getElementById('middlename_error').style.display = 'none';
+                        document.getElementById('email_error').style.display = 'none';
+                        document.getElementById('guardian_name_error').style.display = 'none';
+                    }
+
+                    // Validate Student ID - numbers only, 8 digits
+                    function validateStudentId() {
+                        const input = document.getElementById('student_id');
+                        const errorMsg = document.getElementById('student_id_error');
+                        const value = input.value;
+
+                        // Only allow numbers
+                        input.value = value.replace(/[^0-9]/g, '');
+
+                        if (input.value.length > 0 && input.value.length !== 8) {
+                            errorMsg.textContent = 'Student ID must be exactly 8 digits';
+                            errorMsg.style.display = 'block';
+                            input.style.borderColor = '#ef4444';
+                        } else if (input.value.length === 8) {
+                            errorMsg.style.display = 'none';
+                            input.style.borderColor = '#10b981';
+                        } else {
+                            errorMsg.style.display = 'none';
+                            input.style.borderColor = '#e9d5ff';
+                        }
+                    }
+
+                    // Validate letters only - no numbers or special characters
+                    function validateLettersOnly(input, errorId) {
+                        const errorMsg = document.getElementById(errorId);
+                        const value = input.value;
+                        const lettersOnlyPattern = /^[a-zA-Z\s\-']*$/;
+
+                        if (value.length > 0 && !lettersOnlyPattern.test(value)) {
+                            // Remove invalid characters
+                            input.value = value.replace(/[^a-zA-Z\s\-']/g, '').toUpperCase();
+                            errorMsg.textContent = 'Letters only (no numbers or special characters allowed)';
+                            errorMsg.style.display = 'block';
+                            input.style.borderColor = '#ef4444';
+                        } else if (value.length > 0) {
+                            errorMsg.style.display = 'none';
+                            input.style.borderColor = '#10b981';
+                        } else {
+                            errorMsg.style.display = 'none';
+                            input.style.borderColor = '#e9d5ff';
+                        }
+                    }
+
+                    // Validate Email - must be @gmail.com only
+                    function validateGmailOnly() {
+                        const input = document.getElementById('email');
+                        const errorMsg = document.getElementById('email_error');
+                        const value = input.value;
+
+                        if (value.length > 0) {
+                            if (!value.endsWith('@gmail.com')) {
+                                errorMsg.textContent = 'Email must be a @gmail.com address';
+                                errorMsg.style.display = 'block';
+                                input.style.borderColor = '#ef4444';
+                            } else if (!value.match(/^[a-zA-Z0-9._%-]+@gmail\.com$/)) {
+                                errorMsg.textContent = 'Invalid email format';
+                                errorMsg.style.display = 'block';
+                                input.style.borderColor = '#ef4444';
+                            } else {
+                                errorMsg.style.display = 'none';
+                                input.style.borderColor = '#10b981';
+                            }
+                        } else {
+                            errorMsg.style.display = 'none';
+                            input.style.borderColor = '#e9d5ff';
+                        }
+                    }
+
+                    // Validate entire form before submission
+                    function validateStudentForm() {
+                        const studentId = document.getElementById('student_id').value.trim();
+                        const firstName = document.getElementById('firstname').value.trim();
+                        const lastName = document.getElementById('lastname').value.trim();
+                        const middleName = document.getElementById('middlename').value.trim();
+                        const guardianName = document.getElementById('guardian_name').value.trim();
+                        const email = document.getElementById('email').value.trim();
+                        const course = document.getElementById('course').value.trim();
+                        const year = document.getElementById('year').value.trim();
+                        const address = document.getElementById('address').value.trim();
+
+                        let isValid = true;
+                        let errorMessages = [];
+
+                        // Validate Student ID
+                        if (!studentId) {
+                            errorMessages.push('Student ID is required');
+                            isValid = false;
+                        } else if (!/^\d{8}$/.test(studentId)) {
+                            errorMessages.push('Student ID must be exactly 8 digits');
+                            isValid = false;
+                        }
+
+                        // Validate First Name
+                        if (!firstName) {
+                            errorMessages.push('First Name is required');
+                            isValid = false;
+                        } else if (!/^[a-zA-Z\s\-']+$/.test(firstName)) {
+                            errorMessages.push('First Name must contain letters only');
+                            isValid = false;
+                        }
+
+                        // Validate Last Name
+                        if (!lastName) {
+                            errorMessages.push('Last Name is required');
+                            isValid = false;
+                        } else if (!/^[a-zA-Z\s\-']+$/.test(lastName)) {
+                            errorMessages.push('Last Name must contain letters only');
+                            isValid = false;
+                        }
+
+                        // Validate Middle Name
+                        if (!middleName) {
+                            errorMessages.push('Middle Name is required');
+                            isValid = false;
+                        } else if (!/^[a-zA-Z\s\-']+$/.test(middleName)) {
+                            errorMessages.push('Middle Name must contain letters only');
+                            isValid = false;
+                        }
+
+                        // Validate Guardian Name
+                        if (!guardianName) {
+                            errorMessages.push('Guardian Name is required');
+                            isValid = false;
+                        } else if (!/^[a-zA-Z\s\-']+$/.test(guardianName)) {
+                            errorMessages.push('Guardian Name must contain letters only');
+                            isValid = false;
+                        }
+
+                        // Validate Email
+                        if (!email) {
+                            errorMessages.push('Email Address is required');
+                            isValid = false;
+                        } else if (!email.endsWith('@gmail.com')) {
+                            errorMessages.push('Email must be a @gmail.com address');
+                            isValid = false;
+                        } else if (!/^[a-zA-Z0-9._%-]+@gmail\.com$/.test(email)) {
+                            errorMessages.push('Invalid email format');
+                            isValid = false;
+                        }
+
+                        // Validate Address
+                        if (!address) {
+                            errorMessages.push('Address is required');
+                            isValid = false;
+                        }
+
+                        // Validate Course
+                        if (!course) {
+                            errorMessages.push('Course is required');
+                            isValid = false;
+                        }
+
+                        // Validate Year
+                        if (!year) {
+                            errorMessages.push('Year Level is required');
+                            isValid = false;
+                        }
+
+                        if (!isValid) {
+                            alert('Please fix the following errors:\n\n' + errorMessages.join('\n'));
+                            return false;
+                        }
+
+                        return true;
+                    }
+
+                    // Validate entire form before submission
+                    function validateStudentForm() {
+                        const studentId = document.getElementById('student_id').value.trim();
+                        const firstName = document.getElementById('firstname').value.trim();
+                        const lastName = document.getElementById('lastname').value.trim();
+                        const middleName = document.getElementById('middlename').value.trim();
+                        const guardianName = document.getElementById('guardian_name').value.trim();
+                        const email = document.getElementById('email').value.trim();
+                        const course = document.getElementById('course').value.trim();
+                        const year = document.getElementById('year').value.trim();
+                        const address = document.getElementById('address').value.trim();
+
+                        let isValid = true;
+                        let errorMessages = [];
+
+                        // Validate Student ID
+                        if (!studentId) {
+                            errorMessages.push('• Student ID is required');
+                            isValid = false;
+                        } else if (!/^\d{8}$/.test(studentId)) {
+                            errorMessages.push('• Student ID must be exactly 8 digits');
+                            isValid = false;
+                        }
+
+                        // Validate First Name
+                        if (!firstName) {
+                            errorMessages.push('• First Name is required');
+                            isValid = false;
+                        } else if (!/^[a-zA-Z\s\-']+$/.test(firstName)) {
+                            errorMessages.push('• First Name must contain letters only');
+                            isValid = false;
+                        }
+
+                        // Validate Last Name
+                        if (!lastName) {
+                            errorMessages.push('• Last Name is required');
+                            isValid = false;
+                        } else if (!/^[a-zA-Z\s\-']+$/.test(lastName)) {
+                            errorMessages.push('• Last Name must contain letters only');
+                            isValid = false;
+                        }
+
+                        // Validate Middle Name
+                        if (!middleName) {
+                            errorMessages.push('• Middle Name is required');
+                            isValid = false;
+                        } else if (!/^[a-zA-Z\s\-']+$/.test(middleName)) {
+                            errorMessages.push('• Middle Name must contain letters only');
+                            isValid = false;
+                        }
+
+                        // Validate Guardian Name
+                        if (!guardianName) {
+                            errorMessages.push('• Guardian Name is required');
+                            isValid = false;
+                        } else if (!/^[a-zA-Z\s\-']+$/.test(guardianName)) {
+                            errorMessages.push('• Guardian Name must contain letters only');
+                            isValid = false;
+                        }
+
+                        // Validate Email
+                        if (!email) {
+                            errorMessages.push('• Email Address is required');
+                            isValid = false;
+                        } else if (!email.endsWith('@gmail.com')) {
+                            errorMessages.push('• Email must be a @gmail.com address');
+                            isValid = false;
+                        } else if (!/^[a-zA-Z0-9._%-]+@gmail\.com$/.test(email)) {
+                            errorMessages.push('• Invalid email format');
+                            isValid = false;
+                        }
+
+                        // Validate Address
+                        if (!address) {
+                            errorMessages.push('• Address is required');
+                            isValid = false;
+                        }
+
+                        // Validate Course
+                        if (!course) {
+                            errorMessages.push('• Course is required');
+                            isValid = false;
+                        }
+
+                        // Validate Year
+                        if (!year) {
+                            errorMessages.push('• Year Level is required');
+                            isValid = false;
+                        }
+
+                        if (!isValid) {
+                            showValidationError(errorMessages);
+                            return false;
+                        }
+
+                        return true;
+                    }
+
+                    // Show custom validation error modal
+                    function showValidationError(errorMessages) {
+                        const errorModal = document.createElement('div');
+                        errorModal.id = 'validationErrorModal';
+                        errorModal.style.cssText = `
+                            position: fixed;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            background: rgba(0, 0, 0, 0.5);
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            z-index: 2000;
+                            backdrop-filter: blur(8px);
+                            animation: fadeIn 0.3s ease-out;
+                        `;
+
+                        const modalContent = document.createElement('div');
+                        modalContent.style.cssText = `
+                            background: white;
+                            border-radius: 20px;
+                            width: 100%;
+                            max-width: 520px;
+                            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
+                            overflow: hidden;
+                            animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+                        `;
+
+                        modalContent.innerHTML = `
+                            <div style="
+                                position: relative;
+                                padding: 0;
+                                background: linear-gradient(135deg, #f3e8ff, #ede9fe);
+                                border-bottom: 3px solid #e9d5ff;
+                            ">
+                                <div style="
+                                    padding: 36px 40px;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: space-between;
+                                ">
+                                    <div style="flex: 1;">
+                                        <h2 style="
+                                            margin: 0 0 8px 0;
+                                            color: #6b21a8;
+                                            font-size: 1.4em;
+                                            font-weight: 800;
+                                            letter-spacing: -0.5px;
+                                        ">Validation Error</h2>
+                                        <p style="
+                                            margin: 0;
+                                            color: #7e22ce;
+                                            font-size: 0.95em;
+                                            font-weight: 500;
+                                        ">Please review and correct the errors below</p>
+                                    </div>
+                                    <button onclick="document.getElementById('validationErrorModal').remove()" style="
+                                        background: rgba(167, 139, 250, 0.15);
+                                        border: none;
+                                        color: #7e22ce;
+                                        font-size: 24px;
+                                        cursor: pointer;
+                                        width: 38px;
+                                        height: 38px;
+                                        border-radius: 50%;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        transition: all 0.3s;
+                                        line-height: 1;
+                                        flex-shrink: 0;
+                                        margin-left: 20px;
+                                    " onmouseover="this.style.backgroundColor='rgba(167, 139, 250, 0.25); this.style.transform='rotate(90deg)'" onmouseout="this.style.backgroundColor='rgba(167, 139, 250, 0.15); this.style.transform='rotate(0deg)'">×</button>
+                                </div>
+                            </div>
+
+                            <div style="padding: 32px 40px; background: white;">
+                                <ul style="
+                                    margin: 0;
+                                    padding: 0;
+                                    list-style: none;
+                                ">
+                                    ${errorMessages.map((msg, idx) => `
+                                        <li style="
+                                            color: #6b21a8;
+                                            font-size: 1.02em;
+                                            margin-bottom: ${idx === errorMessages.length - 1 ? '0' : '14px'};
+                                            padding-left: 28px;
+                                            position: relative;
+                                            line-height: 1.6;
+                                            font-weight: 500;
+                                            animation: slideInLeft 0.4s ease-out ${0.1 * (idx + 1)}s backwards;
+                                        ">
+                                            <span style="
+                                                position: absolute;
+                                                left: 0;
+                                                top: 5px;
+                                                width: 8px;
+                                                height: 8px;
+                                                background: linear-gradient(135deg, #c084fc, #a78bfa);
+                                                border-radius: 50%;
+                                            "></span>
+                                            ${msg.replace('• ', '')}
+                                        </li>
+                                    `).join('')}
+                                </ul>
+                            </div>
+
+                            <div style="
+                                padding: 24px 40px;
+                                background: linear-gradient(135deg, #f3e8ff, #ede9fe);
+                                border-top: 2px solid #e9d5ff;
+                                display: flex;
+                                gap: 12px;
+                                justify-content: flex-end;
+                            ">
+                                <button onclick="document.getElementById('validationErrorModal').remove()" style="
+                                    padding: 14px 36px;
+                                    background: linear-gradient(135deg, #a78bfa, #9b59b6);
+                                    color: white;
+                                    border: none;
+                                    border-radius: 12px;
+                                    cursor: pointer;
+                                    font-weight: 700;
+                                    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                                    font-size: 1.05em;
+                                    letter-spacing: 0.3px;
+                                    box-shadow: 0 6px 16px rgba(167, 139, 250, 0.3);
+                                " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 12px 28px rgba(167, 139, 250, 0.45)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 6px 16px rgba(167, 139, 250, 0.3)'">Got it</button>
+                            </div>
+                        `;
+
+                        errorModal.appendChild(modalContent);
+                        document.body.appendChild(errorModal);
+
+                        // Add animations
+                        const style = document.createElement('style');
+                        style.textContent = `
+                            @keyframes fadeIn {
+                                from {
+                                    opacity: 0;
+                                }
+                                to {
+                                    opacity: 1;
+                                }
+                            }
+                            @keyframes slideUp {
+                                from {
+                                    transform: translateY(30px);
+                                    opacity: 0;
+                                }
+                                to {
+                                    transform: translateY(0);
+                                    opacity: 1;
+                                }
+                            }
+                            @keyframes slideInLeft {
+                                from {
+                                    transform: translateX(-20px);
+                                    opacity: 0;
+                                }
+                                to {
+                                    transform: translateX(0);
+                                    opacity: 1;
+                                }
+                            }
+                        `;
+                        document.head.appendChild(style);
+
+                        errorModal.addEventListener('click', function(e) {
+                            if (e.target === errorModal) {
+                                errorModal.remove();
+                            }
+                        });
+
+                        document.addEventListener('keydown', function handler(e) {
+                            if (e.key === 'Escape') {
+                                const modal = document.getElementById('validationErrorModal');
+                                if (modal) modal.remove();
+                                document.removeEventListener('keydown', handler);
+                            }
+                        });
                     }
 
                     // Close modal when clicking outside of it
@@ -677,8 +1140,6 @@ $message = getMessage();
                         }
                     }
                 </script>
-
-                <!-- Update Modal -->
                 <div id="updateModal" class="modal" style="display: none;">
                     <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
                         <div class="modal-header">
