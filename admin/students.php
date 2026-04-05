@@ -425,6 +425,20 @@ $course_stmt = $pdo->prepare('SELECT DISTINCT course FROM students WHERE course 
 $course_stmt->execute();
 $courses = $course_stmt->fetchAll();
 
+// Get all courses organized by category from courses table
+$courses_by_category = [];
+$all_courses_stmt = $pdo->prepare('SELECT category, course_name FROM courses ORDER BY category, course_name');
+$all_courses_stmt->execute();
+$all_courses = $all_courses_stmt->fetchAll();
+
+foreach ($all_courses as $course) {
+    $category = $course['category'];
+    if (!isset($courses_by_category[$category])) {
+        $courses_by_category[$category] = [];
+    }
+    $courses_by_category[$category][] = $course['course_name'];
+}
+
 $message = getMessage();
 ?>
 <!DOCTYPE html>
@@ -568,36 +582,15 @@ $message = getMessage();
                                     <label for="course">Course</label>
                                     <select id="course" name="course" required>
                                         <option value="">-- Select Course --</option>
-                                        <optgroup label="College of Engineering and Architecture">
-                                            <option value="BS in Civil Engineering (BSCE)">BS in Civil Engineering
-                                                (BSCE)</option>
-                                            <option value="BS in Electrical Engineering (BSEE)">BS in Electrical
-                                                Engineering (BSEE)</option>
-                                            <option value="BS in Mechanical Engineering (BSME)">BS in Mechanical
-                                                Engineering (BSME)</option>
-                                        </optgroup>
-                                        <optgroup label="College of Criminology">
-                                            <option value="BS in Criminology (BSCrim)">BS in Criminology (BSCrim)
-                                            </option>
-                                        </optgroup>
-                                        <optgroup label="College of Information Technology">
-                                            <option value="BS in Information Technology (BSIT)">BS in Information
-                                                Technology (BSIT)</option>
-                                            <option value="BS in Computer Science (BSCS)">BS in Computer Science (BSCS)
-                                            </option>
-                                        </optgroup>
-                                        <optgroup label="College of Education">
-                                            <option value="Bachelor of Elementary Education (BEEd)">Bachelor of
-                                                Elementary Education (BEEd)</option>
-                                            <option value="Bachelor of Secondary Education (BSEd)">Bachelor of Secondary
-                                                Education (BSEd)</option>
-                                        </optgroup>
-                                        <optgroup label="College of Business and Management">
-                                            <option value="BS in Business Administration (BSBA)">BS in Business
-                                                Administration (BSBA)</option>
-                                            <option value="BS in Hospitality Management (BSHM)">BS in Hospitality
-                                                Management (BSHM)</option>
-                                        </optgroup>
+                                        <?php foreach ($courses_by_category as $category => $course_list): ?>
+                                            <optgroup label="<?php echo htmlspecialchars($category); ?>">
+                                                <?php foreach ($course_list as $course_name): ?>
+                                                    <option value="<?php echo htmlspecialchars($course_name); ?>">
+                                                        <?php echo htmlspecialchars($course_name); ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </optgroup>
+                                        <?php endforeach; ?>
                                     </select>
                                 </div>
 
@@ -742,36 +735,15 @@ $message = getMessage();
                                     <label for="updateCourse">Course</label>
                                     <select id="updateCourse" name="course" required>
                                         <option value="">-- Select Course --</option>
-                                        <optgroup label="College of Engineering and Architecture">
-                                            <option value="BS in Civil Engineering (BSCE)">BS in Civil Engineering
-                                                (BSCE)</option>
-                                            <option value="BS in Electrical Engineering (BSEE)">BS in Electrical
-                                                Engineering (BSEE)</option>
-                                            <option value="BS in Mechanical Engineering (BSME)">BS in Mechanical
-                                                Engineering (BSME)</option>
-                                        </optgroup>
-                                        <optgroup label="College of Criminology">
-                                            <option value="BS in Criminology (BSCrim)">BS in Criminology (BSCrim)
-                                            </option>
-                                        </optgroup>
-                                        <optgroup label="College of Information Technology">
-                                            <option value="BS in Information Technology (BSIT)">BS in Information
-                                                Technology (BSIT)</option>
-                                            <option value="BS in Computer Science (BSCS)">BS in Computer Science (BSCS)
-                                            </option>
-                                        </optgroup>
-                                        <optgroup label="College of Education">
-                                            <option value="Bachelor of Elementary Education (BEEd)">Bachelor of
-                                                Elementary Education (BEEd)</option>
-                                            <option value="Bachelor of Secondary Education (BSEd)">Bachelor of Secondary
-                                                Education (BSEd)</option>
-                                        </optgroup>
-                                        <optgroup label="College of Business and Management">
-                                            <option value="BS in Business Administration (BSBA)">BS in Business
-                                                Administration (BSBA)</option>
-                                            <option value="BS in Hospitality Management (BSHM)">BS in Hospitality
-                                                Management (BSHM)</option>
-                                        </optgroup>
+                                        <?php foreach ($courses_by_category as $category => $course_list): ?>
+                                            <optgroup label="<?php echo htmlspecialchars($category); ?>">
+                                                <?php foreach ($course_list as $course_name): ?>
+                                                    <option value="<?php echo htmlspecialchars($course_name); ?>">
+                                                        <?php echo htmlspecialchars($course_name); ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </optgroup>
+                                        <?php endforeach; ?>
                                     </select>
                                 </div>
 
