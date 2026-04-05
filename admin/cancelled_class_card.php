@@ -66,7 +66,7 @@ $pagination = getPaginationData($total_records, 10);
 // Get cancelled records
 $limit = intval($pagination['limit']);
 $offset = intval($pagination['offset']);
-$query = "SELECT ccd.*, s.name as student_name, s.student_id, s.course, s.year, u.name as teacher_name FROM class_card_drops ccd JOIN students s ON ccd.student_id = s.id JOIN users u ON ccd.teacher_id = u.id WHERE " . $where_sql . " ORDER BY ccd.cancelled_date DESC LIMIT " . $limit . " OFFSET " . $offset;
+$query = "SELECT ccd.*, s.name as student_name, s.student_id, s.course, s.year, s.guardian_name, s.address, s.email, u.name as teacher_name FROM class_card_drops ccd JOIN students s ON ccd.student_id = s.id JOIN users u ON ccd.teacher_id = u.id WHERE " . $where_sql . " ORDER BY ccd.cancelled_date DESC LIMIT " . $limit . " OFFSET " . $offset;
 
 $stmt = $pdo->prepare($query);
 $stmt->execute($params);
@@ -349,6 +349,7 @@ $message = getMessage();
                                             <th>Teacher</th>
                                             <th>Date Requested</th>
                                             <th>Status</th>
+                                            <th>Detail</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -362,6 +363,7 @@ $message = getMessage();
                                                 <td><?php echo htmlspecialchars($record['teacher_name']); ?></td>
                                                 <td><?php echo formatDate($record['drop_date']); ?></td>
                                                 <td><span class="status-cancelled"><?php echo htmlspecialchars($record['status']); ?></span></td>
+                                                <td style="text-align: center;"><button class="detail-btn" onclick="showStudentDetailModal(<?php echo htmlspecialchars(json_encode($record)); ?>)" title="View Details"><span style="font-weight: 700; color: #a78bfa;">i</span></button></td>
                                             </tr>
                                         <?php endforeach; ?>
                                     </tbody>
@@ -389,6 +391,183 @@ $message = getMessage();
 
     <script src="/CLASS_CARD_DROPPING_SYSTEM/js/functions.js"></script>
     <script>
+        function showStudentDetailModal(recordData) {
+            const modal = document.createElement('div');
+            modal.id = 'detailModal';
+            modal.className = 'modal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.6);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+                backdrop-filter: blur(5px);
+                padding: 20px;
+            `;
+
+            modal.innerHTML = `
+                <div style="
+                    background: white;
+                    border-radius: 16px;
+                    width: 100%;
+                    max-width: 850px;
+                    max-height: 85vh;
+                    overflow-y: auto;
+                    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+                ">
+                    <div style="
+                        background: linear-gradient(135deg, var(--primary-color), #9b59b6);
+                        color: white;
+                        padding: 28px 32px;
+                        border-radius: 16px 16px 0 0;
+                        font-size: 1.4em;
+                        font-weight: 700;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        letter-spacing: 0.3px;
+                    ">
+                        <span>Student Information & Drop Details</span>
+                        <button onclick="closeStudentDetailModal()" style="
+                            background: rgba(255, 255, 255, 0.25);
+                            border: none;
+                            color: white;
+                            font-size: 28px;
+                            cursor: pointer;
+                            width: 40px;
+                            height: 40px;
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            transition: all 0.3s;
+                            line-height: 1;
+                        " onmouseover="this.style.backgroundColor='rgba(255, 255, 255, 0.35); this.style.transform='scale(1.1)'" onmouseout="this.style.backgroundColor='rgba(255, 255, 255, 0.25); this.style.transform='scale(1)'">×</button>
+                    </div>
+                    <div style="padding: 40px 32px; background: #f8f6ff;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+                            <div>
+                                <div style="
+                                    background: linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(155, 89, 182, 0.05));
+                                    padding: 24px;
+                                    border-radius: 14px;
+                                    border-left: 5px solid var(--primary-color);
+                                ">
+                                    <h3 style="
+                                        color: var(--primary-color);
+                                        margin: 0 0 24px 0;
+                                        font-size: 1.25em;
+                                        font-weight: 700;
+                                    ">
+                                        Student Information
+                                    </h3>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Student ID</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${recordData.student_id}</p>
+                                    </div>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Full Name</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${recordData.student_name}</p>
+                                    </div>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Course</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${recordData.course || 'N/A'}</p>
+                                    </div>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Year Level</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${recordData.year || 'N/A'}</p>
+                                    </div>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Guardian Name</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${recordData.guardian_name || 'N/A'}</p>
+                                    </div>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Address</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600; word-break: break-word; line-height: 1.5;">${recordData.address || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Email Address</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600; word-break: break-word;">${recordData.email || 'N/A'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div style="
+                                    background: linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(155, 89, 182, 0.05));
+                                    padding: 24px;
+                                    border-radius: 14px;
+                                    border-left: 5px solid #9b59b6;
+                                ">
+                                    <h3 style="
+                                        color: #9b59b6;
+                                        margin: 0 0 24px 0;
+                                        font-size: 1.25em;
+                                        font-weight: 700;
+                                    ">
+                                        Drop Information
+                                    </h3>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Subject</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${recordData.subject_no} - ${recordData.subject_name}</p>
+                                    </div>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Requested Date & Time</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${new Date(recordData.drop_date).toLocaleString()}</p>
+                                    </div>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Cancelled Date & Time</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${recordData.cancelled_date ? new Date(recordData.cancelled_date).toLocaleString() : 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Status</label>
+                                        <p style="margin: 0; color: #1f2937;">
+                                            <span style="padding: 6px 12px; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 0.95em; background-color: #fee2e2; color: #991b1b;">${recordData.status}</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="padding: 24px 32px; border-top: 2px solid #e9d5ff; display: flex; gap: 12px; justify-content: flex-end; background: white;">
+                        <button onclick="closeStudentDetailModal()" style="
+                            padding: 12px 28px;
+                            background-color: #e9d5ff;
+                            color: var(--primary-color);
+                            border: none;
+                            border-radius: 10px;
+                            cursor: pointer;
+                            font-weight: 700;
+                            transition: all 0.3s;
+                            font-size: 1em;
+                        " onmouseover="this.style.backgroundColor='#ddd6fe'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 16px rgba(167, 139, 250, 0.3)'" onmouseout="this.style.backgroundColor='#e9d5ff'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">Close</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) closeStudentDetailModal();
+            });
+
+            document.addEventListener('keydown', function handler(e) {
+                if (e.key === 'Escape') {
+                    closeStudentDetailModal();
+                    document.removeEventListener('keydown', handler);
+                }
+            });
+        }
+
+        function closeStudentDetailModal() {
+            const modal = document.getElementById('detailModal');
+            if (modal) modal.remove();
+        }
+
         setTimeout(function() {
             location.reload();
         }, 300000);

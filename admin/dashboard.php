@@ -71,10 +71,11 @@ $total_approved_drops = $stmt->fetch()['total'];
 $pagination = getPaginationData($total_approved_drops, 10); // 10 items per page
 
 $stmt = $pdo->prepare('
-    SELECT ccd.*, s.name as student_name, s.guardian_name, s.student_id, s.course, s.year, u.name as teacher_name
+    SELECT ccd.*, s.name as student_name, s.guardian_name, s.student_id, s.course, s.year, s.status as student_status, s.address, s.email, u.name as teacher_name, pur.retrieve_date as undrop_retrieve_date, pur.undrop_remarks
     FROM class_card_drops ccd
     JOIN students s ON ccd.student_id = s.id
     JOIN users u ON ccd.teacher_id = u.id
+    LEFT JOIN philcst_undrop_records pur ON ccd.id = pur.drop_id
     WHERE ccd.status IN ("Dropped", "Undropped")
     ORDER BY ccd.drop_date DESC
     LIMIT ' . intval($pagination['limit']) . ' OFFSET ' . intval($pagination['offset']) . '
@@ -213,6 +214,7 @@ $message = getMessage();
                                         <th>Approved Date & Time</th>
                                         <th>Class Card Status</th>
                                         <th>Teacher Remarks</th>
+                                        <th>Detail</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -231,7 +233,8 @@ $message = getMessage();
                                                     <?php echo htmlspecialchars($drop['status']); ?>
                                                 </span>
                                             </td>
-                                            <td><?php echo htmlspecialchars(substr($drop['remarks'], 0, 50)); ?></td>
+                                            <td><span class="remarks-cell" style="word-break: break-word;"><?php $remarks_text = htmlspecialchars($drop['remarks']); echo strlen($remarks_text) > 50 ? substr($remarks_text, 0, 50) . '... <a href="javascript:void(0)" onclick="showRemarksModal(\'' . addslashes($remarks_text) . '\', \'Teacher Remarks\')" style="color: #a78bfa; font-weight: 600;">See More</a>' : $remarks_text; ?></span></td>
+                                            <td style="text-align: center;"><button class="detail-btn" onclick="showStudentDetailModal(<?php echo htmlspecialchars(json_encode($drop)); ?>)" title="View Details"><span style="font-weight: 700; color: #a78bfa;">i</span></button></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
@@ -333,6 +336,222 @@ $message = getMessage();
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        function showStudentDetailModal(recordData) {
+            const modal = document.createElement('div');
+            modal.id = 'detailModal';
+            modal.className = 'modal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.6);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+                backdrop-filter: blur(5px);
+                padding: 20px;
+            `;
+
+            const retrieveDate = (recordData.undrop_retrieve_date && recordData.undrop_retrieve_date !== '0000-00-00 00:00:00') ? recordData.undrop_retrieve_date : 'N/A';
+            
+            modal.innerHTML = `
+                <div style="
+                    background: white;
+                    border-radius: 16px;
+                    width: 100%;
+                    max-width: 850px;
+                    max-height: 85vh;
+                    overflow-y: auto;
+                    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+                ">
+                    <div style="
+                        background: linear-gradient(135deg, var(--primary-color), #9b59b6);
+                        color: white;
+                        padding: 28px 32px;
+                        border-radius: 16px 16px 0 0;
+                        font-size: 1.4em;
+                        font-weight: 700;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        letter-spacing: 0.3px;
+                    ">
+                        <span>Student Information & Drop Details</span>
+                        <button onclick="closeStudentDetailModal()" style="
+                            background: rgba(255, 255, 255, 0.25);
+                            border: none;
+                            color: white;
+                            font-size: 28px;
+                            cursor: pointer;
+                            width: 40px;
+                            height: 40px;
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            transition: all 0.3s;
+                            line-height: 1;
+                        " onmouseover="this.style.backgroundColor='rgba(255, 255, 255, 0.35); this.style.transform='scale(1.1)'" onmouseout="this.style.backgroundColor='rgba(255, 255, 255, 0.25); this.style.transform='scale(1)'">×</button>
+                    </div>
+                    <div style="padding: 40px 32px; background: #f8f6ff;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+                            <div>
+                                <div style="
+                                    background: linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(155, 89, 182, 0.05));
+                                    padding: 24px;
+                                    border-radius: 14px;
+                                    border-left: 5px solid var(--primary-color);
+                                ">
+                                    <h3 style="
+                                        color: var(--primary-color);
+                                        margin: 0 0 24px 0;
+                                        font-size: 1.25em;
+                                        font-weight: 700;
+                                    ">
+                                        Student Information
+                                    </h3>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Student ID</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${recordData.student_id}</p>
+                                    </div>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Full Name</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${recordData.student_name}</p>
+                                    </div>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Course</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${recordData.course || 'N/A'}</p>
+                                    </div>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Year Level</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${recordData.year || 'N/A'}</p>
+                                    </div>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Guardian Name</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${recordData.guardian_name || 'N/A'}</p>
+                                    </div>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Address</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600; word-break: break-word; line-height: 1.5;">${recordData.address || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Email Address</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600; word-break: break-word;">${recordData.email || 'N/A'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div style="
+                                    background: linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(155, 89, 182, 0.05));
+                                    padding: 24px;
+                                    border-radius: 14px;
+                                    border-left: 5px solid #9b59b6;
+                                ">
+                                    <h3 style="
+                                        color: #9b59b6;
+                                        margin: 0 0 24px 0;
+                                        font-size: 1.25em;
+                                        font-weight: 700;
+                                    ">
+                                        Drop Information
+                                    </h3>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Teacher</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${recordData.teacher_name}</p>
+                                    </div>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Subject</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${recordData.subject_no} - ${recordData.subject_name}</p>
+                                    </div>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Class Card Status</label>
+                                        <p style="margin: 0; color: #1f2937;">
+                                            <span style="padding: 6px 12px; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 0.95em; background-color: #dbeafe; color: #1e40af;">${recordData.status}</span>
+                                        </p>
+                                    </div>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Dropped Date & Time</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${new Date(recordData.drop_date).toLocaleString()}</p>
+                                    </div>
+                                    <div style="margin-bottom: 22px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Retrieved Date & Time</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${retrieveDate !== 'N/A' ? new Date(retrieveDate).toLocaleString() : 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Student Status</label>
+                                        <p style="margin: 0; color: #1f2937;">
+                                            <span style="padding: 6px 12px; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 0.95em; background-color: #e0e7ff; color: #3730a3;">${recordData.student_status ? recordData.student_status.charAt(0).toUpperCase() + recordData.student_status.slice(1) : 'N/A'}</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) closeStudentDetailModal();
+            });
+
+            document.addEventListener('keydown', function handler(e) {
+                if (e.key === 'Escape') {
+                    closeStudentDetailModal();
+                    document.removeEventListener('keydown', handler);
+                }
+            });
+        }
+
+        function closeStudentDetailModal() {
+            const modal = document.getElementById('detailModal');
+            if (modal) modal.remove();
+        }
+
+        // Remarks modal function
+        function showRemarksModal(remarksText, remarksTitle) {
+            const modal = document.createElement('div');
+            modal.className = 'remarks-modal';
+            modal.id = 'remarksModal';
+            
+            modal.innerHTML = `
+                <div class="remarks-modal-box">
+                    <div class="remarks-modal-header">
+                        <h3>${remarksTitle}</h3>
+                        <button class="remarks-modal-close" onclick="closeRemarksModal()">×</button>
+                    </div>
+                    <div class="remarks-modal-body">
+                        <p>${remarksText}</p>
+                    </div>
+                    <div class="remarks-modal-footer">
+                        <button class="btn-close-remarks-modal" onclick="closeRemarksModal()">Close</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) closeRemarksModal();
+            });
+            
+            document.addEventListener('keydown', function handler(e) {
+                if (e.key === 'Escape') {
+                    closeRemarksModal();
+                    document.removeEventListener('keydown', handler);
+                }
+            });
+        }
+
+        function closeRemarksModal() {
+            const modal = document.getElementById('remarksModal');
+            if (modal) modal.remove();
         }
 
         // Prevent scroll to top on pagination click

@@ -206,7 +206,6 @@ $message = getMessage();
                                         <th>Student Status</th>
                                         <th>Teacher Remarks</th>
                                         <th>Detail</th>
-                                        <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -221,15 +220,6 @@ $message = getMessage();
                                             <td><span class="status status-<?php echo strtolower($drop['student_status']); ?>"><?php echo ucfirst(htmlspecialchars($drop['student_status'])); ?></span></td>
                                             <td><span class="remarks-cell" style="word-break: break-word;"><?php $remarks_text = htmlspecialchars($drop['remarks']); echo strlen($remarks_text) > 50 ? substr($remarks_text, 0, 50) . '... <a href="javascript:void(0)" onclick="showRemarksModal(\'' . addslashes($remarks_text) . '\', \'Teacher Remarks\')" style="color: #a78bfa; font-weight: 600;">See More</a>' : $remarks_text; ?></span></td>
                                             <td style="text-align: center;"><button class="detail-btn" onclick="showStudentDetailModal(<?php echo htmlspecialchars(json_encode($drop)); ?>)" title="View Details"><span style="font-weight: 700; color: #a78bfa;">i</span></button></td>
-                                            <td>
-                                                <?php if ($drop['status'] === 'Pending'): ?>
-                                                    <button type="button" class="btn btn-sm btn-cancel" onclick="showCancelDropConfirmModal(<?php echo $drop['id']; ?>)">Cancel</button>
-                                                <?php elseif ($drop['status'] === 'Dropped' || $drop['status'] === 'Undropped'): ?>
-                                                    <button class="btn btn-sm btn-cancel" style="opacity:0.6; cursor:not-allowed;" disabled>Cancel</button>
-                                                <?php else: ?>
-                                                    <span style="color: #aaa; font-style: italic;">—</span>
-                                                <?php endif; ?>
-                                            </td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
@@ -240,6 +230,52 @@ $message = getMessage();
                         </div>
                     <?php else: ?>
                         <p class="no-data">No class cards dropped yet.</p>
+                    <?php endif; ?>
+                </section>
+
+                <!-- Approved Dropped Class Card Section -->
+                <section class="section">
+                    <h2>Approved Dropped Class Card</h2>
+                    <?php 
+                        $approved_drops = array_filter($recent_drops, function($drop) {
+                            return $drop['status'] === 'Dropped' || $drop['status'] === 'Undropped';
+                        });
+                    ?>
+                    <?php if (count($approved_drops) > 0): ?>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Student ID</th>
+                                        <th>Student Name</th>
+                                        <th>Course</th>
+                                        <th>Year</th>
+                                        <th>Subject</th>
+                                        <th>Class Card Status</th>
+                                        <th>Student Status</th>
+                                        <th>Teacher Remarks</th>
+                                        <th>Detail</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($approved_drops as $drop): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($drop['student_id_number']); ?></td>
+                                            <td><?php echo htmlspecialchars($drop['student_name']); ?></td>
+                                            <td><?php echo htmlspecialchars($drop['student_course']); ?></td>
+                                            <td><?php echo htmlspecialchars($drop['student_year'] ?? 'N/A'); ?></td>
+                                            <td><?php echo htmlspecialchars($drop['subject_no'] . ' - ' . $drop['subject_name']); ?></td>
+                                            <td><span class="status status-<?php echo strtolower($drop['status']); ?>"><?php echo htmlspecialchars($drop['status']); ?></span></td>
+                                            <td><span class="status status-<?php echo strtolower($drop['student_status']); ?>"><?php echo ucfirst(htmlspecialchars($drop['student_status'])); ?></span></td>
+                                            <td><span class="remarks-cell" style="word-break: break-word;"><?php $remarks_text = htmlspecialchars($drop['remarks']); echo strlen($remarks_text) > 50 ? substr($remarks_text, 0, 50) . '... <a href="javascript:void(0)" onclick="showRemarksModal(\'' . addslashes($remarks_text) . '\', \'Teacher Remarks\')" style="color: #a78bfa; font-weight: 600;">See More</a>' : $remarks_text; ?></span></td>
+                                            <td style="text-align: center;"><button class="detail-btn" onclick="showStudentDetailModal(<?php echo htmlspecialchars(json_encode($drop)); ?>)" title="View Details"><span style="font-weight: 700; color: #a78bfa;">i</span></button></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php else: ?>
+                        <p class="no-data">No approved dropped class cards yet.</p>
                     <?php endif; ?>
                 </section>
             </div>
