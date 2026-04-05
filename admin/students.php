@@ -478,6 +478,9 @@ $message = getMessage();
                 <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/drop_history.php" class="nav-item">
                     <span>Drop History</span>
                 </a>
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/cancelled_class_card.php" class="nav-item">
+                    <span>Cancelled Class Cards</span>
+                </a>
                 <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/profile.php" class="nav-item">
                     <span>Profile</span>
                 </a>

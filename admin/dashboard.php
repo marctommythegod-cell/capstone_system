@@ -26,23 +26,39 @@ $stmt = $pdo->prepare('SELECT COUNT(*) as total FROM users WHERE role = "teacher
 $stmt->execute();
 $total_teachers = $stmt->fetch()['total'];
 
+// Today's dropped
+$stmt = $pdo->prepare('
+    SELECT COUNT(*) as total FROM class_card_drops
+    WHERE DATE(drop_date) = CURDATE() AND status = "Dropped"
+');
+$stmt->execute();
+$today_dropped = $stmt->fetch()['total'];
+
+// Today's undropped
+$stmt = $pdo->prepare('
+    SELECT COUNT(*) as total FROM class_card_drops
+    WHERE DATE(drop_date) = CURDATE() AND status = "Undropped"
+');
+$stmt->execute();
+$today_undropped = $stmt->fetch()['total'];
+
 // This month's drops
 $current_month = date('m');
 $current_year = date('Y');
 $stmt = $pdo->prepare('
     SELECT COUNT(*) as total FROM class_card_drops
-    WHERE MONTH(drop_date) = ? AND YEAR(drop_date) = ?
+    WHERE MONTH(drop_date) = ? AND YEAR(drop_date) = ? AND status = "Dropped"
 ');
 $stmt->execute([$current_month, $current_year]);
-$this_month_drops = $stmt->fetch()['total'];
+$this_month_dropped = $stmt->fetch()['total'];
 
-// This week's drops
+// Total cancelled cards
 $stmt = $pdo->prepare('
     SELECT COUNT(*) as total FROM class_card_drops
-    WHERE WEEK(drop_date) = WEEK(NOW()) AND YEAR(drop_date) = YEAR(NOW())
+    WHERE status = "Cancelled"
 ');
 $stmt->execute();
-$this_week_drops = $stmt->fetch()['total'];
+$total_cancelled = $stmt->fetch()['total'];
 
 // Approved dropped cards with pagination
 $stmt = $pdo->prepare('
@@ -55,7 +71,7 @@ $total_approved_drops = $stmt->fetch()['total'];
 $pagination = getPaginationData($total_approved_drops, 10); // 10 items per page
 
 $stmt = $pdo->prepare('
-    SELECT ccd.*, s.name as student_name, s.guardian_name, s.student_id, u.name as teacher_name
+    SELECT ccd.*, s.name as student_name, s.guardian_name, s.student_id, s.course, s.year, u.name as teacher_name
     FROM class_card_drops ccd
     JOIN students s ON ccd.student_id = s.id
     JOIN users u ON ccd.teacher_id = u.id
@@ -105,6 +121,9 @@ $message = getMessage();
                 <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/drop_history.php" class="nav-item">
                     <span>Drop History</span>
                 </a>
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/cancelled_class_card.php" class="nav-item">
+                    <span>Cancelled Class Cards</span>
+                </a>
                 <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/profile.php" class="nav-item">
                     <span>Profile</span>
                 </a>
@@ -133,39 +152,52 @@ $message = getMessage();
                 
                 <!-- Statistics Section -->
                 <section class="section">
-                    <h2>System Overview</h2>
-                    <div class="stats-grid">
-                        <div class="stat-card clickable-stat" onclick="showDropsModal('total', 'Total Class Card Drops')">
-                            <h3><?php echo $total_drops; ?></h3>
-                            <p>Total Class Cards Dropped</p>
-                            <small>Click to view records</small>
+                    <h2>Statistics</h2>
+                    <div class="stats-grid-columns">
+                        <!-- Left Column: Drop Statistics -->
+                        <div class="stats-column">
+                            <div class="stat-card">
+                                <h3><?php echo $today_dropped; ?></h3>
+                                <p>Today Dropped</p>
+                            </div>
+                            <div class="stat-card">
+                                <h3><?php echo $today_undropped; ?></h3>
+                                <p>Today Undropped</p>
+                            </div>
+                            <div class="stat-card">
+                                <h3><?php echo $this_month_dropped; ?></h3>
+                                <p>This Month Dropped</p>
+                            </div>
+                            <div class="stat-card">
+                                <h3><?php echo $total_drops; ?></h3>
+                                <p>Total Class Cards Dropped</p>
+                            </div>
                         </div>
-                        <div class="stat-card clickable-stat" onclick="showDropsModal('month', 'Class Card Drops - This Month')">
-                            <h3><?php echo $this_month_drops; ?></h3>
-                            <p>This Month's Drops</p>
-                            <small>Click to view records</small>
-                        </div>
-                        <div class="stat-card clickable-stat" onclick="showDropsModal('week', 'Class Card Drops - This Week')">
-                            <h3><?php echo $this_week_drops; ?></h3>
-                            <p>This Week's Drops</p>
-                            <small>Click to view records</small>
-                        </div>
-                        <div class="stat-card clickable-stat" onclick="window.location.href='/CLASS_CARD_DROPPING_SYSTEM/admin/students.php'" style="cursor: pointer;">
-                            <h3><?php echo $total_students; ?></h3>
-                            <p>Total Students</p>
-                            <small>Click to manage</small>
-                        </div>
-                        <div class="stat-card clickable-stat" onclick="window.location.href='/CLASS_CARD_DROPPING_SYSTEM/admin/teachers.php'" style="cursor: pointer;">
-                            <h3><?php echo $total_teachers; ?></h3>
-                            <p>Total Teachers</p>
-                            <small>Click to manage</small>
+                        
+                        <!-- Right Column: User Statistics -->
+                        <div class="stats-column">
+                            <div class="stat-card clickable-stat" onclick="window.location.href='/CLASS_CARD_DROPPING_SYSTEM/admin/students.php'" style="cursor: pointer;">
+                                <h3><?php echo $total_students; ?></h3>
+                                <p>Total Students</p>
+                                <small>Click to manage</small>
+                            </div>
+                            <div class="stat-card clickable-stat" onclick="window.location.href='/CLASS_CARD_DROPPING_SYSTEM/admin/teachers.php'" style="cursor: pointer;">
+                                <h3><?php echo $total_teachers; ?></h3>
+                                <p>Total Teachers</p>
+                                <small>Click to manage</small>
+                            </div>
+                            <div class="stat-card clickable-stat" onclick="window.location.href='/CLASS_CARD_DROPPING_SYSTEM/admin/cancelled_class_card.php'" style="cursor: pointer;">
+                                <h3><?php echo $total_cancelled; ?></h3>
+                                <p>Total Cancelled Class Cards</p>
+                                <small>Click to view</small>
+                            </div>
                         </div>
                     </div>
                 </section>
                 
                 <!-- Approved Dropped Cards Section -->
                 <section class="section">
-                    <h2>Approved Dropped Cards <span style="font-weight: normal; font-size: 0.9em; color: #666;">(<span id="dropsTable-count"><?php echo $pagination['total_items']; ?></span> total, page <?php echo $pagination['current_page']; ?> of <?php echo max(1, $pagination['total_pages']); ?>)</span></h2>
+                    <h2>Approved Dropped Class Card <span style="font-weight: normal; font-size: 0.9em; color: #666;">(<span id="dropsTable-count"><?php echo $pagination['total_items']; ?></span> total, page <?php echo $pagination['current_page']; ?> of <?php echo max(1, $pagination['total_pages']); ?>)</span></h2>
                     <?php if (count($approved_drops) > 0): ?>
                         <div class="table-responsive">
                             <table class="table">
@@ -173,7 +205,8 @@ $message = getMessage();
                                     <tr>
                                         <th>Student ID</th>
                                         <th>Student Name</th>
-                                        <th>Guardian Name</th>
+                                        <th>Course</th>
+                                        <th>Year</th>
                                         <th>Subject</th>
                                         <th>Teacher</th>
                                         <th>Dropped Date & Time</th>
@@ -187,7 +220,8 @@ $message = getMessage();
                                         <tr>
                                             <td><?php echo htmlspecialchars($drop['student_id']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['student_name']); ?></td>
-                                            <td><?php echo htmlspecialchars($drop['guardian_name'] ?? ''); ?></td>
+                                            <td><?php echo htmlspecialchars($drop['course'] ?? ''); ?></td>
+                                            <td><?php echo htmlspecialchars($drop['year'] ?? ''); ?></td>
                                             <td><?php echo htmlspecialchars($drop['subject_no'] . ' - ' . $drop['subject_name']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['teacher_name']); ?></td>
                                             <td><?php echo formatDate($drop['drop_date']); ?></td>

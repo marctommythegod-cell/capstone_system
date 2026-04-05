@@ -166,6 +166,9 @@ $message = getMessage();
                 <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/drop_history.php" class="nav-item">
                     <span>Drop History</span>
                 </a>
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/cancelled_class_card.php" class="nav-item">
+                    <span>Cancelled Class Cards</span>
+                </a>
                 <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/profile.php" class="nav-item">
                     <span>Profile</span>
                 </a>
@@ -327,64 +330,6 @@ $message = getMessage();
                         <?php echo renderPaginationControls($pagination, '/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php'); ?>
                     <?php else: ?>
                         <p class="no-data">No dropped cards found.</p>
-                    <?php endif; ?>
-                </section>
-
-                <!-- Cancelled Requests Section -->
-                <?php 
-                // Fetch cancelled requests
-                $cancelled_query = '
-                    SELECT ccd.*, s.name as student_name, s.guardian_name, s.student_id, u.name as teacher_name
-                    FROM class_card_drops ccd
-                    JOIN students s ON ccd.student_id = s.id
-                    JOIN users u ON ccd.teacher_id = u.id
-                    WHERE ccd.status = "Cancelled"
-                    ORDER BY ccd.cancelled_date DESC
-                ';
-                
-                $stmt = $pdo->prepare($cancelled_query);
-                $stmt->execute();
-                $cancelled_requests = $stmt->fetchAll();
-                ?>
-                <section class="section">
-                    <h2>Cancelled Requests (<span id="cancelledTable-count"><?php echo count($cancelled_requests); ?></span> records)</h2>
-                    <?php if (count($cancelled_requests) > 0): ?>
-                        <div class="table-responsive">
-                            <table class="table" id="cancelledTable">
-                                <thead>
-                                    <tr>
-                                        <th>Student ID</th>
-                                        <th>Student Name</th>
-                                        <th>Guardian Name</th>
-                                        <th>Subject</th>
-                                        <th>Teacher</th>
-                                        <th>Requested Date & Time</th>
-                                        <th>Deadline</th>
-                                        <th>Cancelled Date & Time</th>
-                                        <th>Cancellation Reason</th>
-                                        <th>Teacher Remarks</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($cancelled_requests as $request): ?>
-                                        <tr style="opacity: 0.7; background-color: #f9f9f9;">
-                                            <td><?php echo htmlspecialchars($request['student_id']); ?></td>
-                                            <td><?php echo htmlspecialchars($request['student_name']); ?></td>
-                                            <td><?php echo htmlspecialchars($request['guardian_name'] ?? ''); ?></td>
-                                            <td><?php echo htmlspecialchars($request['subject_no'] . ' - ' . $request['subject_name']); ?></td>
-                                            <td><?php echo htmlspecialchars($request['teacher_name']); ?></td>
-                                            <td><?php echo formatDate($request['drop_date']); ?></td>
-                                            <td><?php echo formatDate($request['deadline']); ?></td>
-                                            <td><?php echo formatDate($request['cancelled_date']); ?></td>
-                                            <td><?php echo htmlspecialchars($request['cancellation_reason'] ?? '-'); ?></td>
-                                            <td><?php echo htmlspecialchars(substr($request['remarks'], 0, 40)); ?></td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    <?php else: ?>
-                        <p class="no-data">No cancelled requests.</p>
                     <?php endif; ?>
                 </section>
             </div>

@@ -111,6 +111,9 @@ $message = getMessage();
                     <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/drop_history.php?year=3" class="submenu-item <?php echo $year_filter === 3 ? 'active' : ''; ?>">3rd Year</a>
                     <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/drop_history.php?year=4" class="submenu-item <?php echo $year_filter === 4 ? 'active' : ''; ?>">4th Year</a>
                 </div>
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/cancelled_class_card.php" class="nav-item">
+                    <span>Cancelled Class Cards</span>
+                </a>
                 <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/profile.php" class="nav-item">
                     <span>Profile</span>
                 </a>
