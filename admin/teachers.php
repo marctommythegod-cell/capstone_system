@@ -941,14 +941,12 @@ $message = getMessage();
                                 <thead>
                                     <tr>
                                         <th>Teacher ID</th>
-                                        <th>Last Name</th>
-                                        <th>First Name</th>
-                                        <th>Middle Name</th>
+                                        <th>Full Name</th>
+                                        <th>Department</th>
                                         <th>Email</th>
                                         <th>Address</th>
-                                        <th>Department</th>
-                                        <th>Teacher Status</th>
                                         <th>Registered</th>
+                                        <th>Teacher Status</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -956,23 +954,12 @@ $message = getMessage();
                                     <?php foreach ($teachers as $teacher): ?>
                                         <tr>
                                             <td><?php echo htmlspecialchars($teacher['teacher_id'] ?? ''); ?></td>
-                                            <td><?php 
-                                                $nameParts = explode(', ', $teacher['name'] ?? '');
-                                                echo htmlspecialchars(trim($nameParts[0] ?? ''));
-                                            ?></td>
-                                            <td><?php 
-                                                $nameParts = explode(', ', $teacher['name'] ?? '');
-                                                echo htmlspecialchars(trim($nameParts[1] ?? ''));
-                                            ?></td>
-                                            <td><?php 
-                                                $nameParts = explode(', ', $teacher['name'] ?? '');
-                                                echo htmlspecialchars(trim($nameParts[2] ?? ''));
-                                            ?></td>
+                                            <td><?php echo htmlspecialchars($teacher['name'] ?? ''); ?></td>
+                                            <td><?php echo htmlspecialchars($teacher['department'] ?? ''); ?></td>
                                             <td><?php echo htmlspecialchars($teacher['email']); ?></td>
                                             <td><?php echo htmlspecialchars($teacher['address'] ?? ''); ?></td>
-                                            <td><?php echo htmlspecialchars($teacher['department'] ?? ''); ?></td>
-                                            <td><span class="status status-<?php echo ($teacher['status'] === 'active') ? 'active' : 'inactive'; ?>"><?php echo ucfirst($teacher['status'] ?? 'inactive'); ?></span></td>
                                             <td><?php echo formatDate($teacher['created_at']); ?></td>
+                                            <td><span class="status status-<?php echo ($teacher['status'] === 'active') ? 'active' : 'inactive'; ?>"><?php echo ucfirst($teacher['status'] ?? 'inactive'); ?></span></td>
                                             <td>
                                                 <button type="button" class="btn btn-sm btn-primary" onclick="openUpdateModal(
                                                     <?php echo $teacher['id']; ?>,

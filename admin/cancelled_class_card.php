@@ -95,17 +95,32 @@ $message = getMessage();
     <link rel="stylesheet" href="/CLASS_CARD_DROPPING_SYSTEM/css/style.css">
     <style>
         .filter-section {
-            background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%);
-            padding: 20px;
-            border-radius: 8px;
+            background: white;
+            padding: 0;
+            border-radius: 12px;
             margin-bottom: 25px;
-            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .filter-section-header {
+            background: linear-gradient(135deg, var(--primary-color), #9b59b6);
+            color: white;
+            padding: 16px 24px;
+            font-weight: 700;
+            font-size: 1.1em;
+            letter-spacing: 0.3px;
+        }
+
+        .filter-section-content {
+            padding: 24px;
         }
 
         .filter-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
         }
 
         .filter-group {
@@ -114,59 +129,69 @@ $message = getMessage();
         }
 
         .filter-group label {
-            font-weight: 600;
-            font-size: 0.9em;
-            margin-bottom: 8px;
-            color: #333;
+            font-weight: 700;
+            color: #7f3fc6;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: block;
+            margin-bottom: 10px;
         }
 
         .filter-group input, .filter-group select {
-            padding: 10px 12px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            padding: 12px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
             font-size: 0.95em;
-            transition: border-color 0.3s ease;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background-color: #fafafa;
         }
 
         .filter-group input:focus, .filter-group select:focus {
             outline: none;
-            border-color: #7f3fc6;
+            border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(127, 63, 198, 0.1);
+            background-color: white;
         }
 
         .filter-buttons {
             display: flex;
-            gap: 10px;
-            align-items: flex-end;
+            gap: 12px;
+            align-items: center;
         }
 
         .btn-filter, .btn-reset {
-            padding: 10px 20px;
+            padding: 12px 28px;
             border: none;
-            border-radius: 5px;
-            font-weight: 600;
+            border-radius: 10px;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.3s ease;
             font-size: 0.95em;
+            text-decoration: none;
+            display: inline-block;
         }
 
         .btn-filter {
-            background-color: #7f3fc6;
+            background: linear-gradient(135deg, var(--primary-color), #9b59b6);
             color: white;
         }
 
         .btn-filter:hover {
-            background-color: #6a2fa8;
-            box-shadow: 0 4px 12px rgba(127, 63, 198, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(167, 139, 250, 0.3);
         }
 
         .btn-reset {
-            background-color: #e0e0e0;
-            color: #333;
+            background-color: white;
+            color: #666;
+            border: 2px solid #e5e7eb;
         }
 
         .btn-reset:hover {
-            background-color: #d0d0d0;
+            background-color: #f5f5f5;
+            border-color: #d0d0d0;
         }
 
         .stats-row {
@@ -294,45 +319,47 @@ $message = getMessage();
                     
                     <!-- Filter Section -->
                     <section class="section">
-                        <h2>Search & Filter</h2>
                         <div class="filter-section">
-                            <form method="GET" id="filterForm">
-                                <div class="filter-grid">
-                                    <div class="filter-group">
-                                        <label for="search">Search (Student/Subject)</label>
-                                        <input type="text" id="search" name="search" placeholder="Enter student name, ID, or subject..." value="<?php echo htmlspecialchars($search); ?>">
+                            <div class="filter-section-header">Search & Filter</div>
+                            <div class="filter-section-content">
+                                <form method="GET" id="filterForm">
+                                    <div class="filter-grid">
+                                        <div class="filter-group">
+                                            <label for="search">Search</label>
+                                            <input type="text" id="search" name="search" placeholder="Student name, ID, or subject..." value="<?php echo htmlspecialchars($search); ?>">
+                                        </div>
+
+                                        <div class="filter-group">
+                                            <label for="course">Course</label>
+                                            <select id="course" name="course">
+                                                <option value="">All Courses</option>
+                                                <?php foreach ($courses as $course): ?>
+                                                    <option value="<?php echo htmlspecialchars($course['course']); ?>" <?php echo $filter_course === $course['course'] ? 'selected' : ''; ?>>
+                                                        <?php echo htmlspecialchars($course['course']); ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+
+                                        <div class="filter-group">
+                                            <label for="teacher">Teacher</label>
+                                            <select id="teacher" name="teacher">
+                                                <option value="">All Teachers</option>
+                                                <?php foreach ($teachers as $teacher): ?>
+                                                    <option value="<?php echo htmlspecialchars($teacher['name']); ?>" <?php echo $filter_teacher === $teacher['name'] ? 'selected' : ''; ?>>
+                                                        <?php echo htmlspecialchars($teacher['name']); ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
                                     </div>
 
-                                    <div class="filter-group">
-                                        <label for="course">Course</label>
-                                        <select id="course" name="course">
-                                            <option value="">All Courses</option>
-                                            <?php foreach ($courses as $course): ?>
-                                                <option value="<?php echo htmlspecialchars($course['course']); ?>" <?php echo $filter_course === $course['course'] ? 'selected' : ''; ?>>
-                                                    <?php echo htmlspecialchars($course['course']); ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
+                                    <div class="filter-buttons">
+                                        <button type="submit" class="btn-filter">Apply Filter</button>
+                                        <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/cancelled_class_card.php" class="btn-reset">Clear All</a>
                                     </div>
-
-                                    <div class="filter-group">
-                                        <label for="teacher">Teacher</label>
-                                        <select id="teacher" name="teacher">
-                                            <option value="">All Teachers</option>
-                                            <?php foreach ($teachers as $teacher): ?>
-                                                <option value="<?php echo htmlspecialchars($teacher['name']); ?>" <?php echo $filter_teacher === $teacher['name'] ? 'selected' : ''; ?>>
-                                                    <?php echo htmlspecialchars($teacher['name']); ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="filter-buttons" style="margin-top: 15px;">
-                                    <button type="submit" class="btn-filter">Search</button>
-                                    <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/cancelled_class_card.php" class="btn-reset">Reset Filters</a>
-                                </div>
-                            </form>
+                                </form>
+                            </div>
                         </div>
                     </section>
 
@@ -352,7 +379,7 @@ $message = getMessage();
                                             <th>Subject</th>
                                             <th>Teacher</th>
                                             <th>Date Requested</th>
-                                            <th>Status</th>
+                                            <th>Teacher Remarks</th>
                                             <th>Detail</th>
                                         </tr>
                                     </thead>
@@ -366,7 +393,7 @@ $message = getMessage();
                                                 <td><?php echo htmlspecialchars($record['subject_no'] . ' - ' . $record['subject_name']); ?></td>
                                                 <td><?php echo htmlspecialchars($record['teacher_name']); ?></td>
                                                 <td><?php echo formatDate($record['drop_date']); ?></td>
-                                                <td><span class="status-cancelled"><?php echo htmlspecialchars($record['status']); ?></span></td>
+                                                <td><?php echo !empty($record['remarks']) ? htmlspecialchars($record['remarks']) : '<em style="color: #999;">No remarks</em>'; ?></td>
                                                 <td style="text-align: center;"><button class="detail-btn" onclick="showStudentDetailModal(<?php echo htmlspecialchars(json_encode($record)); ?>)" title="View Details"><span style="font-weight: 700; color: #a78bfa;">i</span></button></td>
                                             </tr>
                                         <?php endforeach; ?>

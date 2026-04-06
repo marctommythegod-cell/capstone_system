@@ -1450,16 +1450,14 @@ $message = getMessage();
                                 <thead>
                                     <tr>
                                         <th>Student ID</th>
-                                        <th>Last Name</th>
-                                        <th>First Name</th>
-                                        <th>Middle Name</th>
+                                        <th>Full Name</th>
+                                        <th>Course</th>
+                                        <th>Year</th>
                                         <th>Email</th>
                                         <th>Address</th>
                                         <th>Guardian Name</th>
-                                        <th>Course</th>
-                                        <th>Year</th>
-                                        <th>Student Status</th>
                                         <th>Registered</th>
+                                        <th>Student Status</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -1467,31 +1465,19 @@ $message = getMessage();
                                     <?php foreach ($students as $student): ?>
                                         <tr>
                                             <td><?php echo htmlspecialchars($student['student_id'] ?? ''); ?></td>
-                                            <td><?php
-                                            $nameParts = explode(', ', $student['name'] ?? '');
-                                            echo htmlspecialchars(trim($nameParts[0] ?? ''));
-                                            ?></td>
-                                            <td><?php
-                                            $nameParts = explode(', ', $student['name'] ?? '');
-                                            echo htmlspecialchars(trim($nameParts[1] ?? ''));
-                                            ?></td>
-                                            <td><?php
-                                            $nameParts = explode(', ', $student['name'] ?? '');
-                                            echo htmlspecialchars(trim($nameParts[2] ?? ''));
-                                            ?></td>
+                                            <td><?php echo htmlspecialchars($student['name'] ?? ''); ?></td>
+                                            <td><?php echo htmlspecialchars($student['course'] ?? ''); ?></td>
+                                            <td><?php echo $student['year'] ?? ''; ?></td>
                                             <td><?php echo htmlspecialchars($student['email'] ?? ''); ?></td>
                                             <td><?php echo htmlspecialchars($student['address'] ?? ''); ?></td>
                                             <td><?php echo htmlspecialchars($student['guardian_name'] ?? ''); ?></td>
-                                            <td><?php echo htmlspecialchars($student['course'] ?? ''); ?></td>
-                                            <td><?php echo $student['year'] ?? ''; ?></td>
+                                            <td><?php echo formatDate($student['created_at'] ?? ''); ?></td>
                                             <td><span
                                                     class="status status-<?php echo ($student['status'] === 'active') ? 'active' : 'inactive'; ?>"><?php echo ucfirst($student['status'] ?? 'inactive'); ?></span>
                                             </td>
-                                            <td><?php echo formatDate($student['created_at'] ?? ''); ?></td>
                                             <td>
                                                 <button type="button" class="btn btn-sm btn-primary"
-                                                    onclick="openUpdateModal(<?php echo $student['id']; ?>, '<?php echo htmlspecialchars($student['student_id']); ?>', '<?php $nameParts = explode(', ', $student['name']);
-                                                          echo htmlspecialchars(trim($nameParts[0] ?? '')); ?>', '<?php echo htmlspecialchars(trim($nameParts[1] ?? '')); ?>', '<?php echo htmlspecialchars(trim($nameParts[2] ?? '')); ?>', '<?php echo htmlspecialchars($student['address'] ?? ''); ?>', '<?php echo htmlspecialchars($student['email']); ?>', '<?php echo htmlspecialchars($student['guardian_name'] ?? ''); ?>', '<?php echo htmlspecialchars($student['course']); ?>', <?php echo $student['year']; ?>, '<?php echo htmlspecialchars($student['status'] ?? 'inactive'); ?>')">Update</button>
+                                                    onclick="openUpdateModal(<?php echo $student['id']; ?>, '<?php echo htmlspecialchars($student['student_id']); ?>', '<?php $nameParts = explode(', ', $student['name']); echo htmlspecialchars(trim($nameParts[0] ?? '')); ?>', '<?php echo htmlspecialchars(trim($nameParts[1] ?? '')); ?>', '<?php echo htmlspecialchars(trim($nameParts[2] ?? '')); ?>', '<?php echo htmlspecialchars($student['address'] ?? ''); ?>', '<?php echo htmlspecialchars($student['email']); ?>', '<?php echo htmlspecialchars($student['guardian_name'] ?? ''); ?>', '<?php echo htmlspecialchars($student['course']); ?>', <?php echo $student['year']; ?>, '<?php echo htmlspecialchars($student['status'] ?? 'inactive'); ?>')">Update</button>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
