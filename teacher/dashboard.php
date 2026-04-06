@@ -587,7 +587,7 @@ $message = getMessage();
                                     <div>
                                         <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Student Status</label>
                                         <p style="margin: 0; color: #1f2937;">
-                                            <span class="status status-${drop.student_status.toLowerCase()}" style="padding: 6px 12px; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 0.95em;">${escapeHtml(drop.student_status.charAt(0).toUpperCase() + drop.student_status.slice(1))}</span>
+                                            <span class="status status-${drop.student_status.toLowerCase()}" style="padding: 6px 12px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.95em;">${escapeHtml(drop.student_status.charAt(0).toUpperCase() + drop.student_status.slice(1))}</span>
                                         </p>
                                     </div>
                                 </div>
@@ -618,7 +618,7 @@ $message = getMessage();
                                     <div style="margin-bottom: 22px;">
                                         <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Class Card Status</label>
                                         <p style="margin: 0; color: #1f2937;">
-                                            <span class="status status-${drop.status.toLowerCase()}" style="padding: 6px 12px; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 0.95em;">${escapeHtml(drop.status)}</span>
+                                            <span class="status status-${drop.status.toLowerCase()}">${escapeHtml(drop.status)}</span>
                                         </p>
                                     </div>
                                     <div style="margin-bottom: 22px;">

@@ -1141,60 +1141,53 @@ $message = getMessage();
                     }
                 </script>
                 <div id="updateModal" class="modal" style="display: none;">
-                    <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
-                        <div class="modal-header">
-                            <h2>Update Student</h2>
-                            <button type="button" class="modal-close" onclick="closeUpdateModal()">&times;</button>
+                    <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto; background: white; border-radius: 16px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);">
+                        <div style="background: linear-gradient(135deg, var(--primary-color), #9b59b6); color: white; padding: 28px 32px; border-radius: 16px 16px 0 0; font-size: 1.4em; font-weight: 700; display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.3px;">
+                            <span>Update Student Information</span>
+                            <button type="button" class="modal-close" onclick="closeUpdateModal()" style="background: rgba(255, 255, 255, 0.25); border: none; color: white; font-size: 28px; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s; line-height: 1;" onmouseover="this.style.backgroundColor='rgba(255, 255, 255, 0.35); this.style.transform='scale(1.1)'" onmouseout="this.style.backgroundColor='rgba(255, 255, 255, 0.25); this.style.transform='scale(1)'">&times;</button>
                         </div>
                         <form method="POST" id="updateForm">
                             <input type="hidden" name="action" value="update">
                             <input type="hidden" name="id" id="updateStudentId" value="">
-                            <div class="modal-body" style="padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div style="padding: 40px 32px; background: #f8f6ff; display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
                                 <div class="form-group">
-                                    <label for="updateStudentIdField">Student ID</label>
-                                    <input type="text" id="updateStudentIdField" name="student_id" required
-                                        placeholder="ex: 000*****" maxlength="8" inputmode="numeric">
+                                    <label for="updateStudentIdField" style="display: block; font-weight: 600; font-size: 0.9em; color: #374151; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Student ID</label>
+                                    <input type="text" id="updateStudentIdField" name="student_id" required placeholder="ex: 000*****" maxlength="8" inputmode="numeric" style="width: 100%; padding: 12px 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 1em; font-family: inherit; transition: all 0.3s; background: white;" onfocus="this.style.borderColor='var(--primary-color)'; this.style.boxShadow='0 0 0 3px rgba(127, 63, 198, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="updateLastName">Last Name</label>
-                                    <input type="text" id="updateLastName" name="lastname" required
-                                        placeholder="Enter last name" oninput="this.value = this.value.toUpperCase()">
+                                    <label for="updateLastName" style="display: block; font-weight: 600; font-size: 0.9em; color: #374151; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Last Name</label>
+                                    <input type="text" id="updateLastName" name="lastname" required placeholder="Enter last name" oninput="this.value = this.value.toUpperCase()" style="width: 100%; padding: 12px 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 1em; font-family: inherit; transition: all 0.3s; background: white;" onfocus="this.style.borderColor='var(--primary-color)'; this.style.boxShadow='0 0 0 3px rgba(127, 63, 198, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="updateFirstName">First Name</label>
-                                    <input type="text" id="updateFirstName" name="firstname" required
-                                        placeholder="Enter first name" oninput="this.value = this.value.toUpperCase()">
+                                    <label for="updateFirstName" style="display: block; font-weight: 600; font-size: 0.9em; color: #374151; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">First Name</label>
+                                    <input type="text" id="updateFirstName" name="firstname" required placeholder="Enter first name" oninput="this.value = this.value.toUpperCase()" style="width: 100%; padding: 12px 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 1em; font-family: inherit; transition: all 0.3s; background: white;" onfocus="this.style.borderColor='var(--primary-color)'; this.style.boxShadow='0 0 0 3px rgba(127, 63, 198, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="updateMiddleName">Middle Name</label>
-                                    <input type="text" id="updateMiddleName" name="middlename" required
-                                        placeholder="Enter middle name" oninput="this.value = this.value.toUpperCase()">
+                                    <label for="updateMiddleName" style="display: block; font-weight: 600; font-size: 0.9em; color: #374151; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Middle Name</label>
+                                    <input type="text" id="updateMiddleName" name="middlename" required placeholder="Enter middle name" oninput="this.value = this.value.toUpperCase()" style="width: 100%; padding: 12px 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 1em; font-family: inherit; transition: all 0.3s; background: white;" onfocus="this.style.borderColor='var(--primary-color)'; this.style.boxShadow='0 0 0 3px rgba(127, 63, 198, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
                                 </div>
 
                                 <div class="form-group" style="grid-column: 1 / -1;">
-                                    <label for="updateAddress">Complete Address</label>
-                                    <textarea id="updateAddress" name="address" required
-                                        placeholder="Enter complete address" rows="3"></textarea>
+                                    <label for="updateAddress" style="display: block; font-weight: 600; font-size: 0.9em; color: #374151; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Complete Address</label>
+                                    <textarea id="updateAddress" name="address" required placeholder="Enter complete address" rows="3" style="width: 100%; padding: 12px 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 1em; font-family: inherit; transition: all 0.3s; background: white; resize: vertical; min-height: 100px;" onfocus="this.style.borderColor='var(--primary-color)'; this.style.boxShadow='0 0 0 3px rgba(127, 63, 198, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'"></textarea>
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="updateEmail">Email Address</label>
-                                    <input type="email" id="updateEmail" name="email" required
-                                        placeholder="example@gmail.com">
+                                    <label for="updateEmail" style="display: block; font-weight: 600; font-size: 0.9em; color: #374151; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Email Address</label>
+                                    <input type="email" id="updateEmail" name="email" required placeholder="example@gmail.com" style="width: 100%; padding: 12px 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 1em; font-family: inherit; transition: all 0.3s; background: white;" onfocus="this.style.borderColor='var(--primary-color)'; this.style.boxShadow='0 0 0 3px rgba(127, 63, 198, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="updateGuardianName">Guardian Name</label>
-                                    <input type="text" id="updateGuardianName" name="guardian_name" required
-                                        placeholder="Enter guardian name" oninput="this.value = this.value.toUpperCase()">
+                                    <label for="updateGuardianName" style="display: block; font-weight: 600; font-size: 0.9em; color: #374151; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Guardian Name</label>
+                                    <input type="text" id="updateGuardianName" name="guardian_name" required placeholder="Enter guardian name" oninput="this.value = this.value.toUpperCase()" style="width: 100%; padding: 12px 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 1em; font-family: inherit; transition: all 0.3s; background: white;" onfocus="this.style.borderColor='var(--primary-color)'; this.style.boxShadow='0 0 0 3px rgba(127, 63, 198, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
                                 </div>
 
                                 <div class="form-group" style="grid-column: 1 / -1;">
-                                    <label for="updateCourse">Course</label>
-                                    <select id="updateCourse" name="course" required>
+                                    <label for="updateCourse" style="display: block; font-weight: 600; font-size: 0.9em; color: #374151; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Course</label>
+                                    <select id="updateCourse" name="course" required style="width: 100%; padding: 12px 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 1em; font-family: inherit; transition: all 0.3s; background: white;" onfocus="this.style.borderColor='var(--primary-color)'; this.style.boxShadow='0 0 0 3px rgba(127, 63, 198, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
                                         <option value="">-- Select Course --</option>
                                         <?php foreach ($courses_by_category as $category => $course_list): ?>
                                             <optgroup label="<?php echo htmlspecialchars($category); ?>">
@@ -1209,8 +1202,8 @@ $message = getMessage();
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="updateYear">Year Level</label>
-                                    <select id="updateYear" name="year" required>
+                                    <label for="updateYear" style="display: block; font-weight: 600; font-size: 0.9em; color: #374151; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Year Level</label>
+                                    <select id="updateYear" name="year" required style="width: 100%; padding: 12px 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 1em; font-family: inherit; transition: all 0.3s; background: white;" onfocus="this.style.borderColor='var(--primary-color)'; this.style.boxShadow='0 0 0 3px rgba(127, 63, 198, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
                                         <option value="">-- Select Year --</option>
                                         <option value="1">1st Year</option>
                                         <option value="2">2nd Year</option>
@@ -1220,19 +1213,17 @@ $message = getMessage();
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="updateStatus">Status</label>
-                                    <select id="updateStatus" name="status" required>
+                                    <label for="updateStatus" style="display: block; font-weight: 600; font-size: 0.9em; color: #374151; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Status</label>
+                                    <select id="updateStatus" name="status" required style="width: 100%; padding: 12px 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 1em; font-family: inherit; transition: all 0.3s; background: white;" onfocus="this.style.borderColor='var(--primary-color)'; this.style.boxShadow='0 0 0 3px rgba(127, 63, 198, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
                                         <option value="">-- Select Status --</option>
                                         <option value="active">Active</option>
                                         <option value="inactive">Inactive</option>
                                     </select>
                                 </div>
                             </div>
-                            <div class="modal-footer"
-                                style="padding: 15px 20px; border-top: 1px solid #ddd; display: flex; gap: 10px; justify-content: flex-end;">
-                                <button type="button" class="btn btn-secondary"
-                                    onclick="closeUpdateModal()">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Update</button>
+                            <div style="padding: 24px 32px; border-top: 2px solid #e9d5ff; display: flex; gap: 12px; justify-content: flex-end; background: white;">
+                                <button type="button" class="btn btn-secondary" onclick="closeUpdateModal()" style="padding: 12px 28px; background-color: #e9d5ff; color: var(--primary-color); border: none; border-radius: 10px; cursor: pointer; font-weight: 700; transition: all 0.3s; font-size: 1em;" onmouseover="this.style.backgroundColor='#ddd6fe'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 16px rgba(167, 139, 250, 0.3)'" onmouseout="this.style.backgroundColor='#e9d5ff'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">Cancel</button>
+                                <button type="submit" class="btn btn-primary" style="padding: 12px 28px; background: linear-gradient(135deg, var(--primary-color), #9b59b6); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; transition: all 0.3s; font-size: 1em;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 16px rgba(127, 63, 198, 0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">Update Student</button>
                             </div>
                         </form>
                     </div>
@@ -1455,7 +1446,7 @@ $message = getMessage();
                     </div>
                     <?php if (count($students) > 0): ?>
                         <div class="table-responsive">
-                            <table class="table" id="studentsTable">
+                            <table class="table" id="studentsTable" style="font-size: 0.9em;">
                                 <thead>
                                     <tr>
                                         <th>Student ID</th>

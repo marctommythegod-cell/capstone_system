@@ -20,11 +20,12 @@ $count_query = '
     SELECT COUNT(*) as total FROM class_card_drops ccd
     JOIN students s ON ccd.student_id = s.id
     JOIN users u ON ccd.teacher_id = u.id
+    WHERE ccd.status != "Cancelled"
 ';
 $count_params = [];
 
 if ($year_filter) {
-    $count_query .= ' WHERE s.year = ?';
+    $count_query .= ' AND s.year = ?';
     $count_params[] = $year_filter;
 }
 
@@ -40,11 +41,12 @@ $query = '
     JOIN students s ON ccd.student_id = s.id
     JOIN users u ON ccd.teacher_id = u.id
     LEFT JOIN philcst_undrop_records pur ON ccd.id = pur.drop_id
+    WHERE ccd.status != "Cancelled"
 ';
 $query_params = [];
 
 if ($year_filter) {
-    $query .= ' WHERE s.year = ?';
+    $query .= ' AND s.year = ?';
     $query_params[] = $year_filter;
 }
 
@@ -142,42 +144,45 @@ $message = getMessage();
                 <?php endif; ?>
                 
                 <!-- Live Search -->
-                <section class="section">
-                    <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 1.1em;">Filter History</h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: flex-end;">
-                        <!-- Search by Student/Teacher -->
-                        <div>
-                            <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9em; color: #333;">Search</label>
-                            <input type="text" id="liveSearch" data-live-filter="historyTable" placeholder="Student or Teacher..." style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.95em;">
-                        </div>
-                        
-                        <!-- Filter by Status -->
-                        <div>
-                            <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9em; color: #333;">Status</label>
-                            <select id="statusFilter" onchange="filterHistoryTable()" style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.95em;">
-                                <option value="">All Status</option>
-                                <option value="Pending">Pending</option>
-                                <option value="Dropped">Approved</option>
-                                <option value="Undropped">Undropped</option>
-                                <option value="Cancelled">Cancelled</option>
-                            </select>
-                        </div>
-                        
-                        <!-- Filter by Date Range -->
-                        <div>
-                            <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9em; color: #333;">From Date</label>
-                            <input type="date" id="filterFromDate" onchange="filterHistoryTable()" style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.95em;">
-                        </div>
-                        
-                        <div>
-                            <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9em; color: #333;">To Date</label>
-                            <input type="date" id="filterToDate" onchange="filterHistoryTable()" style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.95em;">
-                        </div>
-                        
-                        <!-- Clear Filters Button -->
-                        <div style="display: flex; gap: 8px;">
-                            <button type="button" class="btn btn-secondary" onclick="clearAllFiltersHistory()" style="flex: 1; padding: 8px 12px; font-size: 0.95em;">Clear All</button>
-                            <button type="button" class="btn btn-primary" onclick="filterHistoryTable()" style="flex: 1; padding: 8px 12px; font-size: 0.95em;">Apply</button>
+                <section class="section" style="background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(127, 63, 198, 0.1); overflow: hidden;">
+                    <div style="background: linear-gradient(135deg, var(--primary-color), #9b59b6); padding: 24px 28px; color: white;">
+                        <h3 style="margin: 0; font-size: 1.25em; font-weight: 700; letter-spacing: 0.3px;">Filter Drop History</h3>
+                    </div>
+                    <div style="padding: 32px 28px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; align-items: flex-end;">
+                            <!-- Search by Student/Teacher -->
+                            <div>
+                                <label style="display: block; margin-bottom: 10px; font-weight: 700; color: #7f3fc6; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px;">Search</label>
+                                <input type="text" id="liveSearch" data-live-filter="historyTable" placeholder="Student or Teacher..." style="width: 100%; padding: 12px 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 1em; font-family: inherit; transition: all 0.3s ease;" onfocus="this.style.borderColor = 'var(--primary-color)'; this.style.boxShadow = '0 0 0 3px rgba(127, 63, 198, 0.1)';" onblur="this.style.borderColor = '#e5e7eb'; this.style.boxShadow = 'none';">
+                            </div>
+                            
+                            <!-- Filter by Status -->
+                            <div>
+                                <label style="display: block; margin-bottom: 10px; font-weight: 700; color: #7f3fc6; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px;">Status</label>
+                                <select id="statusFilter" onchange="filterHistoryTable()" style="width: 100%; padding: 12px 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 1em; font-family: inherit; transition: all 0.3s ease; cursor: pointer;" onfocus="this.style.borderColor = 'var(--primary-color)'; this.style.boxShadow = '0 0 0 3px rgba(127, 63, 198, 0.1)';" onblur="this.style.borderColor = '#e5e7eb'; this.style.boxShadow = 'none';">
+                                    <option value="">All Status</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Dropped">Approved</option>
+                                    <option value="Undropped">Undropped</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Filter by Date Range -->
+                            <div>
+                                <label style="display: block; margin-bottom: 10px; font-weight: 700; color: #7f3fc6; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px;">From Date</label>
+                                <input type="date" id="filterFromDate" onchange="filterHistoryTable()" style="width: 100%; padding: 12px 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 1em; font-family: inherit; transition: all 0.3s ease;" onfocus="this.style.borderColor = 'var(--primary-color)'; this.style.boxShadow = '0 0 0 3px rgba(127, 63, 198, 0.1)';" onblur="this.style.borderColor = '#e5e7eb'; this.style.boxShadow = 'none';">
+                            </div>
+                            
+                            <div>
+                                <label style="display: block; margin-bottom: 10px; font-weight: 700; color: #7f3fc6; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px;">To Date</label>
+                                <input type="date" id="filterToDate" onchange="filterHistoryTable()" style="width: 100%; padding: 12px 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 1em; font-family: inherit; transition: all 0.3s ease;" onfocus="this.style.borderColor = 'var(--primary-color)'; this.style.boxShadow = '0 0 0 3px rgba(127, 63, 198, 0.1)';" onblur="this.style.borderColor = '#e5e7eb'; this.style.boxShadow = 'none';">
+                            </div>
+                            
+                            <!-- Clear Filters Button -->
+                            <div style="display: flex; gap: 12px;">
+                                <button type="button" class="btn btn-secondary" onclick="clearAllFiltersHistory()" style="flex: 1; padding: 12px 16px; font-size: 0.95em; font-weight: 600; border: 2px solid #e5e7eb; border-radius: 10px; background: white; color: #666; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.background = '#f5f5f5'; this.style.borderColor = '#d0d0d0';" onmouseout="this.style.background = 'white'; this.style.borderColor = '#e5e7eb';">Clear All</button>
+                                <button type="button" class="btn btn-primary" onclick="filterHistoryTable()" style="flex: 1; padding: 12px 16px; font-size: 0.95em; font-weight: 600; background: linear-gradient(135deg, var(--primary-color), #9b59b6); color: white; border: none; border-radius: 10px; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.transform = 'translateY(-2px)'; this.style.boxShadow = '0 6px 20px rgba(127, 63, 198, 0.4)';" onmouseout="this.style.transform = 'translateY(0)'; this.style.boxShadow = 'none';">Apply</button>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -331,7 +336,7 @@ $message = getMessage();
                 padding: 20px;
             `;
 
-            const retrieveDate = (recordData.retrieve_date && recordData.retrieve_date !== '0000-00-00 00:00:00') ? recordData.retrieve_date : 'N/A';
+            const retrieveDate = (recordData.undrop_retrieve_date && recordData.undrop_retrieve_date !== '0000-00-00 00:00:00' && recordData.undrop_retrieve_date !== null && recordData.undrop_retrieve_date !== '') ? recordData.undrop_retrieve_date : 'N/A';
             
             modal.innerHTML = `
                 <div style="
@@ -377,50 +382,50 @@ $message = getMessage();
                             <div>
                                 <div style="
                                     background: linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(155, 89, 182, 0.05));
-                                    padding: 24px;
+                                    padding: 32px;
                                     border-radius: 14px;
                                     border-left: 5px solid var(--primary-color);
                                 ">
                                     <h3 style="
                                         color: var(--primary-color);
-                                        margin: 0 0 24px 0;
-                                        font-size: 1.25em;
+                                        margin: 0 0 28px 0;
+                                        font-size: 1.35em;
                                         font-weight: 700;
                                     ">
                                         Student Information
                                     </h3>
-                                    <div style="margin-bottom: 22px;">
-                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Student ID</label>
-                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${recordData.student_id}</p>
+                                    <div style="margin-bottom: 26px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Student ID</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.1em; font-weight: 600;">${recordData.student_id}</p>
                                     </div>
-                                    <div style="margin-bottom: 22px;">
-                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Full Name</label>
-                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${recordData.student_name}</p>
+                                    <div style="margin-bottom: 26px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Full Name</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.1em; font-weight: 600;">${recordData.student_name}</p>
                                     </div>
-                                    <div style="margin-bottom: 22px;">
-                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Guardian Name</label>
-                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${recordData.guardian_name || 'N/A'}</p>
+                                    <div style="margin-bottom: 26px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Guardian Name</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.1em; font-weight: 600;">${recordData.guardian_name || 'N/A'}</p>
                                     </div>
-                                    <div style="margin-bottom: 22px;">
-                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Course</label>
-                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${recordData.student_course || 'N/A'}</p>
+                                    <div style="margin-bottom: 26px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Course</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.1em; font-weight: 600;">${recordData.student_course || 'N/A'}</p>
                                     </div>
-                                    <div style="margin-bottom: 22px;">
-                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Year Level</label>
-                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${recordData.student_year || 'N/A'}</p>
+                                    <div style="margin-bottom: 26px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Year Level</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.1em; font-weight: 600;">${recordData.student_year || 'N/A'}</p>
                                     </div>
-                                    <div style="margin-bottom: 22px;">
-                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Address</label>
-                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600; word-break: break-word; line-height: 1.5;">${recordData.address || 'N/A'}</p>
+                                    <div style="margin-bottom: 26px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Address</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.1em; font-weight: 600; word-break: break-word; line-height: 1.5;">${recordData.address || 'N/A'}</p>
                                     </div>
-                                    <div style="margin-bottom: 22px;">
-                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Email Address</label>
-                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600; word-break: break-word;">${recordData.email || 'N/A'}</p>
+                                    <div style="margin-bottom: 26px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Email Address</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.1em; font-weight: 600; word-break: break-word;">${recordData.email || 'N/A'}</p>
                                     </div>
                                     <div>
-                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Student Status</label>
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Student Status</label>
                                         <p style="margin: 0; color: #1f2937;">
-                                            <span style="padding: 6px 12px; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 0.95em; background-color: #e0e7ff; color: #3730a3;">${recordData.student_status ? recordData.student_status.charAt(0).toUpperCase() + recordData.student_status.slice(1) : 'N/A'}</span>
+                                            <span class="status status-${recordData.student_status.toLowerCase()}" style="padding: 6px 12px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.95em;">${recordData.student_status ? recordData.student_status.charAt(0).toUpperCase() + recordData.student_status.slice(1) : 'N/A'}</span>
                                         </p>
                                     </div>
                                 </div>
@@ -428,34 +433,34 @@ $message = getMessage();
                             <div>
                                 <div style="
                                     background: linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(155, 89, 182, 0.05));
-                                    padding: 24px;
+                                    padding: 32px;
                                     border-radius: 14px;
                                     border-left: 5px solid #9b59b6;
                                 ">
                                     <h3 style="
                                         color: #9b59b6;
-                                        margin: 0 0 24px 0;
-                                        font-size: 1.25em;
+                                        margin: 0 0 28px 0;
+                                        font-size: 1.35em;
                                         font-weight: 700;
                                     ">
                                         Class Card Dropping Information
                                     </h3>
-                                    <div style="margin-bottom: 22px;">
-                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Subject</label>
-                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${recordData.subject_no} - ${recordData.subject_name}</p>
+                                    <div style="margin-bottom: 26px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Subject</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.1em; font-weight: 600;">${recordData.subject_no} - ${recordData.subject_name}</p>
                                     </div>
-                                    <div style="margin-bottom: 22px;">
-                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Drop Date & Time</label>
-                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${new Date(recordData.drop_date).toLocaleString()}</p>
+                                    <div style="margin-bottom: 26px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Drop Date & Time</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.1em; font-weight: 600;">${new Date(recordData.drop_date).toLocaleString()}</p>
                                     </div>
-                                    <div style="margin-bottom: 22px;">
-                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Retrieved Date & Time</label>
-                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${retrieveDate !== 'N/A' ? new Date(retrieveDate).toLocaleString() : 'N/A'}</p>
+                                    <div style="margin-bottom: 26px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Retrieved Date & Time</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.1em; font-weight: 600;">${retrieveDate !== 'N/A' ? new Date(retrieveDate).toLocaleString() : 'N/A'}</p>
                                     </div>
                                     <div>
-                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Class Card Status</label>
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Class Card Status</label>
                                         <p style="margin: 0; color: #1f2937;">
-                                            <span style="padding: 6px 12px; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 0.95em; background-color: #dbeafe; color: #1e40af;">${recordData.status}</span>
+                                            <span class="status status-${recordData.status.toLowerCase()}">${recordData.status}</span>
                                         </p>
                                     </div>
                                 </div>

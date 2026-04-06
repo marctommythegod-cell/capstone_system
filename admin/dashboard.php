@@ -400,24 +400,23 @@ $message = getMessage();
                     </div>
                     <div style="padding: 40px 32px; background: #f8f6ff;">
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
-                            <div>
                                 <div style="
                                     background: linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(155, 89, 182, 0.05));
-                                    padding: 24px;
+                                    padding: 32px;
                                     border-radius: 14px;
                                     border-left: 5px solid var(--primary-color);
                                 ">
                                     <h3 style="
                                         color: var(--primary-color);
-                                        margin: 0 0 24px 0;
-                                        font-size: 1.25em;
+                                        margin: 0 0 28px 0;
+                                        font-size: 1.35em;
                                         font-weight: 700;
                                     ">
                                         Student Information
                                     </h3>
-                                    <div style="margin-bottom: 22px;">
-                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Student ID</label>
-                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${recordData.student_id}</p>
+                                    <div style="margin-bottom: 26px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Student ID</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.1em; font-weight: 600;">${recordData.student_id}</p>
                                     </div>
                                     <div style="margin-bottom: 22px;">
                                         <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Full Name</label>
@@ -440,13 +439,13 @@ $message = getMessage();
                                         <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600; word-break: break-word; line-height: 1.5;">${recordData.address || 'N/A'}</p>
                                     </div>
                                     <div style="margin-bottom: 22px;">
-                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Email</label>
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Email Address</label>
                                         <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600; word-break: break-word;">${recordData.email || 'N/A'}</p>
                                     </div>
                                     <div>
                                         <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Student Status</label>
                                         <p style="margin: 0; color: #1f2937;">
-                                            <span style="padding: 6px 12px; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 0.95em; background-color: #e0e7ff; color: #3730a3;">${recordData.student_status ? recordData.student_status.charAt(0).toUpperCase() + recordData.student_status.slice(1) : 'N/A'}</span>
+                                            <span class="status status-${recordData.student_status.toLowerCase()}" style="padding: 6px 12px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.95em;">${recordData.student_status ? recordData.student_status.charAt(0).toUpperCase() + recordData.student_status.slice(1) : 'N/A'}</span>
                                         </p>
                                     </div>
                                 </div>
@@ -454,21 +453,21 @@ $message = getMessage();
                             <div>
                                 <div style="
                                     background: linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(155, 89, 182, 0.05));
-                                    padding: 24px;
+                                    padding: 32px;
                                     border-radius: 14px;
                                     border-left: 5px solid #9b59b6;
                                 ">
                                     <h3 style="
                                         color: #9b59b6;
-                                        margin: 0 0 24px 0;
-                                        font-size: 1.25em;
+                                        margin: 0 0 28px 0;
+                                        font-size: 1.35em;
                                         font-weight: 700;
                                     ">
                                         Class Card Dropping Information
                                     </h3>
                                     <div style="margin-bottom: 22px;">
                                         <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Teacher</label>
-                                        <p style="margin: 0; color: #1f2937; font-size: 1.05em; font-weight: 600;">${recordData.teacher_name}</p>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.1em; font-weight: 600;">${recordData.teacher_name || 'N/A'}</p>
                                     </div>
                                     <div style="margin-bottom: 22px;">
                                         <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Subject</label>
@@ -477,7 +476,7 @@ $message = getMessage();
                                     <div style="margin-bottom: 22px;">
                                         <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Class Card Status</label>
                                         <p style="margin: 0; color: #1f2937;">
-                                            <span style="padding: 6px 12px; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 0.95em; background-color: #dbeafe; color: #1e40af;">${recordData.status}</span>
+                                            <span class="status status-${recordData.status.toLowerCase()}">${recordData.status}</span>
                                         </p>
                                     </div>
                                     <div style="margin-bottom: 22px;">

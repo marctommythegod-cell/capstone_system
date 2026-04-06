@@ -212,12 +212,16 @@ $message = getMessage();
         }
 
         .status-cancelled {
-            background-color: #dc3545;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
+            background-color: #fee2e2;
+            color: #991b1b;
+            padding: 8px 16px;
+            border-radius: 20px;
             font-size: 0.85em;
-            font-weight: 600;
+            font-weight: 400;
+            border: 1px solid #fca5a5;
+            display: inline-block;
+            text-align: center;
+            min-width: 100px;
         }
 
         .no-results {
@@ -526,7 +530,7 @@ $message = getMessage();
                                     <div>
                                         <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Status</label>
                                         <p style="margin: 0; color: #1f2937;">
-                                            <span style="padding: 6px 12px; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 0.95em; background-color: #fee2e2; color: #991b1b;">${recordData.status}</span>
+                                            <span class="status status-cancelled" style="padding: 6px 12px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.95em;">${recordData.status}</span>
                                         </p>
                                     </div>
                                 </div>

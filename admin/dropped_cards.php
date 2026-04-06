@@ -494,7 +494,7 @@ $message = getMessage();
                                     <div>
                                         <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Student Status</label>
                                         <p style="margin: 0; color: #1f2937;">
-                                            <span style="padding: 6px 12px; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 0.95em; background-color: #e0e7ff; color: #3730a3;">${recordData.student_status ? recordData.student_status.charAt(0).toUpperCase() + recordData.student_status.slice(1) : 'N/A'}</span>
+                                            <span class="status status-${recordData.student_status.toLowerCase()}" style="padding: 6px 12px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.95em;">${recordData.student_status ? recordData.student_status.charAt(0).toUpperCase() + recordData.student_status.slice(1) : 'N/A'}</span>
                                         </p>
                                     </div>
                                 </div>
@@ -525,7 +525,7 @@ $message = getMessage();
                                     <div style="margin-bottom: 26px;">
                                         <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Class Card Status</label>
                                         <p style="margin: 0; color: #1f2937;">
-                                            <span style="padding: 6px 12px; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 0.95em; background-color: #dbeafe; color: #1e40af;">${recordData.status}</span>
+                                            <span class="status status-${recordData.status.toLowerCase()}">${recordData.status}</span>
                                         </p>
                                     </div>
                                     <div style="margin-bottom: 26px;">

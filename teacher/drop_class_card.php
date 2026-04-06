@@ -24,14 +24,14 @@ $stmt = $pdo->prepare('SELECT id, subject_no, subject_name FROM subjects ORDER B
 $stmt->execute();
 $subjects = $stmt->fetchAll();
 
-// Fetch recent drops (last 5)
+// Fetch pending drops
 $stmt = $pdo->prepare('
     SELECT ccd.*, s.name as student_name, s.guardian_name, s.student_id as student_id_number, s.course as student_course, s.status as student_status, s.year as student_year, s.address as student_address, u.name as teacher_name, pur.retrieve_date as undrop_retrieve_date, pur.undrop_remarks
     FROM class_card_drops ccd
     JOIN students s ON ccd.student_id = s.id
     JOIN users u ON ccd.teacher_id = u.id
     LEFT JOIN philcst_undrop_records pur ON ccd.id = pur.drop_id
-    WHERE ccd.teacher_id = ?
+    WHERE ccd.teacher_id = ? AND ccd.status = "Pending"
     ORDER BY ccd.drop_date DESC
     LIMIT 5
 ');
@@ -127,13 +127,17 @@ $message = getMessage();
                         <div class="drop-modal-body">
                             <form method="POST" action="/CLASS_CARD_DROPPING_SYSTEM/includes/api.php?action=drop_class_card" id="dropForm">
                                 <div class="form-group">
-                                    <label for="student_search_modal">Search Student <span style="color: #a78bfa;">*</span></label>
-                                    <input type="text" id="student_search_modal" placeholder="Search by ID or name..." onkeyup="filterStudentSelect()">
-                                </div>
-                                
-                                <div class="form-group">
                                     <label for="student_id">Select Student <span style="color: #a78bfa;">*</span></label>
-                                    <select id="student_id" name="student_id" required onchange="updateStudentInfo()">
+                                    <div style="position: relative;">
+                                        <input type="text" id="student_search_display" placeholder="Click to select a student..." readonly style="cursor: pointer; background: white;">
+                                        <div id="student_search_dropdown" class="student-search-dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 2px solid #e5e7eb; border-top: none; border-radius: 0 0 10px 10px; max-height: 300px; overflow-y: auto; z-index: 1000; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);">
+                                            <div style="padding: 12px; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; background: white;">
+                                                <input type="text" id="student_search_input" placeholder="Search by ID or name..." style="width: 100%; padding: 8px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.9em;" onkeyup="filterStudentSelect()">
+                                            </div>
+                                            <div id="student_options_list"></div>
+                                        </div>
+                                    </div>
+                                    <select id="student_id" name="student_id" required style="display: none;">
                                         <option value="">-- Choose a Student --</option>
                                         <?php foreach ($students as $student): ?>
                                             <?php
@@ -142,7 +146,7 @@ $message = getMessage();
                                                 $stmt_status->execute([$student['id']]);
                                                 $status = $stmt_status->fetchColumn();
                                             ?>
-                                            <option value="<?php echo $student['id']; ?>" data-course="<?php echo htmlspecialchars($student['course']); ?>" data-year="<?php echo $student['year']; ?>" data-search="<?php echo htmlspecialchars(strtolower($student['student_id'] . ' ' . $student['name'])); ?>" <?php echo ($status === 'inactive') ? 'disabled style="color:#aaa;"' : ''; ?>>
+                                            <option value="<?php echo $student['id']; ?>" data-course="<?php echo htmlspecialchars($student['course']); ?>" data-year="<?php echo $student['year']; ?>" data-name="<?php echo htmlspecialchars($student['name']); ?>" data-student-id="<?php echo htmlspecialchars($student['student_id']); ?>" data-search="<?php echo htmlspecialchars(strtolower($student['student_id'] . ' ' . $student['name'])); ?>" <?php echo ($status === 'inactive') ? 'disabled' : ''; ?>>
                                                 <?php echo htmlspecialchars($student['student_id'] . ' - ' . $student['name']); ?><?php if ($status === 'inactive') echo ' (Inactive)'; ?>
                                             </option>
                                         <?php endforeach; ?>
@@ -152,26 +156,30 @@ $message = getMessage();
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label for="course">Course</label>
-                                        <input type="text" id="course" name="course" readonly placeholder="Auto-filled">
+                                        <input type="text" id="course" name="course" readonly placeholder="Auto-filled from student selection...">
                                     </div>
                                     
                                     <div class="form-group">
                                         <label for="year">Year Level</label>
-                                        <input type="text" id="year" name="year" readonly placeholder="Auto-filled">
+                                        <input type="text" id="year" name="year" readonly placeholder="Auto-filled from student selection...">
                                     </div>
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="subject_search">Search Subject <span style="color: #a78bfa;">*</span></label>
-                                    <input type="text" id="subject_search" name="subject_search" placeholder="Search by code or name..." onkeyup="filterSubjects()">
-                                </div>
-                                
-                                <div class="form-group">
                                     <label for="subject_id">Select Subject <span style="color: #a78bfa;">*</span></label>
-                                    <select id="subject_id" name="subject_id" required onchange="updateSubjectInfo()">
+                                    <div style="position: relative;">
+                                        <input type="text" id="subject_search_display" placeholder="Click to select a subject..." readonly style="cursor: pointer; background: white;">
+                                        <div id="subject_search_dropdown" class="subject-search-dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 2px solid #e5e7eb; border-top: none; border-radius: 0 0 10px 10px; max-height: 300px; overflow-y: auto; z-index: 1000; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);">
+                                            <div style="padding: 12px; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; background: white;">
+                                                <input type="text" id="subject_search_input" placeholder="Search by code or name..." style="width: 100%; padding: 8px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.9em;" onkeyup="filterSubjectSearch()">
+                                            </div>
+                                            <div id="subject_options_list"></div>
+                                        </div>
+                                    </div>
+                                    <select id="subject_id" name="subject_id" required style="display: none;">
                                         <option value="">-- Choose a Subject --</option>
                                         <?php foreach ($subjects as $subject): ?>
-                                            <option value="<?php echo htmlspecialchars($subject['subject_no']); ?>" data-name="<?php echo htmlspecialchars($subject['subject_name']); ?>" data-code="<?php echo htmlspecialchars($subject['subject_no']); ?>" data-full="<?php echo htmlspecialchars($subject['subject_no'] . ' - ' . $subject['subject_name']); ?>">
+                                            <option value="<?php echo htmlspecialchars($subject['subject_no']); ?>" data-name="<?php echo htmlspecialchars($subject['subject_name']); ?>" data-code="<?php echo htmlspecialchars($subject['subject_no']); ?>" data-full="<?php echo htmlspecialchars($subject['subject_no'] . ' - ' . $subject['subject_name']); ?>" data-search="<?php echo htmlspecialchars(strtolower($subject['subject_no'] . ' ' . $subject['subject_name'])); ?>">
                                                 <?php echo htmlspecialchars($subject['subject_no'] . ' - ' . $subject['subject_name']); ?>
                                             </option>
                                         <?php endforeach; ?>
@@ -191,9 +199,9 @@ $message = getMessage();
                     </div>
                 </div>
 
-                <!-- Recent Class Card Drops Section -->
+                <!-- Pending Request Class Card Section -->
                 <section class="section">
-                    <h2>Recent Class Card Drops</h2>
+                    <h2>Pending Request Class Card</h2>
                     <?php if (count($recent_drops) > 0): ?>
                         <div class="table-responsive">
                             <table class="table">
@@ -286,24 +294,100 @@ $message = getMessage();
 
     <script src="/CLASS_CARD_DROPPING_SYSTEM/js/functions.js"></script>
     <script>
-        function filterStudentSelect() {
-            const searchInput = document.getElementById('student_search_modal').value.toLowerCase();
+        // Populate student options on page load
+        function initStudentSearch() {
             const studentSelect = document.getElementById('student_id');
-            const options = studentSelect.querySelectorAll('option');
+            const optionsList = document.getElementById('student_options_list');
             
+            optionsList.innerHTML = '';
+            
+            const options = studentSelect.querySelectorAll('option');
             options.forEach(option => {
-                if (option.value === '') {
-                    option.style.display = '';
-                } else {
-                    const searchText = option.getAttribute('data-search');
-                    if (searchText && searchText.includes(searchInput)) {
-                        option.style.display = '';
-                    } else {
-                        option.style.display = 'none';
-                    }
+                if (option.value !== '') {
+                    const div = document.createElement('div');
+                    div.className = 'student-option';
+                    div.style.cssText = 'padding: 12px 14px; cursor: pointer; color: #374151; font-size: 0.95em; transition: all 0.2s; border-bottom: 1px solid #f3f4f6;';
+                    div.innerHTML = `<strong style="color: #7f3fc6; font-weight: 700;">${option.getAttribute('data-student-id')}</strong> - ${option.getAttribute('data-name')}`;
+                    div.onclick = () => selectStudent(option.value, option.getAttribute('data-student-id'), option.getAttribute('data-name'), option.getAttribute('data-course'), option.getAttribute('data-year'));
+                    
+                    // Add hover effect
+                    div.onmouseover = function() {
+                        this.style.backgroundColor = '#f3f4f6';
+                        this.style.paddingLeft = '18px';
+                    };
+                    div.onmouseout = function() {
+                        this.style.backgroundColor = 'transparent';
+                        this.style.paddingLeft = '14px';
+                    };
+                    
+                    optionsList.appendChild(div);
                 }
             });
         }
+
+        function filterStudentSelect() {
+            const searchInput = document.getElementById('student_search_input').value.toLowerCase();
+            const studentSelect = document.getElementById('student_id');
+            const optionsList = document.getElementById('student_options_list');
+            
+            optionsList.innerHTML = '';
+            
+            const options = studentSelect.querySelectorAll('option');
+            options.forEach(option => {
+                if (option.value === '') return;
+                
+                const searchText = option.getAttribute('data-search');
+                if (searchText && searchText.includes(searchInput)) {
+                    const div = document.createElement('div');
+                    div.className = 'student-option';
+                    div.style.cssText = 'padding: 12px 14px; cursor: pointer; color: #374151; font-size: 0.95em; transition: all 0.2s; border-bottom: 1px solid #f3f4f6;';
+                    div.innerHTML = `<strong style="color: #7f3fc6; font-weight: 700;">${option.getAttribute('data-student-id')}</strong> - ${option.getAttribute('data-name')}`;
+                    div.onclick = () => selectStudent(option.value, option.getAttribute('data-student-id'), option.getAttribute('data-name'), option.getAttribute('data-course'), option.getAttribute('data-year'));
+                    
+                    // Add hover effect
+                    div.onmouseover = function() {
+                        this.style.backgroundColor = '#f3f4f6';
+                        this.style.paddingLeft = '18px';
+                    };
+                    div.onmouseout = function() {
+                        this.style.backgroundColor = 'transparent';
+                        this.style.paddingLeft = '14px';
+                    };
+                    
+                    optionsList.appendChild(div);
+                }
+            });
+        }
+
+        function selectStudent(studentId, studentIdNum, studentName, course, year) {
+            document.getElementById('student_id').value = studentId;
+            document.getElementById('student_search_display').value = `${studentIdNum} - ${studentName}`;
+            document.getElementById('course').value = course;
+            document.getElementById('year').value = year;
+            document.getElementById('student_search_dropdown').style.display = 'none';
+            document.getElementById('student_search_input').value = '';
+        }
+
+        // Toggle student search dropdown
+        document.getElementById('student_search_display').addEventListener('click', function() {
+            const dropdown = document.getElementById('student_search_dropdown');
+            if (dropdown.style.display === 'none') {
+                dropdown.style.display = 'block';
+                document.getElementById('student_search_input').focus();
+                initStudentSearch();
+            } else {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('student_search_dropdown');
+            const searchDisplay = document.getElementById('student_search_display');
+            if (e.target !== searchDisplay && !searchDisplay?.contains(e.target) && !dropdown?.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
 
         function filterSubjects() {
             const searchInput = document.getElementById('subject_search').value.toLowerCase();
@@ -326,6 +410,109 @@ $message = getMessage();
                 }
             });
         }
+
+        function updateSubjectInfo() {
+            // Subject info update if needed
+        }
+
+        // Initialize subject search
+        function initSubjectSearch() {
+            const subjectSelect = document.getElementById('subject_id');
+            const optionsList = document.getElementById('subject_options_list');
+            
+            optionsList.innerHTML = '';
+            
+            const options = subjectSelect.querySelectorAll('option');
+            options.forEach(option => {
+                if (option.value !== '') {
+                    const div = document.createElement('div');
+                    div.className = 'subject-option';
+                    div.style.cssText = 'padding: 12px 14px; cursor: pointer; color: #374151; font-size: 0.95em; transition: all 0.2s; border-bottom: 1px solid #f3f4f6;';
+                    div.innerHTML = `<strong style="color: #7f3fc6; font-weight: 700;">${option.getAttribute('data-code')}</strong> - ${option.getAttribute('data-name')}`;
+                    div.onclick = () => selectSubject(option.value, option.getAttribute('data-code'), option.getAttribute('data-name'));
+                    
+                    // Add hover effect
+                    div.onmouseover = function() {
+                        this.style.backgroundColor = '#f3f4f6';
+                        this.style.paddingLeft = '18px';
+                    };
+                    div.onmouseout = function() {
+                        this.style.backgroundColor = 'transparent';
+                        this.style.paddingLeft = '14px';
+                    };
+                    
+                    optionsList.appendChild(div);
+                }
+            });
+        }
+
+        function filterSubjectSearch() {
+            const searchInput = document.getElementById('subject_search_input').value.toLowerCase();
+            const subjectSelect = document.getElementById('subject_id');
+            const optionsList = document.getElementById('subject_options_list');
+            
+            optionsList.innerHTML = '';
+            
+            const options = subjectSelect.querySelectorAll('option');
+            options.forEach(option => {
+                if (option.value === '') return;
+                
+                const searchText = option.getAttribute('data-search');
+                if (searchText && searchText.includes(searchInput)) {
+                    const div = document.createElement('div');
+                    div.className = 'subject-option';
+                    div.style.cssText = 'padding: 12px 14px; cursor: pointer; color: #374151; font-size: 0.95em; transition: all 0.2s; border-bottom: 1px solid #f3f4f6;';
+                    div.innerHTML = `<strong style="color: #7f3fc6; font-weight: 700;">${option.getAttribute('data-code')}</strong> - ${option.getAttribute('data-name')}`;
+                    div.onclick = () => selectSubject(option.value, option.getAttribute('data-code'), option.getAttribute('data-name'));
+                    
+                    // Add hover effect
+                    div.onmouseover = function() {
+                        this.style.backgroundColor = '#f3f4f6';
+                        this.style.paddingLeft = '18px';
+                    };
+                    div.onmouseout = function() {
+                        this.style.backgroundColor = 'transparent';
+                        this.style.paddingLeft = '14px';
+                    };
+                    
+                    optionsList.appendChild(div);
+                }
+            });
+        }
+
+        function selectSubject(subjectCode, subjectId, subjectName) {
+            document.getElementById('subject_id').value = subjectCode;
+            document.getElementById('subject_search_display').value = `${subjectId} - ${subjectName}`;
+            document.getElementById('subject_search_dropdown').style.display = 'none';
+            document.getElementById('subject_search_input').value = '';
+        }
+
+        // Toggle subject search dropdown
+        document.getElementById('subject_search_display').addEventListener('click', function() {
+            const dropdown = document.getElementById('subject_search_dropdown');
+            if (dropdown.style.display === 'none') {
+                dropdown.style.display = 'block';
+                document.getElementById('subject_search_input').focus();
+                initSubjectSearch();
+            } else {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const studentDropdown = document.getElementById('student_search_dropdown');
+            const subjectDropdown = document.getElementById('subject_search_dropdown');
+            const searchDisplay = document.getElementById('student_search_display');
+            const subjectDisplay = document.getElementById('subject_search_display');
+            
+            if (e.target !== searchDisplay && !searchDisplay?.contains(e.target) && !studentDropdown?.contains(e.target)) {
+                if (studentDropdown) studentDropdown.style.display = 'none';
+            }
+            if (e.target !== subjectDisplay && !subjectDisplay?.contains(e.target) && !subjectDropdown?.contains(e.target)) {
+                if (subjectDropdown) subjectDropdown.style.display = 'none';
+            }
+        });
 
         function openDropModal() {
             document.getElementById('dropModal').style.display = 'flex';
@@ -536,7 +723,7 @@ $message = getMessage();
                                     <div>
                                         <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Student Status</label>
                                         <p style="margin: 0; color: #1f2937;">
-                                            <span class="status status-${dropData.student_status.toLowerCase()}" style="padding: 6px 12px; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 0.95em;">${dropData.student_status.charAt(0).toUpperCase() + dropData.student_status.slice(1)}</span>
+                                            <span class="status status-${dropData.student_status.toLowerCase()}" style="padding: 6px 12px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.95em;">${dropData.student_status.charAt(0).toUpperCase() + dropData.student_status.slice(1)}</span>
                                         </p>
                                     </div>
                                 </div>
@@ -570,7 +757,7 @@ $message = getMessage();
                                     <div style="margin-bottom: 22px;">
                                         <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Class Card Status</label>
                                         <p style="margin: 0; color: #1f2937;">
-                                            <span class="status status-${dropData.status.toLowerCase()}" style="padding: 6px 12px; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 0.95em;">${dropData.status}</span>
+                                            <span class="status status-${dropData.status.toLowerCase()}">${dropData.status}</span>
                                         </p>
                                     </div>
                                     <div style="margin-bottom: 22px;">
