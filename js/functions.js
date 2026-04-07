@@ -161,21 +161,89 @@ function showConfirmModal(message, onConfirm) {
 
     const overlay = document.createElement('div');
     overlay.id = 'customConfirmModal';
-    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        backdrop-filter: blur(4px);
+        padding: 20px;
+    `;
 
     const box = document.createElement('div');
-    box.style.cssText = 'background:#fff;border-radius:8px;padding:0;min-width:350px;max-width:450px;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
+    box.style.cssText = `
+        background: #fff;
+        border-radius: 14px;
+        padding: 0;
+        width: 100%;
+        max-width: 500px;
+        max-height: 85vh;
+        overflow-y: auto;
+        box-shadow: 0 12px 48px rgba(0, 0, 0, 0.22);
+    `;
 
     box.innerHTML = `
-        <div style="padding:20px 20px 10px;border-bottom:1px solid #eee;">
-            <h3 style="margin:0;font-size:1.1em;">Confirm Action</h3>
+        <div style="
+            background: linear-gradient(135deg, #7f3fc6 0%, #a78bfa 100%);
+            color: white;
+            padding: 32px;
+            border-radius: 14px 14px 0 0;
+            box-shadow: 0 4px 12px rgba(127, 63, 198, 0.2);
+        ">
+            <h2 style="margin: 0; font-size: 1.35em; font-weight: 700;">Confirm Action</h2>
         </div>
-        <div style="padding:20px;">
-            <p style="margin:0;color:#555;">${message}</p>
+
+        <div style="padding: 32px;">
+            <div style="
+                background: #f8f7ff;
+                border: 2px solid #e9d5ff;
+                border-radius: 12px;
+                padding: 16px;
+                color: #5a3d7a;
+                font-size: 0.95em;
+                line-height: 1.5;
+                white-space: pre-wrap;
+            ">${message}</div>
         </div>
-        <div style="padding:12px 20px;border-top:1px solid #eee;display:flex;gap:10px;justify-content:flex-end;">
-            <button id="confirmModalCancel" style="padding:8px 18px;border:1px solid #ccc;background:#f5f5f5;border-radius:5px;cursor:pointer;font-size:0.95em;">Cancel</button>
-            <button id="confirmModalOk" style="padding:8px 18px;border:none;background:#dc3545;color:#fff;border-radius:5px;cursor:pointer;font-size:0.95em;">Confirm</button>
+
+        <div style="
+            padding: 20px 32px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            background: #f9fafb;
+            border-radius: 0 0 14px 14px;
+        ">
+            <button id="confirmModalCancel" style="
+                padding: 10px 24px;
+                border: 2px solid #d1d5db;
+                background: white;
+                color: #374151;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: 600;
+                font-size: 0.95em;
+                transition: all 0.2s;
+            " onmouseover="this.style.background='#f3f4f6'; this.style.borderColor='#9ca3af';" onmouseout="this.style.background='white'; this.style.borderColor='#d1d5db';">Cancel</button>
+            <button id="confirmModalOk" style="
+                padding: 10px 28px;
+                border: none;
+                background: linear-gradient(135deg, #7f3fc6 0%, #a78bfa 100%);
+                color: white;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: 600;
+                font-size: 0.95em;
+                transition: all 0.3s;
+                box-shadow: 0 4px 12px rgba(127, 63, 198, 0.3);
+            " onmouseover="this.style.boxShadow='0 6px 16px rgba(127, 63, 198, 0.4)'; this.style.transform='translateY(-1px)';" onmouseout="this.style.boxShadow='0 4px 12px rgba(127, 63, 198, 0.3)'; this.style.transform='translateY(0)';">Confirm</button>
         </div>
     `;
 
@@ -189,59 +257,297 @@ function showConfirmModal(message, onConfirm) {
         overlay.remove();
         if (onConfirm) onConfirm();
     };
+    
+    // Click outside to close
     overlay.addEventListener('click', function(e) {
         if (e.target === overlay) overlay.remove();
     });
+    
+    // ESC key to close
+    const escapeHandler = function(e) {
+        if (e.key === 'Escape') {
+            overlay.remove();
+            document.removeEventListener('keydown', escapeHandler);
+        }
+    };
+    document.addEventListener('keydown', escapeHandler);
 }
 
-// Undrop modal with remarks textarea and certificate checkboxes
+// Undrop modal with remarks textarea and certificate checkboxes - Modern Design
 function showUndropModal(dropId) {
     const existing = document.getElementById('undropModal');
     if (existing) existing.remove();
 
     const overlay = document.createElement('div');
     overlay.id = 'undropModal';
-    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        backdrop-filter: blur(4px);
+        padding: 20px;
+    `;
 
     const box = document.createElement('div');
-    box.style.cssText = 'background:#fff;border-radius:8px;padding:0;min-width:400px;max-width:550px;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
+    box.style.cssText = `
+        background: #fff;
+        border-radius: 14px;
+        padding: 0;
+        width: 100%;
+        max-width: 600px;
+        max-height: 85vh;
+        overflow-y: auto;
+        box-shadow: 0 12px 48px rgba(0, 0, 0, 0.22);
+    `;
 
     box.innerHTML = `
-        <div style="padding:20px 20px 10px;border-bottom:1px solid #eee;">
-            <h3 style="margin:0;font-size:1.1em;">Undrop Class Card</h3>
+        <div style="
+            background: linear-gradient(135deg, #7f3fc6 0%, #a78bfa 100%);
+            color: white;
+            padding: 32px;
+            border-radius: 14px 14px 0 0;
+            box-shadow: 0 4px 12px rgba(127, 63, 198, 0.2);
+        ">
+            <h2 style="margin: 0 0 4px; font-size: 1.35em; font-weight: 700;">Undrop Class Card</h2>
+            <p style="margin: 0; opacity: 0.95; font-size: 0.9em;">Restore this class card and provide the necessary documentation</p>
         </div>
-        <div style="padding:20px;">
-            <p style="margin:0 0 15px;color:#555;">Are you sure you want to undrop this class card?</p>
-            
-            <label style="display:block;margin-bottom:10px;font-weight:600;color:#333;font-size:0.95em;">Reason for Undrop</label>
-            <div style="background:#f9f9f9;border:1px solid #e0e0e0;border-radius:5px;padding:10px;margin-bottom:15px;">
-                <div style="margin-bottom:8px;">
-                    <input type="checkbox" id="undropCert_medical" name="undrop_certificates" value="Medical Certificate" style="margin-right:8px;">
-                    <label for="undropCert_medical" style="display:inline;cursor:pointer;font-weight:400;">Medical Certificate</label>
-                </div>
-                <div style="margin-bottom:8px;">
-                    <input type="checkbox" id="undropCert_parents" name="undrop_certificates" value="Parents Letter" style="margin-right:8px;">
-                    <label for="undropCert_parents" style="display:inline;cursor:pointer;font-weight:400;">Parents Letter</label>
-                </div>
-                <div>
-                    <input type="checkbox" id="undropCert_other" name="undrop_certificates" value="Other" style="margin-right:8px;" onchange="toggleOtherField()">
-                    <label for="undropCert_other" style="display:inline;cursor:pointer;font-weight:400;">Other</label>
-                </div>
-                <input type="text" id="undropOtherText" placeholder="Please specify..." style="display:none;width:100%;padding:8px;margin-top:8px;border:1px solid #ccc;border-radius:4px;font-size:0.9em;box-sizing:border-box;">
+
+        <div style="padding: 32px;">
+            <div style="
+                background: #f8f7ff;
+                border: 2px solid #e9d5ff;
+                border-radius: 12px;
+                padding: 16px;
+                margin-bottom: 24px;
+                display: flex;
+                align-items: flex-start;
+                gap: 12px;
+            ">
+                <p style="margin: 0; color: #5a3d7a; font-size: 0.95em; line-height: 1.5;">
+                    Please provide the reason for restoring this class card and add any relevant remarks for the teacher's record.
+                </p>
             </div>
-            
-            <label for="undropRemarks" style="display:block;margin-bottom:6px;font-weight:600;color:#333;font-size:0.95em;">Admin Remarks <span style="color:#999;font-weight:400;">(required)</span></label>
-            <textarea id="undropRemarks" rows="4" placeholder="Enter reason for undropping..." style="width:100%;padding:10px;border:1px solid #ccc;border-radius:5px;font-size:0.95em;resize:vertical;box-sizing:border-box;"></textarea>
-            <p id="undropRemarksError" style="color:#dc3545;font-size:0.85em;margin:4px 0 0;display:none;">Please enter remarks before proceeding.</p>
+
+            <div style="margin-bottom: 24px;">
+                <label style="
+                    display: block;
+                    margin-bottom: 12px;
+                    font-weight: 700;
+                    color: #1f2937;
+                    font-size: 0.95em;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                ">Reason for Restoration</label>
+                
+                <div style="
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 10px;
+                    margin-bottom: 12px;
+                ">
+                    <label style="
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        padding: 12px 14px;
+                        background: #f3f4f6;
+                        border: 2px solid transparent;
+                        border-radius: 10px;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                    " class="undrop-cert-label">
+                        <input type="checkbox" id="undropCert_medical" name="undrop_certificates" value="Medical Certificate" style="
+                            width: 18px;
+                            height: 18px;
+                            cursor: pointer;
+                            accent-color: #7f3fc6;
+                        ">
+                        <span style="font-weight: 500; color: #374151; flex: 1;">Medical</span>
+                    </label>
+                    
+                    <label style="
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        padding: 12px 14px;
+                        background: #f3f4f6;
+                        border: 2px solid transparent;
+                        border-radius: 10px;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                    " class="undrop-cert-label">
+                        <input type="checkbox" id="undropCert_parents" name="undrop_certificates" value="Parents Letter" style="
+                            width: 18px;
+                            height: 18px;
+                            cursor: pointer;
+                            accent-color: #7f3fc6;
+                        ">
+                        <span style="font-weight: 500; color: #374151; flex: 1;">Parents</span>
+                    </label>
+                </div>
+
+                <label style="
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    padding: 12px 14px;
+                    background: #f3f4f6;
+                    border: 2px solid transparent;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    margin-bottom: 10px;
+                " class="undrop-cert-label">
+                    <input type="checkbox" id="undropCert_other" name="undrop_certificates" value="Other" style="
+                        width: 18px;
+                        height: 18px;
+                        cursor: pointer;
+                        accent-color: #7f3fc6;
+                    " onchange="toggleOtherField()">
+                    <span style="font-weight: 500; color: #374151; flex: 1;">Other</span>
+                </label>
+
+                <input type="text" id="undropOtherText" placeholder="Please specify the reason..." style="
+                    display: none;
+                    width: 100%;
+                    padding: 10px 14px;
+                    border: 2px solid #e5e7eb;
+                    border-radius: 8px;
+                    font-size: 0.9em;
+                    box-sizing: border-box;
+                    transition: all 0.2s;
+                " onfocus="this.style.borderColor='#7f3fc6'; this.style.boxShadow='0 0 0 3px rgba(127, 63, 198, 0.1)';" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
+                
+                <p id="undropCertificatesError" style="
+                    color: #dc2626;
+                    font-size: 0.85em;
+                    margin: 8px 0 0;
+                    display: none;
+                    font-weight: 500;
+                ">⚠️ Please select at least one reason for restoration.</p>
+            </div>
+
+            <div style="margin-bottom: 8px;">
+                <label for="undropRemarks" style="
+                    display: block;
+                    margin-bottom: 10px;
+                    font-weight: 700;
+                    color: #1f2937;
+                    font-size: 0.95em;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                ">Admin Remarks <span style="color: #dc2626; font-weight: 400; text-transform: none; letter-spacing: 0;">(required)</span></label>
+                
+                <textarea id="undropRemarks" rows="5" placeholder="Provide detailed remarks for the teacher..." style="
+                    width: 100%;
+                    padding: 12px 14px;
+                    border: 2px solid #e5e7eb;
+                    border-radius: 8px;
+                    font-size: 0.9em;
+                    resize: none;
+                    box-sizing: border-box;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    transition: all 0.2s;
+                " onfocus="this.style.borderColor='#7f3fc6'; this.style.boxShadow='0 0 0 3px rgba(127, 63, 198, 0.1)';" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';"></textarea>
+                
+                <p id="undropRemarksError" style="
+                    color: #dc2626;
+                    font-size: 0.85em;
+                    margin: 8px 0 0;
+                    display: none;
+                    font-weight: 500;
+                ">⚠️ Please enter remarks before proceeding.</p>
+            </div>
         </div>
-        <div style="padding:12px 20px;border-top:1px solid #eee;display:flex;gap:10px;justify-content:flex-end;">
-            <button id="undropModalCancel" style="padding:8px 18px;border:1px solid #ccc;background:#f5f5f5;border-radius:5px;cursor:pointer;font-size:0.95em;">Cancel</button>
-            <button id="undropModalConfirm" style="padding:8px 18px;border:none;background:#dc3545;color:#fff;border-radius:5px;cursor:pointer;font-size:0.95em;">Confirm Undrop</button>
+
+        <div style="
+            padding: 20px 32px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            background: #f9fafb;
+            border-radius: 0 0 14px 14px;
+        ">
+            <button id="undropModalCancel" style="
+                padding: 10px 24px;
+                border: 2px solid #d1d5db;
+                background: white;
+                color: #374151;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: 600;
+                font-size: 0.95em;
+                transition: all 0.2s;
+            " onmouseover="this.style.background='#f3f4f6'; this.style.borderColor='#9ca3af';" onmouseout="this.style.background='white'; this.style.borderColor='#d1d5db';">Cancel</button>
+            
+            <button id="undropModalConfirm" style="
+                padding: 10px 28px;
+                border: none;
+                background: linear-gradient(135deg, #7f3fc6 0%, #a78bfa 100%);
+                color: white;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: 600;
+                font-size: 0.95em;
+                transition: all 0.3s;
+                box-shadow: 0 4px 12px rgba(127, 63, 198, 0.3);
+" onmouseover="this.style.boxShadow='0 6px 16px rgba(127, 63, 198, 0.4)'; this.style.transform='translateY(-1px)'" onmouseout="this.style.boxShadow='0 4px 12px rgba(127, 63, 198, 0.3)'; this.style.transform='translateY(0)';">Confirm</button>
         </div>
     `;
 
     overlay.appendChild(box);
     document.body.appendChild(overlay);
+
+    // Add event listener for clicking outside the modal
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+            overlay.remove();
+        }
+    });
+
+    // Add ESC key support
+    const escapeHandler = function(e) {
+        if (e.key === 'Escape') {
+            overlay.remove();
+            document.removeEventListener('keydown', escapeHandler);
+        }
+    };
+    document.addEventListener('keydown', escapeHandler);
+
+    // Style certificate labels on hover and change
+    document.querySelectorAll('.undrop-cert-label').forEach(label => {
+        const checkbox = label.querySelector('input[type="checkbox"]');
+        
+        const updateStyle = () => {
+            if (checkbox.checked) {
+                label.style.background = '#ede9fe';
+                label.style.borderColor = '#c4b5fd';
+            } else {
+                label.style.background = '#f3f4f6';
+                label.style.borderColor = 'transparent';
+            }
+        };
+
+        checkbox.addEventListener('change', updateStyle);
+        label.addEventListener('mouseenter', () => {
+            if (!checkbox.checked) {
+                label.style.background = '#e5e7eb';
+            }
+        });
+        label.addEventListener('mouseleave', () => {
+            if (!checkbox.checked) {
+                label.style.background = '#f3f4f6';
+            }
+        });
+    });
 
     document.getElementById('undropModalCancel').onclick = function() {
         overlay.remove();
@@ -279,18 +585,8 @@ function showUndropModal(dropId) {
         
         // Validate that at least one certificate is selected
         if (certificates.length === 0) {
-            // Show error for certificates
-            let certErrorEl = document.getElementById('undropCertificatesError');
-            if (!certErrorEl) {
-                certErrorEl = document.createElement('p');
-                certErrorEl.id = 'undropCertificatesError';
-                certErrorEl.style.cssText = 'color:#dc3545;font-size:0.85em;margin:8px 0 0;';
-                const certBox = document.querySelector('[style*="background:#f9f9f9"]');
-                if (certBox) {
-                    certBox.parentNode.insertBefore(certErrorEl, certBox.nextSibling);
-                }
-            }
-            certErrorEl.textContent = 'Please select at least one reason for undrop.';
+            const certErrorEl = document.getElementById('undropCertificatesError');
+            certErrorEl.textContent = '⚠️ Please select at least one reason for restoration.';
             certErrorEl.style.display = 'block';
             return;
         }
@@ -337,7 +633,6 @@ function showUndropModal(dropId) {
             }
         });
     });
-
 }
 
 // Helper function to toggle the "Other" text field

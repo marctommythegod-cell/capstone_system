@@ -208,10 +208,31 @@ $message = getMessage();
                 <section class="section">
                     <h2>Pending Drop Requests (<span id="pendingTable-count"><?php echo count($pending_drops); ?></span> awaiting approval)</h2>
                     <?php if (count($pending_drops) > 0): ?>
+                        <div style="margin-bottom: 16px; display: flex; align-items: center; gap: 16px;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px 12px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px;">
+                                <input type="checkbox" id="pendingSelectAllCheckbox" onchange="toggleSelectAllPending()" style="width: 16px; height: 16px; cursor: pointer; accent-color: #7f3fc6;">
+                                <span style="font-weight: 500; color: #374151; font-size: 0.9em;">Select All</span>
+                            </label>
+                            <span id="pendingSelectedCount" style="color: #7f3fc6; font-weight: 600; font-size: 0.85em; display: none;">0 selected</span>
+                            <button type="button" id="bulkApprovePendingBtn" onclick="bulkApprovePending()" style="
+                                padding: 8px 16px;
+                                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                                color: white;
+                                border: none;
+                                border-radius: 6px;
+                                cursor: pointer;
+                                font-weight: 600;
+                                font-size: 0.9em;
+                                transition: all 0.3s;
+                                display: none;
+                                box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+                            " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(16, 185, 129, 0.35)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(16, 185, 129, 0.25)'">Approve Selected</button>
+                        </div>
                         <div class="table-responsive">
                             <table class="table" id="pendingTable">
                                 <thead>
                                     <tr>
+                                        <th style="width: 40px; text-align: center;"></th>
                                         <th>Student ID</th>
                                         <th>Student Name</th>
                                         <th>Course</th>
@@ -226,7 +247,8 @@ $message = getMessage();
                                 </thead>
                                 <tbody>
                                     <?php foreach ($pending_drops as $drop): ?>
-                                        <tr>
+                                        <tr class="pending-drop-row" data-drop-id="<?php echo $drop['id']; ?>" style="transition: all 0.2s;">
+                                            <td style="width: 40px; text-align: center;"><input type="checkbox" class="pending-drop-checkbox" data-drop-id="<?php echo $drop['id']; ?>" onchange="updatePendingSelection()" style="width: 18px; height: 18px; cursor: pointer; accent-color: #7f3fc6;"></td>
                                             <td><?php echo htmlspecialchars($drop['student_id']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['student_name']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['student_course']); ?></td>
@@ -270,10 +292,31 @@ $message = getMessage();
                 <section class="section">
                     <h2>Approved Dropped Class Card <span style="font-weight: normal; font-size: 0.9em; color: #666;">(<span id="approvedTable-count"><?php echo $pagination['total_items']; ?></span> total, page <?php echo $pagination['current_page']; ?> of <?php echo max(1, $pagination['total_pages']); ?>)</span></h2>
                     <?php if (count($drops) > 0): ?>
+                        <div style="margin-bottom: 16px; display: flex; align-items: center; gap: 16px;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px 12px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px;">
+                                <input type="checkbox" id="approvedSelectAllCheckbox" onchange="toggleSelectAllApproved()" style="width: 16px; height: 16px; cursor: pointer; accent-color: #7f3fc6;">
+                                <span style="font-weight: 500; color: #374151; font-size: 0.9em;">Select All</span>
+                            </label>
+                            <span id="approvedSelectedCount" style="color: #dc2626; font-weight: 600; font-size: 0.85em; display: none;">0 selected</span>
+                            <button type="button" id="bulkUndropApprovedBtn" onclick="bulkUndropApproved()" style="
+                                padding: 8px 16px;
+                                background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+                                color: white;
+                                border: none;
+                                border-radius: 6px;
+                                cursor: pointer;
+                                font-weight: 600;
+                                font-size: 0.9em;
+                                transition: all 0.3s;
+                                display: none;
+                                box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
+                            " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(220, 38, 38, 0.35)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(220, 38, 38, 0.25)'">Undrop Selected</button>
+                        </div>
                         <div class="table-responsive">
                             <table class="table" id="approvedTable">
                                 <thead>
                                     <tr>
+                                        <th style="width: 40px; text-align: center;"></th>
                                         <th>Student ID</th>
                                         <th>Student Name</th>
                                         <th>Course</th>
@@ -290,7 +333,8 @@ $message = getMessage();
                                 </thead>
                                 <tbody>
                                     <?php foreach ($drops as $drop): ?>
-                                        <tr>
+                                        <tr class="approved-drop-row" data-drop-id="<?php echo $drop['id']; ?>" style="transition: all 0.2s;">
+                                            <td style="width: 40px; text-align: center;"><?php if ($drop['status'] === 'Dropped'): ?><input type="checkbox" class="approved-drop-checkbox" data-drop-id="<?php echo $drop['id']; ?>" onchange="updateApprovedSelection()" style="width: 18px; height: 18px; cursor: pointer; accent-color: #7f3fc6;"><?php endif; ?></td>
                                             <td><?php echo htmlspecialchars($drop['student_id']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['student_name']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['course'] ?? ''); ?></td>
@@ -621,6 +665,150 @@ $message = getMessage();
                 }, 100);
             }
         });
+
+        // Bulk approval functions
+        function toggleSelectAllPending() {
+            const checkboxes = document.querySelectorAll('.pending-drop-checkbox');
+            const selectAllCheckbox = document.getElementById('pendingSelectAllCheckbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+            updatePendingSelection();
+        }
+
+        function updatePendingSelection() {
+            const checkboxes = document.querySelectorAll('.pending-drop-checkbox');
+            const selectedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+            const selectAllCheckbox = document.getElementById('pendingSelectAllCheckbox');
+            const bulkBtn = document.getElementById('bulkApprovePendingBtn');
+            const countSpan = document.getElementById('pendingSelectedCount');
+
+            // Update row highlighting
+            document.querySelectorAll('.pending-drop-row').forEach(row => {
+                const checkbox = row.querySelector('.pending-drop-checkbox');
+                if (checkbox && checkbox.checked) {
+                    row.style.background = 'rgba(16, 185, 129, 0.08)';
+                    row.style.borderLeft = '4px solid #10b981';
+                } else {
+                    row.style.background = '';
+                    row.style.borderLeft = '';
+                }
+            });
+
+            // Update select all checkbox state
+            selectAllCheckbox.checked = selectedCount > 0 && selectedCount === checkboxes.length;
+            selectAllCheckbox.indeterminate = selectedCount > 0 && selectedCount < checkboxes.length;
+
+            // Show/hide bulk action button and count
+            if (selectedCount > 0) {
+                bulkBtn.style.display = 'inline-block';
+                countSpan.style.display = 'inline-block';
+                countSpan.textContent = selectedCount + ' selected';
+            } else {
+                bulkBtn.style.display = 'none';
+                countSpan.style.display = 'none';
+            }
+        }
+
+        function bulkApprovePending() {
+            const checkboxes = document.querySelectorAll('.pending-drop-checkbox:checked');
+            if (checkboxes.length === 0) {
+                alert('Please select at least one drop request to approve.');
+                return;
+            }
+
+            const dropIds = Array.from(checkboxes).map(cb => cb.getAttribute('data-drop-id'));
+            const message = 'Are you sure you want to approve ' + dropIds.length + ' class card drop request(s)?\n\nNotification emails will be sent to all students and teachers.';
+            
+            showConfirmModal(message, function() {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/CLASS_CARD_DROPPING_SYSTEM/includes/api.php?action=bulk_approve_drops';
+
+                dropIds.forEach(dropId => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'drop_ids[]';
+                    input.value = dropId;
+                    form.appendChild(input);
+                });
+
+                document.body.appendChild(form);
+                form.submit();
+            });
+        }
+
+        // Bulk undrop functions
+        function toggleSelectAllApproved() {
+            const checkboxes = document.querySelectorAll('.approved-drop-checkbox');
+            const selectAllCheckbox = document.getElementById('approvedSelectAllCheckbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+            updateApprovedSelection();
+        }
+
+        function updateApprovedSelection() {
+            const checkboxes = document.querySelectorAll('.approved-drop-checkbox');
+            const selectedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+            const selectAllCheckbox = document.getElementById('approvedSelectAllCheckbox');
+            const bulkBtn = document.getElementById('bulkUndropApprovedBtn');
+            const countSpan = document.getElementById('approvedSelectedCount');
+
+            // Update row highlighting
+            document.querySelectorAll('.approved-drop-row').forEach(row => {
+                const checkbox = row.querySelector('.approved-drop-checkbox');
+                if (checkbox && checkbox.checked) {
+                    row.style.background = 'rgba(220, 38, 38, 0.08)';
+                    row.style.borderLeft = '4px solid #dc2626';
+                } else {
+                    row.style.background = '';
+                    row.style.borderLeft = '';
+                }
+            });
+
+            // Update select all checkbox state
+            selectAllCheckbox.checked = selectedCount > 0 && selectedCount === checkboxes.length;
+            selectAllCheckbox.indeterminate = selectedCount > 0 && selectedCount < checkboxes.length;
+
+            // Show/hide bulk action button and count
+            if (selectedCount > 0) {
+                bulkBtn.style.display = 'inline-block';
+                countSpan.style.display = 'inline-block';
+                countSpan.textContent = selectedCount + ' selected';
+            } else {
+                bulkBtn.style.display = 'none';
+                countSpan.style.display = 'none';
+            }
+        }
+
+        function bulkUndropApproved() {
+            const checkboxes = document.querySelectorAll('.approved-drop-checkbox:checked');
+            if (checkboxes.length === 0) {
+                alert('Please select at least one drop to undrop.');
+                return;
+            }
+
+            const dropIds = Array.from(checkboxes).map(cb => cb.getAttribute('data-drop-id'));
+            const message = 'Are you sure you want to undrop ' + dropIds.length + ' class card(s)?\n\nNotification emails will be sent to all teachers.';
+            
+            showConfirmModal(message, function() {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/CLASS_CARD_DROPPING_SYSTEM/includes/api.php?action=bulk_undrop_drops';
+
+                dropIds.forEach(dropId => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'drop_ids[]';
+                    input.value = dropId;
+                    form.appendChild(input);
+                });
+
+                document.body.appendChild(form);
+                form.submit();
+            });
+        }
     </script>
 </body>
 </html>

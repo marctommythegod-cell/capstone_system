@@ -263,7 +263,7 @@ $message = getMessage();
                 // Text search (Student ID, Name, Subject, Teacher)
                 var textMatch = !search;
                 if (search) {
-                    for (let i = 0; i < Math.min(5, cells.length); i++) {
+                    for (let i = 0; i < Math.min(6, cells.length); i++) {
                         if (cells[i].textContent.toLowerCase().includes(search)) {
                             textMatch = true;
                             break;

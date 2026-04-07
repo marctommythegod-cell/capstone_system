@@ -94,18 +94,23 @@ if ($action === 'drop_class_card') {
     
     // Check if student has already dropped this subject with Pending or Dropped status (per student validation)
     // Cannot drop again if status is still Pending or Dropped
-    // If status is Undropped (which means it's been processed), no record will match and student can drop again
+    // If status is Undropped (which means it's been processed), student CAN drop again
     $stmt = $pdo->prepare('
         SELECT id, status FROM class_card_drops 
         WHERE student_id = ? AND subject_no = ? 
         AND status IN ("Pending", "Dropped")
+        AND cancelled_date IS NULL
         LIMIT 1
     ');
     $stmt->execute([$student_id, $subject_no]);
     $existing_drop = $stmt->fetch();
     
     if ($existing_drop) {
-        setMessage('error', 'This subject is already in the system with ' . $existing_drop['status'] . ' status. You cannot drop it again until it has been undropped.');
+        if ($existing_drop['status'] === 'Pending') {
+            setMessage('error', 'Your drop request for this subject is still pending admin approval. Please wait for the admin to process your request.');
+        } else {
+            setMessage('error', 'This subject is already dropped.');
+        }
         redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php');
     }
     
@@ -218,6 +223,212 @@ if ($action === 'approve_drop') {
     } catch (Exception $e) {
         error_log("Exception in approve_drop: " . $e->getMessage());
         setMessage('error', 'Error approving class card drop: ' . $e->getMessage());
+    }
+    
+    redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php');
+}
+
+// Bulk approve multiple drops
+if ($action === 'bulk_approve_drops') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dashboard.php');
+    }
+    
+    if ($_SESSION['user_role'] !== 'admin') {
+        setMessage('error', 'Unauthorized action.');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dashboard.php');
+    }
+    
+    $admin_id = $_SESSION['user_id'];
+    $drop_ids = $_POST['drop_ids'] ?? [];
+    
+    if (empty($drop_ids) || !is_array($drop_ids)) {
+        setMessage('error', 'No drop records selected.');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php');
+    }
+    
+    // Sanitize drop IDs
+    $drop_ids = array_filter(array_map('intval', $drop_ids));
+    
+    if (empty($drop_ids)) {
+        setMessage('error', 'Invalid drop records.');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php');
+    }
+    
+    try {
+        $successCount = 0;
+        $errorCount = 0;
+        $emailNotifier = new EmailNotifier();
+        
+        foreach ($drop_ids as $drop_id) {
+            try {
+                // Get drop details
+                $stmt = $pdo->prepare('SELECT * FROM class_card_drops WHERE id = ?');
+                $stmt->execute([$drop_id]);
+                $drop = $stmt->fetch();
+                
+                if (!$drop) {
+                    $errorCount++;
+                    continue;
+                }
+                
+                // Update status to Dropped and set approval info
+                $stmt = $pdo->prepare('UPDATE class_card_drops SET status = ?, approved_by = ?, approved_date = NOW() WHERE id = ?');
+                $stmt->execute(['Dropped', $admin_id, $drop_id]);
+                
+                // Get student and teacher info for email
+                $stmt = $pdo->prepare('SELECT student_id, name, email FROM students WHERE id = ?');
+                $stmt->execute([$drop['student_id']]);
+                $student = $stmt->fetch();
+                
+                $stmt = $pdo->prepare('SELECT name, email FROM users WHERE id = ?');
+                $stmt->execute([$drop['teacher_id']]);
+                $teacher = $stmt->fetch();
+                
+                // Send approval notification emails
+                $emailData = [
+                    'student_id' => $student['student_id'],
+                    'student_name' => $student['name'],
+                    'subject_no' => $drop['subject_no'],
+                    'subject_name' => $drop['subject_name'],
+                    'remarks' => $drop['remarks'],
+                    'teacher_name' => $teacher['name'],
+                    'drop_date' => $drop['drop_date'],
+                    'approved_date' => date('Y-m-d H:i:s')
+                ];
+                
+                // Send email to student if they have an email address
+                if ($student && $student['email']) {
+                    $emailNotifier->notifyStudentApproved($student['email'], $emailData);
+                }
+                
+                // Send email to teacher
+                if ($teacher && $teacher['email']) {
+                    $emailNotifier->notifyTeacherApproved($teacher['email'], $emailData);
+                }
+                
+                $successCount++;
+            } catch (Exception $dropException) {
+                error_log("Error approving drop $drop_id: " . $dropException->getMessage());
+                $errorCount++;
+            }
+        }
+        
+        $message = $successCount . ' drop request(s) have been approved.';
+        if ($errorCount > 0) {
+            $message .= ' (' . $errorCount . ' failed)';
+        }
+        setMessage('success', $message);
+    } catch (Exception $e) {
+        error_log("Exception in bulk_approve_drops: " . $e->getMessage());
+        setMessage('error', 'Error approving class card drops: ' . $e->getMessage());
+    }
+    
+    redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php');
+}
+
+// Bulk undrop multiple drops
+if ($action === 'bulk_undrop_drops') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dashboard.php');
+    }
+    
+    if ($_SESSION['user_role'] !== 'admin') {
+        setMessage('error', 'Unauthorized action.');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dashboard.php');
+    }
+    
+    $drop_ids = $_POST['drop_ids'] ?? [];
+    
+    if (empty($drop_ids) || !is_array($drop_ids)) {
+        setMessage('error', 'No drop records selected.');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php');
+    }
+    
+    // Sanitize drop IDs
+    $drop_ids = array_filter(array_map('intval', $drop_ids));
+    
+    if (empty($drop_ids)) {
+        setMessage('error', 'Invalid drop records.');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php');
+    }
+    
+    try {
+        $successCount = 0;
+        $errorCount = 0;
+        $emailNotifier = new EmailNotifier();
+        
+        foreach ($drop_ids as $drop_id) {
+            try {
+                // Get drop details
+                $stmt = $pdo->prepare('SELECT * FROM class_card_drops WHERE id = ?');
+                $stmt->execute([$drop_id]);
+                $drop = $stmt->fetch();
+                
+                if (!$drop || $drop['status'] !== 'Dropped') {
+                    $errorCount++;
+                    continue;
+                }
+                
+                // Update status to Undropped
+                $stmt = $pdo->prepare('UPDATE class_card_drops SET status = ? WHERE id = ?');
+                $stmt->execute(['Undropped', $drop_id]);
+                
+                // Insert undrop record into separate philcst_undrop_records table
+                $stmt = $pdo->prepare('
+                    INSERT INTO philcst_undrop_records 
+                    (drop_id, student_id, subject_no, subject_name, teacher_id, retrieve_date, undrop_remarks, undrop_certificates)
+                    VALUES (?, ?, ?, ?, ?, NOW(), ?, ?)
+                ');
+                $stmt->execute([
+                    $drop_id,
+                    $drop['student_id'],
+                    $drop['subject_no'],
+                    $drop['subject_name'],
+                    $drop['teacher_id'],
+                    'Bulk undrop operation',
+                    'Bulk operation'
+                ]);
+                
+                // Get teacher info for email
+                $stmt = $pdo->prepare('SELECT name, email FROM users WHERE id = ?');
+                $stmt->execute([$drop['teacher_id']]);
+                $teacher = $stmt->fetch();
+                
+                // Get student info for email
+                $stmt = $pdo->prepare('SELECT student_id, name FROM students WHERE id = ?');
+                $stmt->execute([$drop['student_id']]);
+                $student = $stmt->fetch();
+                
+                // Send undrop notification email to teacher
+                $emailData = [
+                    'student_id' => $student['student_id'],
+                    'student_name' => $student['name'],
+                    'subject_no' => $drop['subject_no'],
+                    'subject_name' => $drop['subject_name'],
+                    'retrieve_date' => date('Y-m-d H:i:s'),
+                    'undrop_remarks' => 'Bulk undrop operation'
+                ];
+                
+                if ($teacher && $teacher['email']) {
+                    $emailNotifier->notifyTeacherUndropped($teacher['email'], $emailData);
+                }
+                
+                $successCount++;
+            } catch (Exception $dropException) {
+                error_log("Error undropping drop $drop_id: " . $dropException->getMessage());
+                $errorCount++;
+            }
+        }
+        
+        $message = $successCount . ' class card(s) have been undropped.';
+        if ($errorCount > 0) {
+            $message .= ' (' . $errorCount . ' failed)';
+        }
+        setMessage('success', $message);
+    } catch (Exception $e) {
+        error_log("Exception in bulk_undrop_drops: " . $e->getMessage());
+        setMessage('error', 'Error undropping class cards: ' . $e->getMessage());
     }
     
     redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php');
