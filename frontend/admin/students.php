@@ -1446,7 +1446,7 @@ $message = getMessage();
                     </div>
                     <?php if (count($students) > 0): ?>
                         <div class="table-responsive">
-                            <table class="table" id="studentsTable" style="font-size: 0.9em;">
+                            <table class="table" id="studentsTable">
                                 <thead>
                                     <tr>
                                         <th>Student ID</th>
