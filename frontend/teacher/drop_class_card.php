@@ -1,9 +1,9 @@
 <?php
 // teacher/drop_class_card.php - Drop Class Card
 
-require_once '../includes/session_check.php';
-require_once '../config/db.php';
-require_once '../includes/functions.php';
+require_once '../../backend/includes/session_check.php';
+require_once '../../backend/config/db.php';
+require_once '../../backend/includes/functions.php';
 
 // Check if user is teacher
 if ($_SESSION['user_role'] !== 'teacher') {
@@ -59,29 +59,29 @@ $message = getMessage();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Drop Class Card - PhilCST</title>
-    <link rel="stylesheet" href="/CLASS_CARD_DROPPING_SYSTEM/css/style.css">
+    <link rel="stylesheet" href="../css/teacher.css">
 </head>
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="/CLASS_CARD_DROPPING_SYSTEM/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
+                <img src="../images/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
                 <h2>PhilCST</h2>
                 <p>Teacher Portal</p>
             </div>
             
             <nav class="sidebar-nav">
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/dashboard.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/teacher/dashboard.php" class="nav-item">
                     <span>Overview</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php" class="nav-item active">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/teacher/drop_class_card.php" class="nav-item active">
                     <span>Drop Class Card</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/teacher/drop_history.php" class="nav-item">
                     <span>Drop History</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/profile.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/teacher/profile.php" class="nav-item">
                     <span>Profile</span>
                 </a>
                 <a href="#" class="nav-item logout-item" onclick="showLogoutModal(); return false;">
@@ -125,7 +125,7 @@ $message = getMessage();
                             <button type="button" class="drop-modal-close" onclick="closeDropModal()">&times;</button>
                         </div>
                         <div class="drop-modal-body">
-                            <form method="POST" action="/CLASS_CARD_DROPPING_SYSTEM/includes/api.php?action=drop_class_card" id="dropForm">
+                            <form method="POST" action="../../backend/includes/api.php?action=drop_class_card" id="dropForm">
                                 <div class="form-group">
                                     <label for="student_id">Select Student <span style="color: #a78bfa;">*</span></label>
                                     <div style="position: relative;">
@@ -236,63 +236,17 @@ $message = getMessage();
                             </table>
                         </div>
                         <div style="text-align: center; margin-top: 15px;">
-                            <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php" class="btn btn-secondary">View All Drops</a>
+                            <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/teacher/drop_history.php" class="btn btn-secondary">View All Drops</a>
                         </div>
                     <?php else: ?>
                         <p class="no-data">No class cards dropped yet.</p>
-                    <?php endif; ?>
-                </section>
-
-                <!-- Approved Dropped Class Card Section -->
-                <section class="section">
-                    <h2>Approved Dropped Class Card</h2>
-                    <?php 
-                        $approved_drops = array_filter($recent_drops, function($drop) {
-                            return $drop['status'] === 'Dropped' || $drop['status'] === 'Undropped';
-                        });
-                    ?>
-                    <?php if (count($approved_drops) > 0): ?>
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Student ID</th>
-                                        <th>Student Name</th>
-                                        <th>Course</th>
-                                        <th>Year</th>
-                                        <th>Subject</th>
-                                        <th>Class Card Status</th>
-                                        <th>Student Status</th>
-                                        <th>Teacher Remarks</th>
-                                        <th>Detail</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($approved_drops as $drop): ?>
-                                        <tr>
-                                            <td><?php echo htmlspecialchars($drop['student_id_number']); ?></td>
-                                            <td><?php echo htmlspecialchars($drop['student_name']); ?></td>
-                                            <td><?php echo htmlspecialchars($drop['student_course']); ?></td>
-                                            <td><?php echo htmlspecialchars($drop['student_year'] ?? 'N/A'); ?></td>
-                                            <td><?php echo htmlspecialchars($drop['subject_no'] . ' - ' . $drop['subject_name']); ?></td>
-                                            <td><span class="status status-<?php echo strtolower($drop['status']); ?>"><?php echo htmlspecialchars($drop['status']); ?></span></td>
-                                            <td><span class="status status-<?php echo strtolower($drop['student_status']); ?>"><?php echo ucfirst(htmlspecialchars($drop['student_status'])); ?></span></td>
-                                            <td><span class="remarks-cell" style="word-break: break-word;"><?php $remarks_text = htmlspecialchars($drop['remarks']); echo strlen($remarks_text) > 50 ? substr($remarks_text, 0, 50) . '... <a href="javascript:void(0)" onclick="showRemarksModal(\'' . addslashes($remarks_text) . '\', \'Teacher Remarks\')" style="color: #a78bfa; font-weight: 600;">See More</a>' : $remarks_text; ?></span></td>
-                                            <td style="text-align: center;"><button class="detail-btn" onclick="showStudentDetailModal(<?php echo htmlspecialchars(json_encode($drop)); ?>)" title="View Details"><span style="font-weight: 700; color: #a78bfa;">i</span></button></td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    <?php else: ?>
-                        <p class="no-data">No approved dropped class cards yet.</p>
                     <?php endif; ?>
                 </section>
             </div>
         </main>
     </div>
 
-    <script src="/CLASS_CARD_DROPPING_SYSTEM/js/functions.js"></script>
+    <script src="../js/functions.js"></script>
     <script>
         // Populate student options on page load
         function initStudentSearch() {
@@ -570,7 +524,7 @@ $message = getMessage();
             // Submit the form to cancel the drop
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = '/CLASS_CARD_DROPPING_SYSTEM/includes/api.php?action=cancel_drop';
+            form.action = '../../backend/includes/api.php?action=cancel_drop';
             form.innerHTML = `<input type="hidden" name="drop_id" value="${dropId}">`;
             document.body.appendChild(form);
             form.submit();
@@ -821,3 +775,4 @@ $message = getMessage();
     </script>
 </body>
 </html>
+

@@ -1,9 +1,9 @@
 <?php
 // admin/students.php - Manage Students
 
-require_once '../includes/session_check.php';
-require_once '../config/db.php';
-require_once '../includes/functions.php';
+require_once '../../backend/includes/session_check.php';
+require_once '../../backend/config/db.php';
+require_once '../../backend/includes/functions.php';
 
 if ($_SESSION['user_role'] !== 'admin') {
     redirect('/CLASS_CARD_DROPPING_SYSTEM/index.php');
@@ -127,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 setMessage('error', 'Error adding student: ' . $e->getMessage());
             }
         }
-        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/students.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/students.php');
     } elseif ($_POST['action'] === 'update') {
         $id = intval($_POST['id'] ?? 0);
         $student_id = trim($_POST['student_id'] ?? '');
@@ -250,7 +250,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 setMessage('error', 'Error updating student: ' . $e->getMessage());
             }
         }
-        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/students.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/students.php');
     } elseif ($_POST['action'] === 'update_status') {
         $student_id = intval($_POST['student_id'] ?? 0);
         $status = trim($_POST['status'] ?? '');
@@ -268,12 +268,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 setMessage('error', 'Error updating student: ' . $e->getMessage());
             }
         }
-        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/students.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/students.php');
     } elseif ($_POST['action'] === 'import_students') {
         $csv_data = $_POST['csv_data'] ?? '';
         if (empty($csv_data)) {
             setMessage('error', 'No data to import. Please select a file first.');
-            redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/students.php');
+            redirect('/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/students.php');
         }
 
         $lines = array_filter(explode("\n", $csv_data), function($line) {
@@ -283,7 +283,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
         if (count($lines) < 2) {
             setMessage('error', 'The file contains no data rows.');
-            redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/students.php');
+            redirect('/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/students.php');
         }
 
         // Remove header row
@@ -368,7 +368,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
         }
         setMessage($imported > 0 ? 'success' : 'error', $msg);
-        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/students.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/students.php');
     }
 }
 
@@ -448,7 +448,7 @@ $message = getMessage();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Students - PhilCST</title>
-    <link rel="stylesheet" href="/CLASS_CARD_DROPPING_SYSTEM/css/style.css">
+    <link rel="stylesheet" href="../css/admin.css">
 </head>
 
 <body>
@@ -459,43 +459,43 @@ $message = getMessage();
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="/CLASS_CARD_DROPPING_SYSTEM/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
+                <img src="../images/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
                 <h2>PhilCST</h2>
                 <p>Admin Portal</p>
             </div>
 
             <nav class="sidebar-nav">
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/dashboard.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/dashboard.php" class="nav-item">
                     <span>Dashboard</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php" class="nav-item">
-                    <span>Dropped Cards</span>
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/dropped_cards.php" class="nav-item">
+                    <span>Manage Class Cards</span>
                 </a>
                 <div class="nav-item submenu-trigger active" onclick="toggleSubmenu(this)">
                     <span>Manage Students</span>
                 </div>
                 <div class="submenu active" id="studentSubmenu">
-                    <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/students.php" class="submenu-item <?php echo !$course_filter && !$year_filter ? 'active' : ''; ?>">All Students</a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/students.php" class="submenu-item <?php echo !$course_filter && !$year_filter ? 'active' : ''; ?>">All Students</a>
                     <div style="padding: 8px 16px; color: rgba(255, 255, 255, 0.6); font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; border-top: 1px solid rgba(255, 255, 255, 0.1);">Courses</div>
                     <?php foreach ($courses as $course): ?>
-                    <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/students.php?course=<?php echo urlencode($course['course']); ?>" class="submenu-item" style="padding-left: 40px; <?php echo $course_filter === $course['course'] && !$year_filter ? 'background-color: rgba(167, 139, 250, 0.25); color: #c4b5fd;' : ''; ?>"><?php echo htmlspecialchars($course['course']); ?></a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/students.php?course=<?php echo urlencode($course['course']); ?>" class="submenu-item" style="padding-left: 40px; <?php echo $course_filter === $course['course'] && !$year_filter ? 'background-color: rgba(167, 139, 250, 0.25); color: #c4b5fd;' : ''; ?>"><?php echo htmlspecialchars($course['course']); ?></a>
                     <?php endforeach; ?>
                     <div style="padding: 8px 16px; color: rgba(255, 255, 255, 0.6); font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; border-top: 1px solid rgba(255, 255, 255, 0.1);">Year Level</div>
-                    <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/students.php?year=1" class="submenu-item" style="padding-left: 40px; <?php echo $year_filter === 1 && !$course_filter ? 'background-color: rgba(167, 139, 250, 0.25); color: #c4b5fd;' : ''; ?>">1st Year</a>
-                    <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/students.php?year=2" class="submenu-item" style="padding-left: 40px; <?php echo $year_filter === 2 && !$course_filter ? 'background-color: rgba(167, 139, 250, 0.25); color: #c4b5fd;' : ''; ?>">2nd Year</a>
-                    <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/students.php?year=3" class="submenu-item" style="padding-left: 40px; <?php echo $year_filter === 3 && !$course_filter ? 'background-color: rgba(167, 139, 250, 0.25); color: #c4b5fd;' : ''; ?>">3rd Year</a>
-                    <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/students.php?year=4" class="submenu-item" style="padding-left: 40px; <?php echo $year_filter === 4 && !$course_filter ? 'background-color: rgba(167, 139, 250, 0.25); color: #c4b5fd;' : ''; ?>">4th Year</a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/students.php?year=1" class="submenu-item" style="padding-left: 40px; <?php echo $year_filter === 1 && !$course_filter ? 'background-color: rgba(167, 139, 250, 0.25); color: #c4b5fd;' : ''; ?>">1st Year</a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/students.php?year=2" class="submenu-item" style="padding-left: 40px; <?php echo $year_filter === 2 && !$course_filter ? 'background-color: rgba(167, 139, 250, 0.25); color: #c4b5fd;' : ''; ?>">2nd Year</a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/students.php?year=3" class="submenu-item" style="padding-left: 40px; <?php echo $year_filter === 3 && !$course_filter ? 'background-color: rgba(167, 139, 250, 0.25); color: #c4b5fd;' : ''; ?>">3rd Year</a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/students.php?year=4" class="submenu-item" style="padding-left: 40px; <?php echo $year_filter === 4 && !$course_filter ? 'background-color: rgba(167, 139, 250, 0.25); color: #c4b5fd;' : ''; ?>">4th Year</a>
                 </div>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/teachers.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/teachers.php" class="nav-item">
                     <span>Manage Teachers</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/drop_history.php" class="nav-item">
-                    <span>Drop History</span>
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/drop_history.php" class="nav-item">
+                    <span>Class Cards History</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/cancelled_class_card.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/cancelled_class_card.php" class="nav-item">
                     <span>Cancelled Class Cards</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/profile.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/profile.php" class="nav-item">
                     <span>Profile</span>
                 </a>
                 <a href="#" class="nav-item logout-item" onclick="showLogoutModal(); return false;">
@@ -1484,7 +1484,7 @@ $message = getMessage();
                                 </tbody>
                             </table>
                         </div>
-                        <?php echo renderPaginationControls($pagination, '/CLASS_CARD_DROPPING_SYSTEM/admin/students.php'); ?>
+                        <?php echo renderPaginationControls($pagination, '/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/students.php'); ?>
                     <?php else: ?>
                         <p class="no-data">No students registered yet.</p>
                     <?php endif; ?>
@@ -1523,7 +1523,7 @@ $message = getMessage();
         });
     </script>
 
-    <script src="/CLASS_CARD_DROPPING_SYSTEM/js/functions.js"></script>
+    <script src="../js/functions.js"></script>
 </body>
 
 </html>

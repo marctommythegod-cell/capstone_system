@@ -1,9 +1,9 @@
 <?php
 // admin/teachers.php - Manage Teachers
 
-require_once '../includes/session_check.php';
-require_once '../config/db.php';
-require_once '../includes/functions.php';
+require_once '../../backend/includes/session_check.php';
+require_once '../../backend/config/db.php';
+require_once '../../backend/includes/functions.php';
 
 if ($_SESSION['user_role'] !== 'admin') {
     redirect('/CLASS_CARD_DROPPING_SYSTEM/index.php');
@@ -162,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 setMessage('error', 'Error adding teacher: ' . $e->getMessage());
             }
         }
-        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/teachers.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/teachers.php');
     } elseif ($_POST['action'] === 'update') {
         $id = intval($_POST['id'] ?? 0);
         $teacher_id = trim($_POST['teacher_id'] ?? '');
@@ -241,12 +241,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 setMessage('error', 'Error updating teacher: ' . $e->getMessage());
             }
         }
-        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/teachers.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/teachers.php');
     } elseif ($_POST['action'] === 'import_teachers') {
         $csv_data = $_POST['csv_data'] ?? '';
         if (empty($csv_data)) {
             setMessage('error', 'No data to import. Please select a file first.');
-            redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/teachers.php');
+            redirect('/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/teachers.php');
         }
 
         $lines = array_filter(explode("\n", $csv_data), function($line) {
@@ -256,7 +256,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
         if (count($lines) < 2) {
             setMessage('error', 'The file contains no data rows.');
-            redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/teachers.php');
+            redirect('/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/teachers.php');
         }
 
         // Remove header row
@@ -329,7 +329,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
         }
         setMessage($imported > 0 ? 'success' : 'error', $msg);
-        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/teachers.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/teachers.php');
     }
 }
 
@@ -379,7 +379,7 @@ $message = getMessage();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Teachers - PhilCST</title>
-    <link rel="stylesheet" href="/CLASS_CARD_DROPPING_SYSTEM/css/style.css">
+    <link rel="stylesheet" href="../css/admin.css">
 </head>
 <body>
     <div class="dashboard-container">
@@ -389,38 +389,38 @@ $message = getMessage();
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="/CLASS_CARD_DROPPING_SYSTEM/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
+                <img src="../images/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
                 <h2>PhilCST</h2>
                 <p>Admin Portal</p>
             </div>
             
             <nav class="sidebar-nav">
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/dashboard.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/dashboard.php" class="nav-item">
                     <span>Dashboard</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php" class="nav-item">
-                    <span>Dropped Cards</span>
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/dropped_cards.php" class="nav-item">
+                    <span>Manage Class Cards</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/students.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/students.php" class="nav-item">
                     <span>Manage Students</span>
                 </a>
                 <div class="nav-item submenu-trigger active" onclick="toggleSubmenu(this)">
                     <span>Manage Teachers</span>
                 </div>
                 <div class="submenu active" id="teacherSubmenu">
-                    <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/teachers.php" class="submenu-item <?php echo !$dept_filter ? 'active' : ''; ?>">All Teachers</a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/teachers.php" class="submenu-item <?php echo !$dept_filter ? 'active' : ''; ?>">All Teachers</a>
                     <div style="padding: 8px 16px; color: rgba(255, 255, 255, 0.6); font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; border-top: 1px solid rgba(255, 255, 255, 0.1);">Departments</div>
                     <?php foreach ($departments as $dept): ?>
-                    <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/teachers.php?department=<?php echo urlencode($dept['department']); ?>" class="submenu-item" style="padding-left: 40px; <?php echo $dept_filter === $dept['department'] ? 'background-color: rgba(167, 139, 250, 0.25); color: #c4b5fd;' : ''; ?>"><?php echo htmlspecialchars($dept['department']); ?></a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/teachers.php?department=<?php echo urlencode($dept['department']); ?>" class="submenu-item" style="padding-left: 40px; <?php echo $dept_filter === $dept['department'] ? 'background-color: rgba(167, 139, 250, 0.25); color: #c4b5fd;' : ''; ?>"><?php echo htmlspecialchars($dept['department']); ?></a>
                     <?php endforeach; ?>
                 </div>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/drop_history.php" class="nav-item">
-                    <span>Drop History</span>
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/drop_history.php" class="nav-item">
+                    <span>Class Cards History</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/cancelled_class_card.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/cancelled_class_card.php" class="nav-item">
                     <span>Cancelled Class Cards</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/profile.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/profile.php" class="nav-item">
                     <span>Profile</span>
                 </a>
                 <a href="#" class="nav-item logout-item" onclick="showLogoutModal(); return false;">
@@ -978,7 +978,7 @@ $message = getMessage();
                                 </tbody>
                             </table>
                         </div>
-                        <?php echo renderPaginationControls($pagination, '/CLASS_CARD_DROPPING_SYSTEM/admin/teachers.php'); ?>
+                        <?php echo renderPaginationControls($pagination, '/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/teachers.php'); ?>
                     <?php else: ?>
                         <p class="no-data">No teachers registered yet.</p>
                     <?php endif; ?>
@@ -1457,6 +1457,6 @@ $message = getMessage();
         });
     </script>
 
-    <script src="/CLASS_CARD_DROPPING_SYSTEM/js/functions.js"></script>
+    <script src="../js/functions.js"></script>
 </body>
 </html>

@@ -1,9 +1,9 @@
 <?php
 // admin/drop_history.php - View Drop History per Student
 
-require_once '../includes/session_check.php';
-require_once '../config/db.php';
-require_once '../includes/functions.php';
+require_once '../../backend/includes/session_check.php';
+require_once '../../backend/config/db.php';
+require_once '../../backend/includes/functions.php';
 
 if ($_SESSION['user_role'] !== 'admin') {
     redirect('/CLASS_CARD_DROPPING_SYSTEM/index.php');
@@ -75,8 +75,8 @@ $message = getMessage();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drop History - PhilCST</title>
-    <link rel="stylesheet" href="/CLASS_CARD_DROPPING_SYSTEM/css/style.css">
+    <title>Class Cards History - PhilCST</title>
+    <link rel="stylesheet" href="../css/admin.css">
 </head>
 <body>
     <div class="dashboard-container">
@@ -86,38 +86,38 @@ $message = getMessage();
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="/CLASS_CARD_DROPPING_SYSTEM/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
+                <img src="../images/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
                 <h2>PhilCST</h2>
                 <p>Admin Portal</p>
             </div>
             
             <nav class="sidebar-nav">
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/dashboard.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/dashboard.php" class="nav-item">
                     <span>Dashboard</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php" class="nav-item">
-                    <span>Dropped Cards</span>
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/dropped_cards.php" class="nav-item">
+                    <span>Manage Class Cards</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/students.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/students.php" class="nav-item">
                     <span>Manage Students</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/teachers.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/teachers.php" class="nav-item">
                     <span>Manage Teachers</span>
                 </a>
                 <div class="nav-item submenu-trigger active" onclick="toggleSubmenu(this)">
                     <span>Drop History</span>
                 </div>
                 <div class="submenu active" id="historySubmenu">
-                    <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/drop_history.php" class="submenu-item <?php echo !$year_filter ? 'active' : ''; ?>">All Records</a>
-                    <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/drop_history.php?year=1" class="submenu-item <?php echo $year_filter === 1 ? 'active' : ''; ?>">1st Year</a>
-                    <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/drop_history.php?year=2" class="submenu-item <?php echo $year_filter === 2 ? 'active' : ''; ?>">2nd Year</a>
-                    <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/drop_history.php?year=3" class="submenu-item <?php echo $year_filter === 3 ? 'active' : ''; ?>">3rd Year</a>
-                    <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/drop_history.php?year=4" class="submenu-item <?php echo $year_filter === 4 ? 'active' : ''; ?>">4th Year</a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/drop_history.php" class="submenu-item <?php echo !$year_filter ? 'active' : ''; ?>">All Records</a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/drop_history.php?year=1" class="submenu-item <?php echo $year_filter === 1 ? 'active' : ''; ?>">1st Year</a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/drop_history.php?year=2" class="submenu-item <?php echo $year_filter === 2 ? 'active' : ''; ?>">2nd Year</a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/drop_history.php?year=3" class="submenu-item <?php echo $year_filter === 3 ? 'active' : ''; ?>">3rd Year</a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/drop_history.php?year=4" class="submenu-item <?php echo $year_filter === 4 ? 'active' : ''; ?>">4th Year</a>
                 </div>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/cancelled_class_card.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/cancelled_class_card.php" class="nav-item">
                     <span>Cancelled Class Cards</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/profile.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/profile.php" class="nav-item">
                     <span>Profile</span>
                 </a>
                 <a href="#" class="nav-item logout-item" onclick="showLogoutModal(); return false;">
@@ -189,7 +189,7 @@ $message = getMessage();
                 
                 <!-- History Display -->
                 <section class="section">
-                    <h2>Drop History <span style="font-weight: normal; font-size: 0.9em; color: #666;">(<span id="historyTable-count"><?php echo $pagination['total_items']; ?></span> total, page <?php echo $pagination['current_page']; ?> of <?php echo max(1, $pagination['total_pages']); ?>)</span></h2>
+                    <h2>Class Cards History <span style="font-weight: normal; font-size: 0.9em; color: #666;">(<span id="historyTable-count"><?php echo $pagination['total_items']; ?></span> total, page <?php echo $pagination['current_page']; ?> of <?php echo max(1, $pagination['total_pages']); ?>)</span></h2>
                     
                     <?php if (count($all_history) > 0): ?>
                         <div class="table-responsive">
@@ -231,7 +231,7 @@ $message = getMessage();
                             </table>
                         </div>
                         <?php 
-                        $pagination_url = '/CLASS_CARD_DROPPING_SYSTEM/admin/drop_history.php';
+                        $pagination_url = '/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/drop_history.php';
                         if ($year_filter) {
                             $pagination_url .= '?year=' . $year_filter;
                         }
@@ -245,7 +245,7 @@ $message = getMessage();
         </main>
     </div>
 
-    <script src="/CLASS_CARD_DROPPING_SYSTEM/js/functions.js"></script>
+    <script src="../js/functions.js"></script>
     <script>
         function filterHistoryTable() {
             var search = document.getElementById('liveSearch').value.toLowerCase().trim();
@@ -555,3 +555,4 @@ $message = getMessage();
     </script>
 </body>
 </html>
+

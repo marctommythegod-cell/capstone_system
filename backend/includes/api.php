@@ -6,7 +6,7 @@ require_once '../config/db.php';
 require_once '../includes/functions.php';
 require_once '../email/EmailNotifier.php';
 
-$action = $_GET['action'] ?? '';
+$action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 // Check if student-subject has active drop request
 if ($action === 'check_active_drop') {
@@ -95,6 +95,7 @@ if ($action === 'drop_class_card') {
     // Check if student has already dropped this subject with Pending or Dropped status (per student validation)
     // Cannot drop again if status is still Pending or Dropped
     // If status is Undropped (which means it's been processed), student CAN drop again
+    // If status is Cancelled, student CAN drop again
     $stmt = $pdo->prepare('
         SELECT id, status FROM class_card_drops 
         WHERE student_id = ? AND subject_no = ? 
@@ -111,7 +112,7 @@ if ($action === 'drop_class_card') {
         } else {
             setMessage('error', 'This subject is already dropped.');
         }
-        redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/frontend/teacher/drop_class_card.php');
     }
     
     try {
@@ -146,6 +147,155 @@ if ($action === 'drop_class_card') {
     }
     
     redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php');
+}
+
+if ($action === 'walk_in_drop') {
+    header('Content-Type: application/json');
+    
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        exit;
+    }
+    
+    if ($_SESSION['user_role'] !== 'admin') {
+        echo json_encode(['success' => false, 'message' => 'Unauthorized action']);
+        exit;
+    }
+    
+    $admin_id = $_SESSION['user_id'];
+    $student_id = intval($_POST['student_id'] ?? 0);
+    $subject_no = trim($_POST['subject_no'] ?? '');
+    $teacher_id = intval($_POST['teacher_id'] ?? 0);
+    $remarks = trim($_POST['remarks'] ?? '');
+    
+    if (!$student_id || !$subject_no || !$teacher_id) {
+        echo json_encode(['success' => false, 'message' => 'Please select all required fields']);
+        exit;
+    }
+    
+    try {
+        // Fetch student
+        $stmt = $pdo->prepare('SELECT id, name, email, student_id FROM students WHERE id = ?');
+        $stmt->execute([$student_id]);
+        $student = $stmt->fetch();
+        
+        if (!$student) {
+            echo json_encode(['success' => false, 'message' => 'Student not found']);
+            exit;
+        }
+        
+        // Fetch subject
+        $stmt = $pdo->prepare('SELECT subject_no, subject_name FROM subjects WHERE subject_no = ?');
+        $stmt->execute([$subject_no]);
+        $subject = $stmt->fetch();
+        
+        if (!$subject) {
+            echo json_encode(['success' => false, 'message' => 'Subject not found']);
+            exit;
+        }
+        
+        $subject_name = $subject['subject_name'];
+        
+        // Fetch teacher
+        $stmt = $pdo->prepare('SELECT id, name, email FROM users WHERE id = ? AND role = "teacher"');
+        $stmt->execute([$teacher_id]);
+        $teacher = $stmt->fetch();
+        
+        if (!$teacher) {
+            echo json_encode(['success' => false, 'message' => 'Teacher not found']);
+            exit;
+        }
+        
+        // Check if student has already dropped this subject with Pending or Dropped status
+        $stmt = $pdo->prepare('
+            SELECT id, status FROM class_card_drops 
+            WHERE student_id = ? AND subject_no = ? 
+            AND status IN ("Pending", "Dropped")
+            AND cancelled_date IS NULL
+            LIMIT 1
+        ');
+        $stmt->execute([$student_id, $subject_no]);
+        $existing_drop = $stmt->fetch();
+        
+        if ($existing_drop) {
+            if ($existing_drop['status'] === 'Pending') {
+                echo json_encode(['success' => false, 'message' => 'This student already has a pending drop request for this subject']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'This subject is already dropped for this student']);
+            }
+            exit;
+        }
+        
+        // Set deadline to end of the same day (11:59 PM)
+        $deadline = date('Y-m-d 23:59:59');
+        $drop_date = date('Y-m-d H:i:s');
+        $drop_month = date('F Y');
+        $drop_year = date('Y');
+        
+        // Insert drop record with Dropped status (already approved by admin for walk-in)
+        $stmt = $pdo->prepare('
+            INSERT INTO class_card_drops 
+            (teacher_id, student_id, subject_no, subject_name, remarks, status, drop_date, deadline, drop_month, drop_year, approved_by, approved_date)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        ');
+        $stmt->execute([
+            $teacher_id,
+            $student_id,
+            $subject_no,
+            $subject_name,
+            $remarks,
+            'Dropped',
+            $drop_date,
+            $deadline,
+            $drop_month,
+            $drop_year,
+            $admin_id
+        ]);
+        
+        // Get the inserted ID
+        $drop_id = $pdo->lastInsertId();
+        
+        // Send email notification to student
+        if ($student && $student['email']) {
+            error_log("Sending walk-in drop email to student: " . $student['email']);
+            $emailNotifier = new EmailNotifier();
+            $emailData = [
+                'student_id' => $student['student_id'],
+                'student_name' => $student['name'],
+                'subject_no' => $subject_no,
+                'subject_name' => $subject_name,
+                'remarks' => $remarks,
+                'teacher_name' => $teacher['name'],
+                'drop_date' => $drop_date,
+                'approved_date' => date('Y-m-d H:i:s')
+            ];
+            $result = $emailNotifier->notifyStudentApproved($student['email'], $emailData);
+            error_log("Student email result: " . ($result ? 'sent' : 'failed'));
+        }
+        
+        // Send email notification to teacher
+        if ($teacher && $teacher['email']) {
+            error_log("Sending walk-in drop email to teacher: " . $teacher['email']);
+            $emailNotifier = new EmailNotifier();
+            $emailData = [
+                'student_id' => $student['student_id'],
+                'student_name' => $student['name'],
+                'subject_no' => $subject_no,
+                'subject_name' => $subject_name,
+                'drop_date' => $drop_date,
+                'approved_date' => date('Y-m-d H:i:s'),
+                'remarks' => $remarks
+            ];
+            $result = $emailNotifier->notifyTeacherApproved($teacher['email'], $emailData);
+            error_log("Teacher email result: " . ($result ? 'sent' : 'failed'));
+        }
+        
+        echo json_encode(['success' => true, 'message' => 'Class card dropped successfully and emails sent']);
+    } catch (Exception $e) {
+        error_log("Walk-in drop error: " . $e->getMessage());
+        echo json_encode(['success' => false, 'message' => 'Error dropping class card: ' . $e->getMessage()]);
+    }
+    exit;
 }
 
 if ($action === 'approve_drop') {

@@ -1,9 +1,9 @@
 <?php
 // teacher/dashboard.php - Teacher Dashboard
 
-require_once '../includes/session_check.php';
-require_once '../config/db.php';
-require_once '../includes/functions.php';
+require_once '../../backend/includes/session_check.php';
+require_once '../../backend/config/db.php';
+require_once '../../backend/includes/functions.php';
 
 // Check if user is teacher
 if ($_SESSION['user_role'] !== 'teacher') {
@@ -65,36 +65,36 @@ $message = getMessage();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teacher Dashboard - PhilCST</title>
-    <link rel="stylesheet" href="/CLASS_CARD_DROPPING_SYSTEM/css/style.css">
+    <link rel="stylesheet" href="../css/teacher.css">
 </head>
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="/CLASS_CARD_DROPPING_SYSTEM/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
+                <img src="../images/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
                 <h2>PhilCST</h2>
                 <p>Teacher Portal</p>
             </div>
             
             <nav class="sidebar-nav">
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/dashboard.php" class="nav-item active">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/teacher/dashboard.php" class="nav-item active">
                     <span>Overview</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/teacher/drop_class_card.php" class="nav-item">
                     <span>Drop Class Card</span>
                 </a>
                 <div class="nav-item submenu-trigger" onclick="toggleSubmenu(this)">
                     <span>Drop History</span>
                 </div>
                 <div class="submenu" id="historySubmenu">
-                    <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php" class="submenu-item">All Records</a>
-                    <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php?year=1" class="submenu-item">1st Year</a>
-                    <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php?year=2" class="submenu-item">2nd Year</a>
-                    <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php?year=3" class="submenu-item">3rd Year</a>
-                    <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php?year=4" class="submenu-item">4th Year</a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/teacher/drop_history.php" class="submenu-item">All Records</a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/teacher/drop_history.php?year=1" class="submenu-item">1st Year</a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/teacher/drop_history.php?year=2" class="submenu-item">2nd Year</a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/teacher/drop_history.php?year=3" class="submenu-item">3rd Year</a>
+                    <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/teacher/drop_history.php?year=4" class="submenu-item">4th Year</a>
                 </div>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/profile.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/teacher/profile.php" class="nav-item">
                     <span>Profile</span>
                 </a>
                 <a href="#" class="nav-item logout-item" onclick="showLogoutModal(); return false;">
@@ -192,9 +192,9 @@ $message = getMessage();
                                 </tbody>
                             </table>
                         </div>
-                        <?php echo renderPaginationControls($pagination, '/CLASS_CARD_DROPPING_SYSTEM/teacher/dashboard.php'); ?>
+                        <?php echo renderPaginationControls($pagination, '/CLASS_CARD_DROPPING_SYSTEM/frontend/teacher/dashboard.php'); ?>
                         <div style="text-align: center; margin-top: 15px;">
-                            <a href="/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_history.php" class="btn btn-secondary">View All Drops</a>
+                            <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/teacher/drop_history.php" class="btn btn-secondary">View All Drops</a>
                         </div>
                     <?php else: ?>
                         <p class="no-data">No class cards dropped yet.</p>
@@ -216,7 +216,7 @@ $message = getMessage();
                         <strong>Welcome!</strong> For security reasons, you must change your default password on your first login. Please create a strong password below.
                     </p>
                 </div>
-                <form method="POST" action="/CLASS_CARD_DROPPING_SYSTEM/includes/api.php?action=change_password" id="changePasswordForm">
+                <form method="POST" action="../../backend/includes/api.php?action=change_password" id="changePasswordForm">
                     <input type="hidden" name="is_first_time" value="1">
                     
                     <div class="form-group">
@@ -407,7 +407,7 @@ $message = getMessage();
 
         // Teacher drops modal functions
         function showTeacherDropsModal(type, title) {
-            fetch('/CLASS_CARD_DROPPING_SYSTEM/includes/api.php?action=get_teacher_drops&type=' + encodeURIComponent(type))
+            fetch('../../backend/includes/api.php?action=get_teacher_drops&type=' + encodeURIComponent(type))
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -735,6 +735,7 @@ $message = getMessage();
         });
     </script>
     
-    <script src="/CLASS_CARD_DROPPING_SYSTEM/js/functions.js"></script>
+    <script src="../js/functions.js"></script>
 </body>
 </html>
+

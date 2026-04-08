@@ -61,7 +61,7 @@ function showLogoutModal() {
             </div>
             <div class="logout-modal-footer">
                 <button class="btn btn-secondary" onclick="closeLogoutModal()">Cancel</button>
-                <button class="btn btn-danger" onclick="window.location.href='/CLASS_CARD_DROPPING_SYSTEM/includes/logout.php'">Yes, Logout</button>
+                <button class="btn btn-danger" onclick="window.location.href='/CLASS_CARD_DROPPING_SYSTEM/backend/includes/logout.php'">Yes, Logout</button>
             </div>
         </div>
     `;
@@ -741,7 +741,7 @@ function approveDrop(dropId) {
     showConfirmModal('Are you sure you want to approve this class card drop?', function() {
         const form = document.createElement('form');
         form.method = 'POST';
-        form.action = '/CLASS_CARD_DROPPING_SYSTEM/includes/api.php?action=approve_drop';
+        form.action = '/CLASS_CARD_DROPPING_SYSTEM/backend/includes/api.php?action=approve_drop';
         
         const input = document.createElement('input');
         input.type = 'hidden';

@@ -1,11 +1,11 @@
 <?php
 // admin/dropped_cards.php - View All Dropped Cards
 
-require_once '../includes/session_check.php';
-require_once '../config/db.php';
-require_once '../includes/functions.php';
-require_once '../includes/check_overdue_requests.php';
-require_once '../email/EmailNotifier.php';
+require_once '../../backend/includes/session_check.php';
+require_once '../../backend/config/db.php';
+require_once '../../backend/includes/functions.php';
+require_once '../../backend/includes/check_overdue_requests.php';
+require_once '../../backend/email/EmailNotifier.php';
 
 if ($_SESSION['user_role'] !== 'admin') {
     redirect('/CLASS_CARD_DROPPING_SYSTEM/index.php');
@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
         if (!$drop) {
             setMessage('error', 'Drop record not found.');
-            redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php');
+            redirect('/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/dropped_cards.php');
         }
 
         // Update status to Undropped in class_card_drops (without retrieve_date as it's now in separate table)
@@ -86,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         error_log("Exception in undrop action: " . $e->getMessage());
         setMessage('error', 'Error undropping class card: ' . $e->getMessage());
     }
-    redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php');
+    redirect('/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/dropped_cards.php');
 }
 
 // Fetch pending drop requests with deadline
@@ -103,10 +103,10 @@ $stmt = $pdo->prepare($pending_query);
 $stmt->execute();
 $pending_drops = $stmt->fetchAll();
 
-// Fetch approved/undropped cards with pagination
+// Fetch dropped cards (to undrop) with pagination
 $stmt = $pdo->prepare('
     SELECT COUNT(*) as total FROM class_card_drops
-    WHERE status IN ("Dropped", "Undropped")
+    WHERE status IN ("Dropped")
 ');
 $stmt->execute();
 $total_approved_drops = $stmt->fetch()['total'];
@@ -119,7 +119,7 @@ $query = '
     JOIN students s ON ccd.student_id = s.id
     JOIN users u ON ccd.teacher_id = u.id
     LEFT JOIN philcst_undrop_records pur ON ccd.id = pur.drop_id
-    WHERE ccd.status IN ("Dropped", "Undropped")
+    WHERE ccd.status IN ("Dropped")
     ORDER BY ccd.drop_date DESC
     LIMIT ' . intval($pagination['limit']) . ' OFFSET ' . intval($pagination['offset']) . '
 ';
@@ -129,14 +129,55 @@ $stmt->execute();
 $drops = $stmt->fetchAll();
 
 $message = getMessage();
+
+// Fetch all students, subjects, and teachers for walk-in modal
+$stmt = $pdo->prepare('SELECT id, student_id, name FROM students WHERE status = "active" ORDER BY name ASC');
+$stmt->execute();
+$all_students = $stmt->fetchAll();
+
+$stmt = $pdo->prepare('SELECT subject_no, subject_name FROM subjects ORDER BY subject_name ASC');
+$stmt->execute();
+$all_subjects = $stmt->fetchAll();
+
+$stmt = $pdo->prepare('SELECT id, name FROM users WHERE role = "teacher" ORDER BY name ASC');
+$stmt->execute();
+$all_teachers = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dropped Cards - PhilCST</title>
-    <link rel="stylesheet" href="/CLASS_CARD_DROPPING_SYSTEM/css/style.css">
+    <title>Manage Class Cards - PhilCST</title>
+    <link rel="stylesheet" href="../css/admin.css">
+    <style>
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        @keyframes slideUp {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+        }
+    </style>
+    <script>
+        // Embed data for walk-in modal
+        window.walkInStudents = <?php echo json_encode($all_students); ?>;
+        window.walkInSubjects = <?php echo json_encode($all_subjects); ?>;
+        window.walkInTeachers = <?php echo json_encode($all_teachers); ?>;
+    </script>
 </head>
 <body>
     <div class="dashboard-container">
@@ -146,31 +187,31 @@ $message = getMessage();
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="/CLASS_CARD_DROPPING_SYSTEM/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
+                <img src="../images/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
                 <h2>PhilCST</h2>
                 <p>Admin Portal</p>
             </div>
 
             <nav class="sidebar-nav">
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/dashboard.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/dashboard.php" class="nav-item">
                     <span>Dashboard</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php" class="nav-item active">
-                    <span>Dropped Cards</span>
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/dropped_cards.php" class="nav-item active">
+                    <span>Manage Class Cards</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/students.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/students.php" class="nav-item">
                     <span>Manage Students</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/teachers.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/teachers.php" class="nav-item">
                     <span>Manage Teachers</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/drop_history.php" class="nav-item">
-                    <span>Drop History</span>
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/drop_history.php" class="nav-item">
+                    <span>Class Cards History</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/cancelled_class_card.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/cancelled_class_card.php" class="nav-item">
                     <span>Cancelled Class Cards</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/profile.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/profile.php" class="nav-item">
                     <span>Profile</span>
                 </a>
                 <a href="#" class="nav-item logout-item" onclick="showLogoutModal(); return false;">
@@ -288,9 +329,26 @@ $message = getMessage();
                     <?php endif; ?>
                 </section>
 
-                <!-- Approved Dropped Cards Table -->
+                <!-- Undrop Class Card Table -->
                 <section class="section">
-                    <h2>Approved Dropped Class Card <span style="font-weight: normal; font-size: 0.9em; color: #666;">(<span id="approvedTable-count"><?php echo $pagination['total_items']; ?></span> total, page <?php echo $pagination['current_page']; ?> of <?php echo max(1, $pagination['total_pages']); ?>)</span></h2>
+                    <h2>Undrop Class Card <span style="font-weight: normal; font-size: 0.9em; color: #666;">(<span id="approvedTable-count"><?php echo $pagination['total_items']; ?></span> total, page <?php echo $pagination['current_page']; ?> of <?php echo max(1, $pagination['total_pages']); ?>)</span></h2>
+                    
+                    <!-- Walk-in Drop Button -->
+                    <div style="margin-bottom: 20px;">
+                        <button type="button" onclick="showWalkInDropModal()" style="
+                            padding: 12px 24px;
+                            background: linear-gradient(135deg, #a78bfa 0%, #7f3fc6 100%);
+                            color: white;
+                            border: none;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-weight: 600;
+                            font-size: 0.95em;
+                            transition: all 0.3s;
+                            box-shadow: 0 4px 12px rgba(167, 139, 250, 0.3);
+                        " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(167, 139, 250, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(167, 139, 250, 0.3)'">Drop Class Card</button>
+                    </div>
+                    
                     <?php if (count($drops) > 0): ?>
                         <div style="margin-bottom: 16px; display: flex; align-items: center; gap: 16px;">
                             <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px 12px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px;">
@@ -356,8 +414,6 @@ $message = getMessage();
                                                         <input type="hidden" name="drop_id" value="<?php echo $drop['id']; ?>">
                                                         <button type="button" class="btn btn-sm btn-danger" onclick="showUndropModal(<?php echo $drop['id']; ?>)">Undrop</button>
                                                     </form>
-                                                <?php elseif ($drop['status'] === 'Undropped'): ?>
-                                                    <button class="btn btn-sm btn-danger" style="opacity:0.6; cursor:not-allowed;" disabled>Undrop</button>
                                                 <?php else: ?>
                                                     <span style="color: #aaa; font-style: italic;">—</span>
                                                 <?php endif; ?>
@@ -368,7 +424,7 @@ $message = getMessage();
                                 </tbody>
                             </table>
                         </div>
-                        <?php echo renderPaginationControls($pagination, '/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php'); ?>
+                        <?php echo renderPaginationControls($pagination, '/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/dropped_cards.php'); ?>
                     <?php else: ?>
                         <p class="no-data">No dropped cards found.</p>
                     <?php endif; ?>
@@ -377,7 +433,7 @@ $message = getMessage();
         </main>
     </div>
 
-    <script src="/CLASS_CARD_DROPPING_SYSTEM/js/functions.js"></script>
+    <script src="../js/functions.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             liveTableFilter('liveSearch', 'approvedTable');
@@ -723,7 +779,7 @@ $message = getMessage();
             showConfirmModal(message, function() {
                 const form = document.createElement('form');
                 form.method = 'POST';
-                form.action = '/CLASS_CARD_DROPPING_SYSTEM/includes/api.php?action=bulk_approve_drops';
+                form.action = '../../backend/includes/api.php?action=bulk_approve_drops';
 
                 dropIds.forEach(dropId => {
                     const input = document.createElement('input');
@@ -795,7 +851,7 @@ $message = getMessage();
             showConfirmModal(message, function() {
                 const form = document.createElement('form');
                 form.method = 'POST';
-                form.action = '/CLASS_CARD_DROPPING_SYSTEM/includes/api.php?action=bulk_undrop_drops';
+                form.action = '../../backend/includes/api.php?action=bulk_undrop_drops';
 
                 dropIds.forEach(dropId => {
                     const input = document.createElement('input');
@@ -808,6 +864,570 @@ $message = getMessage();
                 document.body.appendChild(form);
                 form.submit();
             });
+        }
+
+        // Walk-in Drop Functions
+        function showWalkInDropModal() {
+            const modal = document.createElement('div');
+            modal.id = 'walkInDropModal';
+            modal.style.cssText = `
+                display: flex;
+                position: fixed;
+                z-index: 1000;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0,0,0,0.6);
+                align-items: center;
+                justify-content: center;
+                backdrop-filter: blur(4px);
+            `;
+            modal.innerHTML = `
+                <div style="
+                    background: linear-gradient(135deg, #ffffff 0%, #f9f7ff 100%);
+                    padding: 0;
+                    border-radius: 12px;
+                    width: 90%;
+                    max-width: 650px;
+                    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                    max-height: 90vh;
+                    overflow: hidden;
+                    display: flex;
+                    flex-direction: column;
+                ">
+                    <div style="
+                        background: linear-gradient(135deg, #a78bfa 0%, #7f3fc6 100%);
+                        padding: 24px 30px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        border-bottom: 2px solid rgba(167, 139, 250, 0.2);
+                    ">
+                        <h2 style="margin: 0; font-size: 1.6em; font-weight: 700; color: white; letter-spacing: 0.5px;">Drop Class Card</h2>
+                        <button onclick="document.getElementById('walkInDropModal').remove()" style="
+                            background: rgba(255,255,255,0.2);
+                            border: none;
+                            font-size: 28px;
+                            cursor: pointer;
+                            color: white;
+                            width: 40px;
+                            height: 40px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            border-radius: 6px;
+                            transition: all 0.3s;
+                        " onmouseover="this.style.backgroundColor='rgba(255,255,255,0.3)'" onmouseout="this.style.backgroundColor='rgba(255,255,255,0.2)'">&times;</button>
+                    </div>
+                    <form id="walkInDropForm" method="POST" style="
+                        display: flex;
+                        flex-direction: column;
+                        gap: 20px;
+                        padding: 30px;
+                        overflow-y: auto;
+                        flex: 1;
+                    ">
+                        <div>
+                            <label style="
+                                display: block;
+                                margin-bottom: 10px;
+                                font-weight: 600;
+                                color: #1f2937;
+                                font-size: 0.95em;
+                                letter-spacing: 0.3px;
+                            ">Student <span style="color: #ef4444;">*</span></label>
+                            <div style="position: relative;">
+                                <input type="text" id="walkInStudentDisplay" placeholder="Click to search student..." readonly style="
+                                    cursor: pointer; 
+                                    background: white;
+                                    width: 100%;
+                                    padding: 12px 16px;
+                                    border: 2px solid #e5e7eb;
+                                    border-radius: 8px;
+                                    font-size: 0.95em;
+                                    transition: all 0.3s;
+                                    color: #374151;
+                                " onmouseover="this.style.borderColor='#a78bfa'" onmouseout="this.style.borderColor='#e5e7eb'">
+                                <div id="walkInStudentDropdown" style="
+                                    display: none; 
+                                    position: absolute; 
+                                    top: 100%; 
+                                    left: 0; 
+                                    right: 0; 
+                                    background: white; 
+                                    border: 2px solid #a78bfa; 
+                                    border-top: none; 
+                                    border-radius: 0 0 8px 8px; 
+                                    max-height: 300px; 
+                                    overflow-y: auto; 
+                                    z-index: 1001; 
+                                    box-shadow: 0 10px 25px rgba(167, 139, 250, 0.15);
+                                ">
+                                    <div style="padding: 14px; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; background: #fafafa;">
+                                        <input type="text" id="walkInStudentSearch" placeholder="Search by ID or name..." style="
+                                            width: 100%; 
+                                            padding: 10px 12px; 
+                                            border: 2px solid #e5e7eb; 
+                                            border-radius: 6px; 
+                                            font-size: 0.9em;
+                                            transition: all 0.3s;
+                                        " onfocus="this.style.borderColor='#a78bfa'" onblur="this.style.borderColor='#e5e7eb'" onkeyup="filterWalkInStudents()">
+                                    </div>
+                                    <div id="walkInStudentList"></div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="walkInStudentId" name="student_id">
+                        </div>
+                        <div>
+                            <label style="
+                                display: block;
+                                margin-bottom: 10px;
+                                font-weight: 600;
+                                color: #1f2937;
+                                font-size: 0.95em;
+                                letter-spacing: 0.3px;
+                            ">Subject <span style="color: #ef4444;">*</span></label>
+                            <div style="position: relative;">
+                                <input type="text" id="walkInSubjectDisplay" placeholder="Click to search subject..." readonly style="
+                                    cursor: pointer; 
+                                    background: white;
+                                    width: 100%;
+                                    padding: 12px 16px;
+                                    border: 2px solid #e5e7eb;
+                                    border-radius: 8px;
+                                    font-size: 0.95em;
+                                    transition: all 0.3s;
+                                    color: #374151;
+                                " onmouseover="this.style.borderColor='#a78bfa'" onmouseout="this.style.borderColor='#e5e7eb'">
+                                <div id="walkInSubjectDropdown" style="
+                                    display: none; 
+                                    position: absolute; 
+                                    top: 100%; 
+                                    left: 0; 
+                                    right: 0; 
+                                    background: white; 
+                                    border: 2px solid #a78bfa; 
+                                    border-top: none; 
+                                    border-radius: 0 0 8px 8px; 
+                                    max-height: 300px; 
+                                    overflow-y: auto; 
+                                    z-index: 1001; 
+                                    box-shadow: 0 10px 25px rgba(167, 139, 250, 0.15);
+                                ">
+                                    <div style="padding: 14px; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; background: #fafafa;">
+                                        <input type="text" id="walkInSubjectSearch" placeholder="Search by code or name..." style="
+                                            width: 100%; 
+                                            padding: 10px 12px; 
+                                            border: 2px solid #e5e7eb; 
+                                            border-radius: 6px; 
+                                            font-size: 0.9em;
+                                            transition: all 0.3s;
+                                        " onfocus="this.style.borderColor='#a78bfa'" onblur="this.style.borderColor='#e5e7eb'" onkeyup="filterWalkInSubjects()">
+                                    </div>
+                                    <div id="walkInSubjectList"></div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="walkInSubjectNo" name="subject_no">
+                        </div>
+                        <div>
+                            <label style="
+                                display: block;
+                                margin-bottom: 10px;
+                                font-weight: 600;
+                                color: #1f2937;
+                                font-size: 0.95em;
+                                letter-spacing: 0.3px;
+                            ">Teacher <span style="color: #ef4444;">*</span></label>
+                            <div style="position: relative;">
+                                <input type="text" id="walkInTeacherDisplay" placeholder="Click to search teacher..." readonly style="
+                                    cursor: pointer; 
+                                    background: white;
+                                    width: 100%;
+                                    padding: 12px 16px;
+                                    border: 2px solid #e5e7eb;
+                                    border-radius: 8px;
+                                    font-size: 0.95em;
+                                    transition: all 0.3s;
+                                    color: #374151;
+                                " onmouseover="this.style.borderColor='#a78bfa'" onmouseout="this.style.borderColor='#e5e7eb'">
+                                <div id="walkInTeacherDropdown" style="
+                                    display: none; 
+                                    position: absolute; 
+                                    top: 100%; 
+                                    left: 0; 
+                                    right: 0; 
+                                    background: white; 
+                                    border: 2px solid #a78bfa; 
+                                    border-top: none; 
+                                    border-radius: 0 0 8px 8px; 
+                                    max-height: 300px; 
+                                    overflow-y: auto; 
+                                    z-index: 1001; 
+                                    box-shadow: 0 10px 25px rgba(167, 139, 250, 0.15);
+                                ">
+                                    <div style="padding: 14px; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; background: #fafafa;">
+                                        <input type="text" id="walkInTeacherSearch" placeholder="Search by name..." style="
+                                            width: 100%; 
+                                            padding: 10px 12px; 
+                                            border: 2px solid #e5e7eb; 
+                                            border-radius: 6px; 
+                                            font-size: 0.9em;
+                                            transition: all 0.3s;
+                                        " onfocus="this.style.borderColor='#a78bfa'" onblur="this.style.borderColor='#e5e7eb'" onkeyup="filterWalkInTeachers()">
+                                    </div>
+                                    <div id="walkInTeacherList"></div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="walkInTeacherId" name="teacher_id">
+                        </div>
+                        <div>
+                            <label style="
+                                display: block;
+                                margin-bottom: 10px;
+                                font-weight: 600;
+                                color: #1f2937;
+                                font-size: 0.95em;
+                                letter-spacing: 0.3px;
+                            ">Remarks (Optional)</label>
+                            <textarea id="walkInRemarks" name="remarks" placeholder="Add any additional remarks..." style="
+                                width: 100%;
+                                padding: 12px 16px;
+                                border: 2px solid #e5e7eb;
+                                border-radius: 8px;
+                                font-size: 0.95em;
+                                min-height: 110px;
+                                font-family: inherit;
+                                resize: vertical;
+                                transition: all 0.3s;
+                                color: #374151;
+                            " onfocus="this.style.borderColor='#a78bfa'" onblur="this.style.borderColor='#e5e7eb'"></textarea>
+                        </div>
+                    </form>
+                    <div style="
+                        padding: 20px 30px;
+                        background: #f9f7ff;
+                        border-top: 1px solid #e5e7eb;
+                        display: flex;
+                        gap: 12px;
+                        justify-content: flex-end;
+                    ">
+                        <button type="button" onclick="document.getElementById('walkInDropModal').remove()" style="
+                            padding: 11px 24px;
+                            background: #e5e7eb;
+                            border: none;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            font-weight: 600;
+                            color: #374151;
+                            font-size: 0.95em;
+                            transition: all 0.3s;
+                        " onmouseover="this.style.backgroundColor='#d1d5db'" onmouseout="this.style.backgroundColor='#e5e7eb'">Cancel</button>
+                        <button type="submit" form="walkInDropForm" style="
+                            padding: 11px 28px;
+                            background: linear-gradient(135deg, #a78bfa 0%, #7f3fc6 100%);
+                            color: white;
+                            border: none;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            font-weight: 600;
+                            font-size: 0.95em;
+                            box-shadow: 0 4px 12px rgba(167, 139, 250, 0.3);
+                            transition: all 0.3s;
+                        " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(167, 139, 250, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(167, 139, 250, 0.3)'">Confirm</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Load data and setup event listeners
+            loadWalkInDropData();
+            setupWalkInDropListeners();
+            
+            document.getElementById('walkInDropForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const studentId = document.getElementById('walkInStudentId').value;
+                const subjectNo = document.getElementById('walkInSubjectNo').value;
+                const teacherId = document.getElementById('walkInTeacherId').value;
+                const remarks = document.getElementById('walkInRemarks').value.trim();
+                
+                if (!studentId || !subjectNo || !teacherId) {
+                    alert('Please select student, subject, and teacher.');
+                    return;
+                }
+                
+                submitWalkInDrop(studentId, subjectNo, teacherId, remarks);
+            });
+        }
+
+        function loadWalkInDropData() {
+            // This will be populated by PHP data embedded in the page
+            // For now, we'll fetch it via AJAX or use embedded data
+            const modal = document.getElementById('walkInDropModal');
+            initWalkInStudents(modal);
+            initWalkInSubjects(modal);
+            initWalkInTeachers(modal);
+        }
+
+        function setupWalkInDropListeners() {
+            // Student dropdown toggle
+            document.getElementById('walkInStudentDisplay').addEventListener('click', function() {
+                const dropdown = document.getElementById('walkInStudentDropdown');
+                dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+                if (dropdown.style.display === 'block') {
+                    document.getElementById('walkInStudentSearch').focus();
+                    initWalkInStudents();
+                }
+            });
+
+            // Subject dropdown toggle
+            document.getElementById('walkInSubjectDisplay').addEventListener('click', function() {
+                const dropdown = document.getElementById('walkInSubjectDropdown');
+                dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+                if (dropdown.style.display === 'block') {
+                    document.getElementById('walkInSubjectSearch').focus();
+                    initWalkInSubjects();
+                }
+            });
+
+            // Teacher dropdown toggle
+            document.getElementById('walkInTeacherDisplay').addEventListener('click', function() {
+                const dropdown = document.getElementById('walkInTeacherDropdown');
+                dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+                if (dropdown.style.display === 'block') {
+                    document.getElementById('walkInTeacherSearch').focus();
+                    initWalkInTeachers();
+                }
+            });
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('#walkInStudentDisplay') && !e.target.closest('#walkInStudentDropdown')) {
+                    document.getElementById('walkInStudentDropdown').style.display = 'none';
+                }
+                if (!e.target.closest('#walkInSubjectDisplay') && !e.target.closest('#walkInSubjectDropdown')) {
+                    document.getElementById('walkInSubjectDropdown').style.display = 'none';
+                }
+                if (!e.target.closest('#walkInTeacherDisplay') && !e.target.closest('#walkInTeacherDropdown')) {
+                    document.getElementById('walkInTeacherDropdown').style.display = 'none';
+                }
+            });
+        }
+
+        // Load and display students
+        function initWalkInStudents() {
+            const list = document.getElementById('walkInStudentList');
+            list.innerHTML = '';
+            
+            const students = window.walkInStudents || [];
+            students.forEach(student => {
+                const div = document.createElement('div');
+                div.style.cssText = 'padding: 12px 14px; cursor: pointer; color: #374151; font-size: 0.95em; transition: all 0.2s; border-bottom: 1px solid #f3f4f6;';
+                div.innerHTML = `<strong style="color: #7f3fc6; font-weight: 700;">${student.student_id}</strong> - ${student.name}`;
+                div.onclick = () => selectWalkInStudent(student.id, student.student_id, student.name);
+                div.onmouseover = function() { this.style.backgroundColor = '#f3f4f6'; };
+                div.onmouseout = function() { this.style.backgroundColor = 'transparent'; };
+                list.appendChild(div);
+            });
+        }
+
+        function filterWalkInStudents() {
+            const search = document.getElementById('walkInStudentSearch').value.toLowerCase();
+            const list = document.getElementById('walkInStudentList');
+            list.innerHTML = '';
+            
+            const students = window.walkInStudents || [];
+            students.filter(s => (s.student_id + ' ' + s.name).toLowerCase().includes(search)).forEach(student => {
+                const div = document.createElement('div');
+                div.style.cssText = 'padding: 12px 14px; cursor: pointer; color: #374151; font-size: 0.95em; transition: all 0.2s; border-bottom: 1px solid #f3f4f6;';
+                div.innerHTML = `<strong style="color: #7f3fc6; font-weight: 700;">${student.student_id}</strong> - ${student.name}`;
+                div.onclick = () => selectWalkInStudent(student.id, student.student_id, student.name);
+                div.onmouseover = function() { this.style.backgroundColor = '#f3f4f6'; };
+                div.onmouseout = function() { this.style.backgroundColor = 'transparent'; };
+                list.appendChild(div);
+            });
+        }
+
+        function selectWalkInStudent(id, studentId, name) {
+            document.getElementById('walkInStudentId').value = id;
+            document.getElementById('walkInStudentDisplay').value = `${studentId} - ${name}`;
+            document.getElementById('walkInStudentDropdown').style.display = 'none';
+        }
+
+        // Load and display subjects
+        function initWalkInSubjects() {
+            const list = document.getElementById('walkInSubjectList');
+            list.innerHTML = '';
+            
+            const subjects = window.walkInSubjects || [];
+            subjects.forEach(subject => {
+                const div = document.createElement('div');
+                div.style.cssText = 'padding: 12px 14px; cursor: pointer; color: #374151; font-size: 0.95em; transition: all 0.2s; border-bottom: 1px solid #f3f4f6;';
+                div.innerHTML = `<strong style="color: #7f3fc6; font-weight: 700;">${subject.subject_no}</strong> - ${subject.subject_name}`;
+                div.onclick = () => selectWalkInSubject(subject.subject_no, subject.subject_name);
+                div.onmouseover = function() { this.style.backgroundColor = '#f3f4f6'; };
+                div.onmouseout = function() { this.style.backgroundColor = 'transparent'; };
+                list.appendChild(div);
+            });
+        }
+
+        function filterWalkInSubjects() {
+            const search = document.getElementById('walkInSubjectSearch').value.toLowerCase();
+            const list = document.getElementById('walkInSubjectList');
+            list.innerHTML = '';
+            
+            const subjects = window.walkInSubjects || [];
+            subjects.filter(s => (s.subject_no + ' ' + s.subject_name).toLowerCase().includes(search)).forEach(subject => {
+                const div = document.createElement('div');
+                div.style.cssText = 'padding: 12px 14px; cursor: pointer; color: #374151; font-size: 0.95em; transition: all 0.2s; border-bottom: 1px solid #f3f4f6;';
+                div.innerHTML = `<strong style="color: #7f3fc6; font-weight: 700;">${subject.subject_no}</strong> - ${subject.subject_name}`;
+                div.onclick = () => selectWalkInSubject(subject.subject_no, subject.subject_name);
+                div.onmouseover = function() { this.style.backgroundColor = '#f3f4f6'; };
+                div.onmouseout = function() { this.style.backgroundColor = 'transparent'; };
+                list.appendChild(div);
+            });
+        }
+
+        function selectWalkInSubject(subjectNo, subjectName) {
+            document.getElementById('walkInSubjectNo').value = subjectNo;
+            document.getElementById('walkInSubjectDisplay').value = `${subjectNo} - ${subjectName}`;
+            document.getElementById('walkInSubjectDropdown').style.display = 'none';
+        }
+
+        // Load and display teachers
+        function initWalkInTeachers() {
+            const list = document.getElementById('walkInTeacherList');
+            list.innerHTML = '';
+            
+            const teachers = window.walkInTeachers || [];
+            teachers.forEach(teacher => {
+                const div = document.createElement('div');
+                div.style.cssText = 'padding: 12px 14px; cursor: pointer; color: #374151; font-size: 0.95em; transition: all 0.2s; border-bottom: 1px solid #f3f4f6;';
+                div.innerHTML = `<strong style="color: #7f3fc6; font-weight: 700;">${teacher.name}</strong>`;
+                div.onclick = () => selectWalkInTeacher(teacher.id, teacher.name);
+                div.onmouseover = function() { this.style.backgroundColor = '#f3f4f6'; };
+                div.onmouseout = function() { this.style.backgroundColor = 'transparent'; };
+                list.appendChild(div);
+            });
+        }
+
+        function filterWalkInTeachers() {
+            const search = document.getElementById('walkInTeacherSearch').value.toLowerCase();
+            const list = document.getElementById('walkInTeacherList');
+            list.innerHTML = '';
+            
+            const teachers = window.walkInTeachers || [];
+            teachers.filter(t => t.name.toLowerCase().includes(search)).forEach(teacher => {
+                const div = document.createElement('div');
+                div.style.cssText = 'padding: 12px 14px; cursor: pointer; color: #374151; font-size: 0.95em; transition: all 0.2s; border-bottom: 1px solid #f3f4f6;';
+                div.innerHTML = `<strong style="color: #7f3fc6; font-weight: 700;">${teacher.name}</strong>`;
+                div.onclick = () => selectWalkInTeacher(teacher.id, teacher.name);
+                div.onmouseover = function() { this.style.backgroundColor = '#f3f4f6'; };
+                div.onmouseout = function() { this.style.backgroundColor = 'transparent'; };
+                list.appendChild(div);
+            });
+        }
+
+        function selectWalkInTeacher(id, name) {
+            document.getElementById('walkInTeacherId').value = id;
+            document.getElementById('walkInTeacherDisplay').value = name;
+            document.getElementById('walkInTeacherDropdown').style.display = 'none';
+        }
+
+        function submitWalkInDrop(studentId, subjectNo, teacherId, remarks) {
+            const formData = new FormData();
+            formData.append('action', 'walk_in_drop');
+            formData.append('student_id', studentId);
+            formData.append('subject_no', subjectNo);
+            formData.append('teacher_id', teacherId);
+            formData.append('remarks', remarks);
+
+            fetch('../../backend/includes/api.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Close the modal
+                const modal = document.getElementById('walkInDropModal');
+                if (modal) modal.remove();
+                
+                if (data.success) {
+                    // Show success notification
+                    showSuccessNotification('Class card has been dropped successfully! Email notifications have been sent to both student and teacher.');
+                    
+                    // Reload page after 2 seconds
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    // Show error notification
+                    showErrorNotification(data.message || 'Error processing walk-in drop');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showErrorNotification('Error processing walk-in drop: ' + error.message);
+            });
+        }
+
+        function showSuccessNotification(message) {
+            // Find content wrapper
+            const contentWrapper = document.querySelector('.content-wrapper');
+            if (!contentWrapper) {
+                console.error('Content wrapper not found');
+                return;
+            }
+
+            // Create alert div
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success';
+            alertDiv.style.cssText = 'animation: slideDown 0.3s ease-out;';
+            alertDiv.innerHTML = `
+                <svg style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span>${message}</span>
+            `;
+
+            // Insert at the beginning of content wrapper
+            contentWrapper.insertBefore(alertDiv, contentWrapper.firstChild);
+
+            // Auto-remove after 4 seconds
+            setTimeout(() => {
+                alertDiv.style.animation = 'slideUp 0.3s ease-out';
+                setTimeout(() => alertDiv.remove(), 300);
+            }, 4000);
+        }
+
+        function showErrorNotification(message) {
+            // Find content wrapper
+            const contentWrapper = document.querySelector('.content-wrapper');
+            if (!contentWrapper) {
+                console.error('Content wrapper not found');
+                return;
+            }
+
+            // Create alert div
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-error';
+            alertDiv.style.cssText = 'animation: slideDown 0.3s ease-out;';
+            alertDiv.innerHTML = `
+                <svg style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4v2m0 0v2m0-2v-2m0 0v-2m0 2h2m-2 0h-2"></path>
+                </svg>
+                <span>${message}</span>
+            `;
+
+            // Insert at the beginning of content wrapper
+            contentWrapper.insertBefore(alertDiv, contentWrapper.firstChild);
+
+            // Auto-remove after 4 seconds
+            setTimeout(() => {
+                alertDiv.style.animation = 'slideUp 0.3s ease-out';
+                setTimeout(() => alertDiv.remove(), 300);
+            }, 4000);
         }
     </script>
 </body>

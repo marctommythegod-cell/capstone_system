@@ -1,9 +1,9 @@
 <?php
 // admin/settings.php - Admin Settings/Profile
 
-require_once '../includes/session_check.php';
-require_once '../config/db.php';
-require_once '../includes/functions.php';
+require_once '../../backend/includes/session_check.php';
+require_once '../../backend/config/db.php';
+require_once '../../backend/includes/functions.php';
 
 // Check if user is admin
 if ($_SESSION['user_role'] !== 'admin') {
@@ -33,7 +33,7 @@ $message = getMessage();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Settings - Admin Portal - PhilCST</title>
-    <link rel="stylesheet" href="/CLASS_CARD_DROPPING_SYSTEM/css/style.css">
+    <link rel="stylesheet" href="../css/admin.css">
 </head>
 <body>
     <div class="dashboard-container">
@@ -43,31 +43,31 @@ $message = getMessage();
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="/CLASS_CARD_DROPPING_SYSTEM/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
+                <img src="../images/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
                 <h2>PhilCST</h2>
                 <p>Admin Portal</p>
             </div>
             
             <nav class="sidebar-nav">
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/dashboard.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/dashboard.php" class="nav-item">
                     <span>Dashboard</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php" class="nav-item">
-                    <span>Dropped Cards</span>
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/dropped_cards.php" class="nav-item">
+                    <span>Manage Class Cards</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/students.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/students.php" class="nav-item">
                     <span>Manage Students</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/teachers.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/teachers.php" class="nav-item">
                     <span>Manage Teachers</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/drop_history.php" class="nav-item">
-                    <span>Drop History</span>
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/drop_history.php" class="nav-item">
+                    <span>Class Cards History</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/cancelled_class_card.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/cancelled_class_card.php" class="nav-item">
                     <span>Cancelled Class Cards</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/settings.php" class="nav-item active">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/settings.php" class="nav-item active">
                     <span>Profile</span>
                 </a>
                 <a href="#" class="nav-item logout-item" onclick="showLogoutModal(); return false;">
@@ -156,15 +156,15 @@ $message = getMessage();
         </main>
     </div>
 
-    <!-- Edit Profile Modal -->
-    <div id="editProfileModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
+    <!-- Edit Profile Modal (Redesigned) -->
+    <div id="editProfileModal" class="profile-modal">
+        <div class="profile-modal-box">
+            <div class="profile-modal-header">
                 <h2>Edit Profile</h2>
-                <button type="button" class="modal-close" onclick="closeEditProfileModal()">&times;</button>
+                <button type="button" class="profile-modal-close" onclick="closeEditProfileModal()">&times;</button>
             </div>
-            <div class="modal-body">
-                <form method="POST" action="/CLASS_CARD_DROPPING_SYSTEM/includes/api.php?action=update_admin_profile" id="editProfileForm">
+            <div class="profile-modal-body">
+                <form method="POST" action="../../backend/includes/api.php?action=update_admin_profile" id="editProfileForm">
                     <div class="form-group">
                         <label for="modal_firstname">First Name</label>
                         <input type="text" id="modal_firstname" name="firstname" required value="<?php echo htmlspecialchars($firstname); ?>" placeholder="First name" pattern="[a-zA-Z\s\-']+" oninput="validateNameInput(this); this.value = this.value.toUpperCase()" title="Letters, spaces, hyphens, and apostrophes only">
@@ -181,7 +181,7 @@ $message = getMessage();
                         <label for="modal_position">Position</label>
                         <input type="text" id="modal_position" name="position" required value="<?php echo htmlspecialchars($admin_info['department'] ?: ''); ?>" placeholder="Your position or title">
                     </div>
-                    <div class="modal-footer">
+                    <div class="profile-modal-footer">
                         <button type="button" class="btn btn-secondary" onclick="closeEditProfileModal()">Cancel</button>
                         <button type="submit" class="btn btn-primary">Save Changes</button>
                     </div>
@@ -190,15 +190,15 @@ $message = getMessage();
         </div>
     </div>
 
-    <!-- Change Password Modal -->
-    <div id="changePasswordModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
+    <!-- Change Password Modal (Redesigned) -->
+    <div id="changePasswordModal" class="profile-modal">
+        <div class="profile-modal-box">
+            <div class="profile-modal-header">
                 <h2>Change Password</h2>
-                <button type="button" class="modal-close" onclick="closeChangePasswordModal()">&times;</button>
+                <button type="button" class="profile-modal-close" onclick="closeChangePasswordModal()">&times;</button>
             </div>
-            <div class="modal-body">
-                <form method="POST" action="/CLASS_CARD_DROPPING_SYSTEM/includes/api.php?action=update_admin_password" id="changePasswordForm">
+            <div class="profile-modal-body">
+                <form method="POST" action="../../backend/includes/api.php?action=update_admin_password" id="changePasswordForm">
                     <div class="form-group">
                         <label for="currentPassword">Current Password</label>
                         <input type="password" id="currentPassword" name="current_password" required placeholder="Enter your current password">
@@ -207,7 +207,7 @@ $message = getMessage();
                     <div class="form-group">
                         <label for="newPassword">New Password</label>
                         <input type="password" id="newPassword" name="new_password" required placeholder="Enter your new password" oninput="checkPasswordStrength(this.value)">
-                        <small id="password-requirements" style="display: none; display: block; margin-top: 8px; color: #666;">
+                        <small id="password-requirements">
                             <strong>Password Requirements:</strong><br>
                             • At least 6 characters long<br>
                             • At least one uppercase letter (A–Z)<br>
@@ -215,16 +215,16 @@ $message = getMessage();
                             • At least one number (0–9)<br>
                             • At least one special character (!, @, #, $, %)
                         </small>
-                        <div id="password-strength" style="margin-top: 8px; font-size: 0.85em;"></div>
+                        <div id="password-strength"></div>
                     </div>
 
                     <div class="form-group">
                         <label for="confirmPassword">Confirm New Password</label>
                         <input type="password" id="confirmPassword" name="confirm_password" required placeholder="Re-enter your new password" oninput="checkConfirmMatch()">
-                        <div id="confirm-match" style="margin-top: 8px; font-size: 0.85em;"></div>
+                        <div id="confirm-match"></div>
                     </div>
 
-                    <div class="modal-footer">
+                    <div class="profile-modal-footer">
                         <button type="button" class="btn btn-secondary" onclick="closeChangePasswordModal()">Cancel</button>
                         <button type="submit" class="btn btn-primary">Update Password</button>
                     </div>
@@ -233,31 +233,37 @@ $message = getMessage();
         </div>
     </div>
 
+    <script>
+        // Edit Profile Modal
+        function openEditProfileModal() {
+            document.getElementById('editProfileModal').classList.add('show');
+        }
+
+        function closeEditProfileModal() {
+            document.getElementById('editProfileModal').classList.remove('show');
+        }
+
+        // Change Password Modal
+        function openChangePasswordModal() {
+            document.getElementById('changePasswordModal').classList.add('show');
+        }
+
+        function closeChangePasswordModal() {
+            document.getElementById('changePasswordModal').classList.remove('show');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('editProfileModal').addEventListener('click', function(e) {
+            if (e.target === this) closeEditProfileModal();
+        });
+
+        document.getElementById('changePasswordModal').addEventListener('click', function(e) {
+            if (e.target === this) closeChangePasswordModal();
+        });
+    </script>
+
     <style>
-        .modal {
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-content {
-            background-color: white;
-            width: 95%;
-            max-width: 500px;
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-            overflow: hidden;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        @keyframes slideIn {
+        /* Old modal styles - kept for compatibility */
             from {
                 opacity: 0;
                 transform: translateY(-20px);
@@ -710,6 +716,7 @@ $message = getMessage();
         }
     </script>
 
-    <script src="/CLASS_CARD_DROPPING_SYSTEM/js/functions.js"></script>
+    <script src="../js/functions.js"></script>
 </body>
 </html>
+

@@ -1,9 +1,9 @@
 <?php
 // admin/cancelled_class_card.php - Cancelled Class Card Management
 
-require_once '../includes/session_check.php';
-require_once '../config/db.php';
-require_once '../includes/functions.php';
+require_once '../../backend/includes/session_check.php';
+require_once '../../backend/config/db.php';
+require_once '../../backend/includes/functions.php';
 
 // Check if user is admin
 if ($_SESSION['user_role'] !== 'admin') {
@@ -92,7 +92,7 @@ $message = getMessage();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cancelled Class Cards - PhilCST</title>
-    <link rel="stylesheet" href="/CLASS_CARD_DROPPING_SYSTEM/css/style.css">
+    <link rel="stylesheet" href="../css/admin.css">
     <style>
         .filter-section {
             background: white;
@@ -269,31 +269,31 @@ $message = getMessage();
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="/CLASS_CARD_DROPPING_SYSTEM/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
+                <img src="../images/Philcst Logo (2).png" alt="PhilCST Logo" class="sidebar-logo">
                 <h2>PhilCST</h2>
                 <p>Admin Portal</p>
             </div>
             
             <nav class="sidebar-nav">
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/dashboard.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/dashboard.php" class="nav-item">
                     <span>Dashboard</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php" class="nav-item">
-                    <span>Dropped Cards</span>
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/dropped_cards.php" class="nav-item">
+                    <span>Manage Class Cards</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/students.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/students.php" class="nav-item">
                     <span>Manage Students</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/teachers.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/teachers.php" class="nav-item">
                     <span>Manage Teachers</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/drop_history.php" class="nav-item">
-                    <span>Drop History</span>
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/drop_history.php" class="nav-item">
+                    <span>Class Cards History</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/cancelled_class_card.php" class="nav-item active">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/cancelled_class_card.php" class="nav-item active">
                     <span>Cancelled Class Cards</span>
                 </a>
-                <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/profile.php" class="nav-item">
+                <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/profile.php" class="nav-item">
                     <span>Profile</span>
                 </a>
                 <a href="#" class="nav-item logout-item" onclick="showLogoutModal(); return false;">
@@ -356,7 +356,7 @@ $message = getMessage();
 
                                     <div class="filter-buttons">
                                         <button type="submit" class="btn-filter">Apply Filter</button>
-                                        <a href="/CLASS_CARD_DROPPING_SYSTEM/admin/cancelled_class_card.php" class="btn-reset">Clear All</a>
+                                        <a href="/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/cancelled_class_card.php" class="btn-reset">Clear All</a>
                                     </div>
                                 </form>
                             </div>
@@ -406,7 +406,7 @@ $message = getMessage();
                             if (!empty($search)) $filter_params .= '?search=' . urlencode($search);
                             if (!empty($filter_course)) $filter_params .= (strpos($filter_params, '?') !== false ? '&' : '?') . 'course=' . urlencode($filter_course);
                             if (!empty($filter_teacher)) $filter_params .= (strpos($filter_params, '?') !== false ? '&' : '?') . 'teacher=' . urlencode($filter_teacher);
-                            echo renderPaginationControls($pagination, '/CLASS_CARD_DROPPING_SYSTEM/admin/cancelled_class_card.php' . $filter_params); 
+                            echo renderPaginationControls($pagination, '/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/cancelled_class_card.php' . $filter_params); 
                             ?>
                         <?php else: ?>
                             <div class="no-results">
@@ -420,7 +420,7 @@ $message = getMessage();
         </main>
     </div>
 
-    <script src="/CLASS_CARD_DROPPING_SYSTEM/js/functions.js"></script>
+    <script src="../js/functions.js"></script>
     <script>
         function showStudentDetailModal(recordData) {
             const modal = document.createElement('div');
@@ -605,3 +605,4 @@ $message = getMessage();
     </script>
 </body>
 </html>
+
