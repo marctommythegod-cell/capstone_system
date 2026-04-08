@@ -274,7 +274,7 @@ function showConfirmModal(message, onConfirm) {
 }
 
 // Undrop modal with remarks textarea and certificate checkboxes - Modern Design
-function showUndropModal(dropId) {
+function showUndropModal(dropId, originalRemarks = '') {
     const existing = document.getElementById('undropModal');
     if (existing) existing.remove();
 
@@ -344,7 +344,7 @@ function showUndropModal(dropId) {
                     font-size: 0.95em;
                     text-transform: uppercase;
                     letter-spacing: 0.5px;
-                ">Reason for Restoration</label>
+                ">Reason for Absent</label>
                 
                 <div style="
                     display: grid;
@@ -369,7 +369,7 @@ function showUndropModal(dropId) {
                             cursor: pointer;
                             accent-color: #7f3fc6;
                         ">
-                        <span style="font-weight: 500; color: #374151; flex: 1;">Medical</span>
+                        <span style="font-weight: 500; color: #374151; flex: 1;">Medical Certificate</span>
                     </label>
                     
                     <label style="
@@ -389,7 +389,7 @@ function showUndropModal(dropId) {
                             cursor: pointer;
                             accent-color: #7f3fc6;
                         ">
-                        <span style="font-weight: 500; color: #374151; flex: 1;">Parents</span>
+                        <span style="font-weight: 500; color: #374151; flex: 1;">Parents Letter</span>
                     </label>
                 </div>
 
@@ -431,7 +431,7 @@ function showUndropModal(dropId) {
                     margin: 8px 0 0;
                     display: none;
                     font-weight: 500;
-                ">⚠️ Please select at least one reason for restoration.</p>
+                ">⚠️ Please select at least one reason for undrop.</p>
             </div>
 
             <div style="margin-bottom: 8px;">
@@ -443,7 +443,7 @@ function showUndropModal(dropId) {
                     font-size: 0.95em;
                     text-transform: uppercase;
                     letter-spacing: 0.5px;
-                ">Admin Remarks <span style="color: #dc2626; font-weight: 400; text-transform: none; letter-spacing: 0;">(required)</span></label>
+                ">Admin Remarks <span style="color: #a78bfa; font-weight: 400; text-transform: none; letter-spacing: 0;">(required)</span></label>
                 
                 <textarea id="undropRemarks" rows="5" placeholder="Provide detailed remarks for the teacher..." style="
                     width: 100%;
@@ -586,7 +586,7 @@ function showUndropModal(dropId) {
         // Validate that at least one certificate is selected
         if (certificates.length === 0) {
             const certErrorEl = document.getElementById('undropCertificatesError');
-            certErrorEl.textContent = '⚠️ Please select at least one reason for restoration.';
+            certErrorEl.textContent = '⚠️ Please select at least one reason for undrop.';
             certErrorEl.style.display = 'block';
             return;
         }
@@ -739,18 +739,29 @@ function printPage() {
 // Approve class card drop request
 function approveDrop(dropId) {
     showConfirmModal('Are you sure you want to approve this class card drop?', function() {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/CLASS_CARD_DROPPING_SYSTEM/backend/includes/api.php?action=approve_drop';
-        
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'drop_id';
-        input.value = dropId;
-        
-        form.appendChild(input);
-        document.body.appendChild(form);
-        form.submit();
+        const form = new FormData();
+        form.append('action', 'approve_drop');
+        form.append('drop_id', dropId);
+
+        fetch('/CLASS_CARD_DROPPING_SYSTEM/backend/includes/api.php', {
+            method: 'POST',
+            body: form
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccessNotification(data.message);
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                showErrorNotification(data.message || 'Error approving drop');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showErrorNotification('Error approving drop: ' + error.message);
+        });
     });
 }
 
@@ -795,4 +806,56 @@ function closeApprovalModal() {
 function confirmApproveDrop(dropId) {
     approveDrop(dropId);
     closeApprovalModal();
+}
+
+// Show success notification banner
+function showSuccessNotification(message) {
+    const contentWrapper = document.querySelector('.content-wrapper');
+    if (!contentWrapper) {
+        console.error('Content wrapper not found');
+        return;
+    }
+
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success';
+    alertDiv.style.cssText = 'animation: slideDown 0.3s ease-out;';
+    alertDiv.innerHTML = `
+        <svg style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <span>${message}</span>
+    `;
+
+    contentWrapper.insertBefore(alertDiv, contentWrapper.firstChild);
+
+    setTimeout(() => {
+        alertDiv.style.animation = 'slideUp 0.3s ease-out';
+        setTimeout(() => alertDiv.remove(), 300);
+    }, 4000);
+}
+
+// Show error notification banner
+function showErrorNotification(message) {
+    const contentWrapper = document.querySelector('.content-wrapper');
+    if (!contentWrapper) {
+        console.error('Content wrapper not found');
+        return;
+    }
+
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-error';
+    alertDiv.style.cssText = 'animation: slideDown 0.3s ease-out;';
+    alertDiv.innerHTML = `
+        <svg style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4v2m0 0v2m0-2v-2m0 0v-2m0 2h2m-2 0h-2"></path>
+        </svg>
+        <span>${message}</span>
+    `;
+
+    contentWrapper.insertBefore(alertDiv, contentWrapper.firstChild);
+
+    setTimeout(() => {
+        alertDiv.style.animation = 'slideUp 0.3s ease-out';
+        setTimeout(() => alertDiv.remove(), 300);
+    }, 4000);
 }

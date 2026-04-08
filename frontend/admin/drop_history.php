@@ -36,7 +36,7 @@ $total_history = $stmt->fetch()['total'];
 $pagination = getPaginationData($total_history, 10); // 10 items per page
 
 $query = '
-    SELECT ccd.*, s.student_id, s.name as student_name, s.guardian_name, s.course as student_course, s.status as student_status, s.year as student_year, s.address, s.email, u.name as teacher_name, pur.undrop_remarks, pur.retrieve_date as undrop_retrieve_date
+    SELECT ccd.*, s.student_id, s.name as student_name, s.guardian_name, s.course as student_course, s.status as student_status, s.year as student_year, s.address, s.email, u.name as teacher_name, pur.undrop_remarks, pur.undrop_certificates, pur.retrieve_date as undrop_retrieve_date
     FROM class_card_drops ccd
     JOIN students s ON ccd.student_id = s.id
     JOIN users u ON ccd.teacher_id = u.id
@@ -450,6 +450,10 @@ $message = getMessage();
                                         <p style="margin: 0; color: #1f2937; font-size: 1.1em; font-weight: 600;">${recordData.subject_no} - ${recordData.subject_name}</p>
                                     </div>
                                     <div style="margin-bottom: 26px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Teacher Name</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.1em; font-weight: 600;">${recordData.teacher_name || 'N/A'}</p>
+                                    </div>
+                                    <div style="margin-bottom: 26px;">
                                         <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Drop Date & Time</label>
                                         <p style="margin: 0; color: #1f2937; font-size: 1.1em; font-weight: 600;">${new Date(recordData.drop_date).toLocaleString()}</p>
                                     </div>
@@ -457,11 +461,15 @@ $message = getMessage();
                                         <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Retrieved Date & Time</label>
                                         <p style="margin: 0; color: #1f2937; font-size: 1.1em; font-weight: 600;">${retrieveDate !== 'N/A' ? new Date(retrieveDate).toLocaleString() : 'N/A'}</p>
                                     </div>
-                                    <div>
+                                    <div style="margin-bottom: 26px;">
                                         <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Class Card Status</label>
                                         <p style="margin: 0; color: #1f2937;">
                                             <span class="status status-${recordData.status.toLowerCase()}">${recordData.status}</span>
                                         </p>
+                                    </div>
+                                    <div style="margin-bottom: 26px;">
+                                        <label style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Reason for Absent</label>
+                                        <p style="margin: 0; color: #1f2937; font-size: 1.1em; font-weight: 600; word-break: break-word;">${recordData.undrop_certificates || '-'}</p>
                                     </div>
                                 </div>
                             </div>

@@ -299,83 +299,84 @@ if ($action === 'walk_in_drop') {
 }
 
 if ($action === 'approve_drop') {
+    header('Content-Type: application/json');
+    
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dashboard.php');
+        echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        exit;
     }
     
     if ($_SESSION['user_role'] !== 'admin') {
-        setMessage('error', 'Unauthorized action.');
-        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dashboard.php');
+        echo json_encode(['success' => false, 'message' => 'Unauthorized action']);
+        exit;
     }
-    
+
     $admin_id = $_SESSION['user_id'];
     $drop_id = intval($_POST['drop_id'] ?? 0);
     
     if (!$drop_id) {
-        setMessage('error', 'Invalid drop record.');
-        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php');
+        echo json_encode(['success' => false, 'message' => 'Invalid drop record']);
+        exit;
     }
     
     try {
-        // Get drop details
-        $stmt = $pdo->prepare('SELECT * FROM class_card_drops WHERE id = ?');
+        // Get drop details with student and teacher info in one query
+        $stmt = $pdo->prepare('
+            SELECT ccd.*, 
+                   s.student_id, s.name as student_name, s.email as student_email,
+                   u.name as teacher_name, u.email as teacher_email
+            FROM class_card_drops ccd
+            JOIN students s ON ccd.student_id = s.id
+            JOIN users u ON ccd.teacher_id = u.id
+            WHERE ccd.id = ?
+        ');
         $stmt->execute([$drop_id]);
         $drop = $stmt->fetch();
         
         if (!$drop) {
-            setMessage('error', 'Drop record not found.');
-            redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php');
+            echo json_encode(['success' => false, 'message' => 'Drop record not found']);
+            exit;
         }
         
         // Update status to Dropped and set approval info
         $stmt = $pdo->prepare('UPDATE class_card_drops SET status = ?, approved_by = ?, approved_date = NOW() WHERE id = ?');
         $stmt->execute(['Dropped', $admin_id, $drop_id]);
         
-        // Get student and teacher info for email
-        $stmt = $pdo->prepare('SELECT student_id, name, email FROM students WHERE id = ?');
-        $stmt->execute([$drop['student_id']]);
-        $student = $stmt->fetch();
+        // Don't wait for emails - send them in background
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        }
         
-        $stmt = $pdo->prepare('SELECT name, email FROM users WHERE id = ?');
-        $stmt->execute([$drop['teacher_id']]);
-        $teacher = $stmt->fetch();
-        
-        // Send approval notification emails
+        // Send approval notification emails asynchronously
         $emailNotifier = new EmailNotifier();
         $emailData = [
-            'student_id' => $student['student_id'],
-            'student_name' => $student['name'],
+            'student_id' => $drop['student_id'],
+            'student_name' => $drop['student_name'],
             'subject_no' => $drop['subject_no'],
             'subject_name' => $drop['subject_name'],
             'remarks' => $drop['remarks'],
-            'teacher_name' => $teacher['name'],
+            'teacher_name' => $drop['teacher_name'],
             'drop_date' => $drop['drop_date'],
             'approved_date' => date('Y-m-d H:i:s')
         ];
         
-        // Send email to student if they have an email address
-        if ($student && $student['email']) {
-            error_log("Attempting to send approval email to student: " . $student['email']);
-            $emailNotifier->notifyStudentApproved($student['email'], $emailData);
-        } else {
-            error_log("Student has no email address: " . ($student['student_id'] ?? 'unknown'));
+        // Send emails (will complete in background)
+        if ($drop['student_email']) {
+            error_log("Sending approval email to student: " . $drop['student_email']);
+            $emailNotifier->notifyStudentApproved($drop['student_email'], $emailData);
         }
         
-        // Send email to teacher
-        if ($teacher && $teacher['email']) {
-            error_log("Attempting to send approval email to teacher: " . $teacher['email']);
-            $emailNotifier->notifyTeacherApproved($teacher['email'], $emailData);
-        } else {
-            error_log("Teacher has no email address");
+        if ($drop['teacher_email']) {
+            error_log("Sending approval email to teacher: " . $drop['teacher_email']);
+            $emailNotifier->notifyTeacherApproved($drop['teacher_email'], $emailData);
         }
         
-        setMessage('success', 'Class card drop has been approved. Student and teacher have been notified.');
+        echo json_encode(['success' => true, 'message' => 'Class card drop has been approved. Student and teacher are being notified.']);
     } catch (Exception $e) {
         error_log("Exception in approve_drop: " . $e->getMessage());
-        setMessage('error', 'Error approving class card drop: ' . $e->getMessage());
+        echo json_encode(['success' => false, 'message' => 'Error approving class card drop: ' . $e->getMessage()]);
     }
-    
-    redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php');
+    exit;
 }
 
 // Bulk approve multiple drops
@@ -394,7 +395,7 @@ if ($action === 'bulk_approve_drops') {
     
     if (empty($drop_ids) || !is_array($drop_ids)) {
         setMessage('error', 'No drop records selected.');
-        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dashboard.php');
     }
     
     // Sanitize drop IDs
@@ -402,72 +403,62 @@ if ($action === 'bulk_approve_drops') {
     
     if (empty($drop_ids)) {
         setMessage('error', 'Invalid drop records.');
-        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dropped_cards.php');
+        redirect('/CLASS_CARD_DROPPING_SYSTEM/admin/dashboard.php');
     }
     
     try {
-        $successCount = 0;
-        $errorCount = 0;
-        $emailNotifier = new EmailNotifier();
+        // Update all drops at once (faster than loop)
+        $placeholders = implode(',', array_fill(0, count($drop_ids), '?'));
+        $stmt = $pdo->prepare("UPDATE class_card_drops SET status = 'Dropped', approved_by = ?, approved_date = NOW() WHERE id IN ($placeholders)");
+        $params = array_merge([$admin_id], $drop_ids);
+        $stmt->execute($params);
         
-        foreach ($drop_ids as $drop_id) {
+        // Get all affected drops with student and teacher info
+        $stmt = $pdo->prepare("
+            SELECT ccd.*, 
+                   s.student_id, s.name as student_name, s.email as student_email,
+                   u.name as teacher_name, u.email as teacher_email
+            FROM class_card_drops ccd
+            JOIN students s ON ccd.student_id = s.id
+            JOIN users u ON ccd.teacher_id = u.id
+            WHERE ccd.id IN ($placeholders)
+        ");
+        $stmt->execute($drop_ids);
+        $drops = $stmt->fetchAll();
+        
+        // Allow script to continue after headers are sent (async email)
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        }
+        
+        // Send emails asynchronously
+        $emailNotifier = new EmailNotifier();
+        foreach ($drops as $drop) {
             try {
-                // Get drop details
-                $stmt = $pdo->prepare('SELECT * FROM class_card_drops WHERE id = ?');
-                $stmt->execute([$drop_id]);
-                $drop = $stmt->fetch();
-                
-                if (!$drop) {
-                    $errorCount++;
-                    continue;
-                }
-                
-                // Update status to Dropped and set approval info
-                $stmt = $pdo->prepare('UPDATE class_card_drops SET status = ?, approved_by = ?, approved_date = NOW() WHERE id = ?');
-                $stmt->execute(['Dropped', $admin_id, $drop_id]);
-                
-                // Get student and teacher info for email
-                $stmt = $pdo->prepare('SELECT student_id, name, email FROM students WHERE id = ?');
-                $stmt->execute([$drop['student_id']]);
-                $student = $stmt->fetch();
-                
-                $stmt = $pdo->prepare('SELECT name, email FROM users WHERE id = ?');
-                $stmt->execute([$drop['teacher_id']]);
-                $teacher = $stmt->fetch();
-                
-                // Send approval notification emails
                 $emailData = [
-                    'student_id' => $student['student_id'],
-                    'student_name' => $student['name'],
+                    'student_id' => $drop['student_id'],
+                    'student_name' => $drop['student_name'],
                     'subject_no' => $drop['subject_no'],
                     'subject_name' => $drop['subject_name'],
                     'remarks' => $drop['remarks'],
-                    'teacher_name' => $teacher['name'],
+                    'teacher_name' => $drop['teacher_name'],
                     'drop_date' => $drop['drop_date'],
                     'approved_date' => date('Y-m-d H:i:s')
                 ];
                 
-                // Send email to student if they have an email address
-                if ($student && $student['email']) {
-                    $emailNotifier->notifyStudentApproved($student['email'], $emailData);
+                if ($drop['student_email']) {
+                    $emailNotifier->notifyStudentApproved($drop['student_email'], $emailData);
                 }
                 
-                // Send email to teacher
-                if ($teacher && $teacher['email']) {
-                    $emailNotifier->notifyTeacherApproved($teacher['email'], $emailData);
+                if ($drop['teacher_email']) {
+                    $emailNotifier->notifyTeacherApproved($drop['teacher_email'], $emailData);
                 }
-                
-                $successCount++;
-            } catch (Exception $dropException) {
-                error_log("Error approving drop $drop_id: " . $dropException->getMessage());
-                $errorCount++;
+            } catch (Exception $e) {
+                error_log("Error sending bulk approval emails for drop {$drop['id']}: " . $e->getMessage());
             }
         }
         
-        $message = $successCount . ' drop request(s) have been approved.';
-        if ($errorCount > 0) {
-            $message .= ' (' . $errorCount . ' failed)';
-        }
+        $message = count($drops) . ' drop request(s) have been approved. Students and teachers are being notified.';
         setMessage('success', $message);
     } catch (Exception $e) {
         error_log("Exception in bulk_approve_drops: " . $e->getMessage());

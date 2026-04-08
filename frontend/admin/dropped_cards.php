@@ -23,8 +23,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $undrop_remarks = trim($_POST['undrop_remarks'] ?? '');
     $undrop_certificates = trim($_POST['undrop_certificates'] ?? '');
     try {
-        // Get drop details before updating
-        $stmt = $pdo->prepare('SELECT * FROM class_card_drops WHERE id = ?');
+        // Get drop details with student and teacher info in one optimized query
+        $stmt = $pdo->prepare('
+            SELECT ccd.*, 
+                   s.student_id, s.name as student_name,
+                   u.name as teacher_name, u.email as teacher_email
+            FROM class_card_drops ccd
+            JOIN students s ON ccd.student_id = s.id
+            JOIN users u ON ccd.teacher_id = u.id
+            WHERE ccd.id = ?
+        ');
         $stmt->execute([$drop_id]);
         $drop = $stmt->fetch();
 
@@ -33,11 +41,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             redirect('/CLASS_CARD_DROPPING_SYSTEM/frontend/admin/dropped_cards.php');
         }
 
-        // Update status to Undropped in class_card_drops (without retrieve_date as it's now in separate table)
+        // Update status to Undropped
         $stmt = $pdo->prepare('UPDATE class_card_drops SET status = ? WHERE id = ?');
         $stmt->execute(['Undropped', $drop_id]);
 
-        // Insert undrop record into separate philcst_undrop_records table
+        // Insert undrop record
         $stmt = $pdo->prepare('
             INSERT INTO philcst_undrop_records 
             (drop_id, student_id, subject_no, subject_name, teacher_id, retrieve_date, undrop_remarks, undrop_certificates)
@@ -53,22 +61,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $undrop_certificates
         ]);
 
-        // Get student and teacher info for email notification
-        $stmt = $pdo->prepare('SELECT student_id, name, email FROM students WHERE id = ?');
-        $stmt->execute([$drop['student_id']]);
-        $student = $stmt->fetch();
+        // Allow script to continue after headers are sent (async email)
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        }
 
-        $stmt = $pdo->prepare('SELECT name, email FROM users WHERE id = ?');
-        $stmt->execute([$drop['teacher_id']]);
-        $teacher = $stmt->fetch();
-
-        // Send email notification to teacher
-        if ($teacher && $teacher['email']) {
-            error_log("Attempting to send undrop email to teacher: " . $teacher['email']);
+        // Send email notification to teacher asynchronously
+        if ($drop['teacher_email']) {
+            error_log("Sending undrop email to teacher: " . $drop['teacher_email']);
             $emailNotifier = new EmailNotifier();
             $emailData = [
-                'student_id' => $student['student_id'],
-                'student_name' => $student['name'],
+                'student_id' => $drop['student_id'],
+                'student_name' => $drop['student_name'],
                 'subject_no' => $drop['subject_no'],
                 'subject_name' => $drop['subject_name'],
                 'drop_date' => $drop['drop_date'],
@@ -76,12 +80,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 'undrop_remarks' => $undrop_remarks,
                 'undrop_certificates' => $undrop_certificates
             ];
-            $emailNotifier->notifyTeacherUndropped($teacher['email'], $emailData);
-        } else {
-            error_log("Teacher has no email address for undrop notification");
+            $emailNotifier->notifyTeacherUndropped($drop['teacher_email'], $emailData);
         }
 
-        setMessage('success', 'Class card has been undropped. The teacher has been notified.');
+        setMessage('success', 'Class card has been undropped. The teacher is being notified.');
     } catch (Exception $e) {
         error_log("Exception in undrop action: " . $e->getMessage());
         setMessage('error', 'Error undropping class card: ' . $e->getMessage());
@@ -350,31 +352,10 @@ $all_teachers = $stmt->fetchAll();
                     </div>
                     
                     <?php if (count($drops) > 0): ?>
-                        <div style="margin-bottom: 16px; display: flex; align-items: center; gap: 16px;">
-                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px 12px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px;">
-                                <input type="checkbox" id="approvedSelectAllCheckbox" onchange="toggleSelectAllApproved()" style="width: 16px; height: 16px; cursor: pointer; accent-color: #7f3fc6;">
-                                <span style="font-weight: 500; color: #374151; font-size: 0.9em;">Select All</span>
-                            </label>
-                            <span id="approvedSelectedCount" style="color: #dc2626; font-weight: 600; font-size: 0.85em; display: none;">0 selected</span>
-                            <button type="button" id="bulkUndropApprovedBtn" onclick="bulkUndropApproved()" style="
-                                padding: 8px 16px;
-                                background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-                                color: white;
-                                border: none;
-                                border-radius: 6px;
-                                cursor: pointer;
-                                font-weight: 600;
-                                font-size: 0.9em;
-                                transition: all 0.3s;
-                                display: none;
-                                box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
-                            " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(220, 38, 38, 0.35)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(220, 38, 38, 0.25)'">Undrop Selected</button>
-                        </div>
                         <div class="table-responsive">
                             <table class="table" id="approvedTable">
                                 <thead>
                                     <tr>
-                                        <th style="width: 40px; text-align: center;"></th>
                                         <th>Student ID</th>
                                         <th>Student Name</th>
                                         <th>Course</th>
@@ -392,7 +373,6 @@ $all_teachers = $stmt->fetchAll();
                                 <tbody>
                                     <?php foreach ($drops as $drop): ?>
                                         <tr class="approved-drop-row" data-drop-id="<?php echo $drop['id']; ?>" style="transition: all 0.2s;">
-                                            <td style="width: 40px; text-align: center;"><?php if ($drop['status'] === 'Dropped'): ?><input type="checkbox" class="approved-drop-checkbox" data-drop-id="<?php echo $drop['id']; ?>" onchange="updateApprovedSelection()" style="width: 18px; height: 18px; cursor: pointer; accent-color: #7f3fc6;"><?php endif; ?></td>
                                             <td><?php echo htmlspecialchars($drop['student_id']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['student_name']); ?></td>
                                             <td><?php echo htmlspecialchars($drop['course'] ?? ''); ?></td>
@@ -412,7 +392,7 @@ $all_teachers = $stmt->fetchAll();
                                                     <form method="POST" style="display: inline;" id="undropForm<?php echo $drop['id']; ?>">
                                                         <input type="hidden" name="action" value="undrop">
                                                         <input type="hidden" name="drop_id" value="<?php echo $drop['id']; ?>">
-                                                        <button type="button" class="btn btn-sm btn-danger" onclick="showUndropModal(<?php echo $drop['id']; ?>)">Undrop</button>
+                                                        <button type="button" class="btn btn-sm btn-danger" onclick="showUndropModal(<?php echo $drop['id']; ?>, '<?php echo addslashes(htmlspecialchars($drop['remarks'])); ?>')">Undrop</button>
                                                     </form>
                                                 <?php else: ?>
                                                     <span style="color: #aaa; font-style: italic;">—</span>
@@ -808,7 +788,6 @@ $all_teachers = $stmt->fetchAll();
             const checkboxes = document.querySelectorAll('.approved-drop-checkbox');
             const selectedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
             const selectAllCheckbox = document.getElementById('approvedSelectAllCheckbox');
-            const bulkBtn = document.getElementById('bulkUndropApprovedBtn');
             const countSpan = document.getElementById('approvedSelectedCount');
 
             // Update row highlighting
@@ -827,43 +806,13 @@ $all_teachers = $stmt->fetchAll();
             selectAllCheckbox.checked = selectedCount > 0 && selectedCount === checkboxes.length;
             selectAllCheckbox.indeterminate = selectedCount > 0 && selectedCount < checkboxes.length;
 
-            // Show/hide bulk action button and count
+            // Show/hide count
             if (selectedCount > 0) {
-                bulkBtn.style.display = 'inline-block';
                 countSpan.style.display = 'inline-block';
                 countSpan.textContent = selectedCount + ' selected';
             } else {
-                bulkBtn.style.display = 'none';
                 countSpan.style.display = 'none';
             }
-        }
-
-        function bulkUndropApproved() {
-            const checkboxes = document.querySelectorAll('.approved-drop-checkbox:checked');
-            if (checkboxes.length === 0) {
-                alert('Please select at least one drop to undrop.');
-                return;
-            }
-
-            const dropIds = Array.from(checkboxes).map(cb => cb.getAttribute('data-drop-id'));
-            const message = 'Are you sure you want to undrop ' + dropIds.length + ' class card(s)?\n\nNotification emails will be sent to all teachers.';
-            
-            showConfirmModal(message, function() {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '../../backend/includes/api.php?action=bulk_undrop_drops';
-
-                dropIds.forEach(dropId => {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = 'drop_ids[]';
-                    input.value = dropId;
-                    form.appendChild(input);
-                });
-
-                document.body.appendChild(form);
-                form.submit();
-            });
         }
 
         // Walk-in Drop Functions
