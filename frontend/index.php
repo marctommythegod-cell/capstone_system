@@ -25,25 +25,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($email) || empty($password)) {
         $error = 'Email and password are required.';
     } else {
-        $stmt = $pdo->prepare('SELECT id, email, password, role, status FROM users WHERE email = ?');
+        $stmt = $pdo->prepare('SELECT id, email, password, role FROM users WHERE email = ?');
         $stmt->execute([$email]);
         $user = $stmt->fetch();
 
         if ($user && verifyPassword($password, $user['password'])) {
-            // Check if user is inactive
-            if (isset($user['status']) && $user['status'] === 'inactive') {
-                $error = 'Your account is currently inactive. Please contact the administrator.';
-            } else {
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['user_role'] = $user['role'];
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['user_role'] = $user['role'];
 
-                if ($user['role'] === 'admin') {
-                    header('Location: /CLASS_CARD_DROPPING_SYSTEM/frontend/admin/dashboard.php');
-                } else {
-                    header('Location: /CLASS_CARD_DROPPING_SYSTEM/frontend/teacher/dashboard.php');
-                }
-                exit;
+            if ($user['role'] === 'admin') {
+                header('Location: /CLASS_CARD_DROPPING_SYSTEM/frontend/admin/dashboard.php');
+            } else {
+                header('Location: /CLASS_CARD_DROPPING_SYSTEM/frontend/teacher/dashboard.php');
             }
+            exit;
         } else {
             $error = 'Invalid email or password.';
         }

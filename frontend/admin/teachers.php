@@ -31,13 +31,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         
         // Check for empty fields
         if (empty($teacher_id)) {
-            $errors[] = 'Teacher ID is required.';
-        } elseif (!preg_match('/^\d+$/', $teacher_id)) {
-            $errors[] = 'Teacher ID must contain only numbers.';
-        } elseif (strlen($teacher_id) < 2) {
-            $errors[] = 'Teacher ID must be at least 2 characters.';
-        } elseif (strlen($teacher_id) > 50) {
-            $errors[] = 'Teacher ID must not exceed 50 characters.';
+            $errors[] = 'Teacher Number is required.';
+        } elseif (strlen($teacher_id) !== 8) {
+            $errors[] = 'Teacher Number must be exactly 8 digits.';
+        } elseif (!preg_match('/^[0-9]{8}$/', $teacher_id)) {
+            $errors[] = 'Teacher Number can only contain numbers (0-9).';
         }
         
         if (empty($lastname)) {
@@ -81,22 +79,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         if (empty($department)) {
             $errors[] = 'Department is required.';
         } else {
-            // Valid departments (courses) for teachers
+            // Valid departments (colleges) for teachers
             $valid_departments = [
-                'BS in Civil Engineering (BSCE)',
-                'BS in Electrical Engineering (BSEE)',
-                'BS in Mechanical Engineering (BSME)',
-                'BS in Criminology (BSCrim)',
-                'BS in Information Technology (BSIT)',
-                'BS in Computer Science (BSCS)',
-                'Bachelor of Elementary Education (BEEd)',
-                'Bachelor of Secondary Education (BSEd)',
-                'BS in Business Administration (BSBA)',
-                'BS in Hospitality Management (BSHM)'
+                'College of Engineering',
+                'College of Accountancy and Business Education',
+                'College of Education',
+                'College of Criminal Justice',
+                'College of Maritime Studies',
+                'College of Hospitality and Tourism Management',
+                'College of Computer Studies'
             ];
             
             if (!in_array($department, $valid_departments)) {
-                $errors[] = 'Department must be a valid course.';
+                $errors[] = 'Department must be a valid college.';
             }
         }
         
@@ -149,6 +144,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $errors[] = 'This email is already registered. Please use a different email.';
             }
         }
+
+        // Check for duplicate teacher number
+        if (empty($errors)) {
+            $stmt = $pdo->prepare('SELECT id FROM users WHERE teacher_id = ? AND role = "teacher"');
+            $stmt->execute([$teacher_id]);
+            if ($stmt->fetch()) {
+                $errors[] = 'This teacher number is already registered. Please use a different number.';
+            }
+        }
         
         if (!empty($errors)) {
             setMessage('error', implode('<br>', $errors));
@@ -181,7 +185,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $errors[] = 'Invalid teacher record.';
         }
         if (empty($teacher_id)) {
-            $errors[] = 'Teacher ID is required.';
+            $errors[] = 'Teacher Number is required.';
+        } elseif (strlen($teacher_id) !== 8) {
+            $errors[] = 'Teacher Number must be exactly 8 digits.';
+        } elseif (!preg_match('/^[0-9]{8}$/', $teacher_id)) {
+            $errors[] = 'Teacher Number can only contain numbers (0-9).';
         }
         if (empty($lastname)) {
             $errors[] = 'Last name is required.';
@@ -198,22 +206,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         if (empty($department)) {
             $errors[] = 'Department is required.';
         } else {
-            // Valid departments (courses) for teachers
+            // Valid departments (colleges) for teachers
             $valid_departments = [
-                'BS in Civil Engineering (BSCE)',
-                'BS in Electrical Engineering (BSEE)',
-                'BS in Mechanical Engineering (BSME)',
-                'BS in Criminology (BSCrim)',
-                'BS in Information Technology (BSIT)',
-                'BS in Computer Science (BSCS)',
-                'Bachelor of Elementary Education (BEEd)',
-                'Bachelor of Secondary Education (BSEd)',
-                'BS in Business Administration (BSBA)',
-                'BS in Hospitality Management (BSHM)'
+                'College of Engineering',
+                'College of Accountancy and Business Education',
+                'College of Education',
+                'College of Criminal Justice',
+                'College of Maritime Studies',
+                'College of Hospitality and Tourism Management',
+                'College of Computer Studies'
             ];
             
             if (!in_array($department, $valid_departments)) {
-                $errors[] = 'Department must be a valid course.';
+                $errors[] = 'Department must be a valid college.';
             }
         }
         
@@ -352,7 +357,7 @@ $total_teachers_count = $stmt->fetch()['total'];
 $pagination = getPaginationData($total_teachers_count, 15); // 15 items per page
 
 // Fetch paginated teachers
-$query = 'SELECT id, teacher_id, name, email, address, department, status, created_at FROM users WHERE role = "teacher"';
+$query = 'SELECT id, teacher_id, name, email, address, department, created_at FROM users WHERE role = "teacher"';
 $query_params = [];
 
 if ($dept_filter) {
@@ -464,8 +469,8 @@ $message = getMessage();
                             <div class="modal-body" style="padding: 40px 32px; background: #f8f6ff; display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
                                 <div style="grid-column: 1 / 2;">
                                     <div class="form-group" style="margin-bottom: 24px;">
-                                        <label for="teacher_id" style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Teacher ID</label>
-                                        <input type="text" id="teacher_id" name="teacher_id" required placeholder="Enter teacher ID (8 digits)" oninput="validateTeacherId()" style="width: 100%; padding: 12px 16px; border: 2px solid #e9d5ff; border-radius: 10px; font-size: 1em; transition: all 0.3s;" onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='#e9d5ff'">
+                                        <label for="teacher_id" style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Teacher Number</label>
+                                        <input type="text" id="teacher_id" name="teacher_id" required placeholder="8-digit number (00000000)" maxlength="8" inputmode="numeric" style="width: 100%; padding: 12px 16px; border: 2px solid #e9d5ff; border-radius: 10px; font-size: 1em; transition: all 0.3s;" onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='#e9d5ff'; validateTeacherId()" oninput="validateTeacherId()">
                                         <div id="teacher_id_error" style="color: #ef4444; font-size: 0.9em; margin-top: 8px; display: none;"></div>
                                     </div>
                                     
@@ -501,29 +506,16 @@ $message = getMessage();
                                     </div>
                                     
                                     <div class="form-group">
-                                        <label for="department" style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Department</label>
+                                        <label for="department" style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">College/Department</label>
                                         <select id="department" name="department" required style="width: 100%; padding: 12px 16px; border: 2px solid #e9d5ff; border-radius: 10px; font-size: 1em; transition: all 0.3s;" onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='#e9d5ff'">
-                                            <option value="">-- Select Department --</option>
-                                            <optgroup label="College of Engineering and Architecture">
-                                                <option value="BS in Civil Engineering (BSCE)">BS in Civil Engineering (BSCE)</option>
-                                                <option value="BS in Electrical Engineering (BSEE)">BS in Electrical Engineering (BSEE)</option>
-                                                <option value="BS in Mechanical Engineering (BSME)">BS in Mechanical Engineering (BSME)</option>
-                                            </optgroup>
-                                            <optgroup label="College of Criminology">
-                                                <option value="BS in Criminology (BSCrim)">BS in Criminology (BSCrim)</option>
-                                            </optgroup>
-                                            <optgroup label="College of Information Technology">
-                                                <option value="BS in Information Technology (BSIT)">BS in Information Technology (BSIT)</option>
-                                                <option value="BS in Computer Science (BSCS)">BS in Computer Science (BSCS)</option>
-                                            </optgroup>
-                                            <optgroup label="College of Education">
-                                                <option value="Bachelor of Elementary Education (BEEd)">Bachelor of Elementary Education (BEEd)</option>
-                                                <option value="Bachelor of Secondary Education (BSEd)">Bachelor of Secondary Education (BSEd)</option>
-                                            </optgroup>
-                                            <optgroup label="College of Business and Management">
-                                                <option value="BS in Business Administration (BSBA)">BS in Business Administration (BSBA)</option>
-                                                <option value="BS in Hospitality Management (BSHM)">BS in Hospitality Management (BSHM)</option>
-                                            </optgroup>
+                                            <option value="">-- Select College/Department --</option>
+                                            <option value="College of Engineering">College of Engineering</option>
+                                            <option value="College of Accountancy and Business Education">College of Accountancy and Business Education</option>
+                                            <option value="College of Education">College of Education</option>
+                                            <option value="College of Criminal Justice">College of Criminal Justice</option>
+                                            <option value="College of Maritime Studies">College of Maritime Studies</option>
+                                            <option value="College of Hospitality and Tourism Management">College of Hospitality and Tourism Management</option>
+                                            <option value="College of Computer Studies">College of Computer Studies</option>
                                         </select>
                                     </div>
                                 </div>
@@ -699,13 +691,6 @@ $message = getMessage();
                                         </optgroup>
                                     </select>
                                 </div>
-                                <div class="form-group">
-                                    <label for="updateStatus" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 0.95em;">Status</label>
-                                    <select id="updateStatus" name="status" required style="width: 100%; padding: 12px 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 1em; font-family: inherit; transition: all 0.3s ease; cursor: pointer;" onfocus="this.style.borderColor = 'var(--primary-color)'; this.style.boxShadow = '0 0 0 3px rgba(127, 63, 198, 0.1)';" onblur="this.style.borderColor = '#e5e7eb'; this.style.boxShadow = 'none';">
-                                        <option value="active">Active</option>
-                                        <option value="inactive">Inactive</option>
-                                    </select>
-                                </div>
                             </div>
                             <div class="modal-footer" style="padding: 20px 32px; border-top: 1px solid #e5e7eb; display: flex; gap: 12px; justify-content: flex-end; background: white; border-radius: 0 0 16px 16px;">
                                 <button type="button" class="btn btn-secondary" onclick="closeUpdateModal()" style="padding: 10px 24px; border: 2px solid #e5e7eb; border-radius: 10px; background: white; color: #666; font-weight: 600; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.background = '#f5f5f5'; this.style.borderColor = '#d0d0d0';" onmouseout="this.style.background = 'white'; this.style.borderColor = '#e5e7eb';">Cancel</button>
@@ -716,7 +701,7 @@ $message = getMessage();
                 </div>
                 
                 <script>
-                    function openUpdateModal(id, teacherId, lastName, firstName, middleName, address, email, department, status) {
+                    function openUpdateModal(id, teacherId, lastName, firstName, middleName, address, email, department) {
                         document.getElementById('updateId').value = id;
                         document.getElementById('updateTeacherId').value = teacherId;
                         document.getElementById('updateLastname').value = lastName;
@@ -725,7 +710,6 @@ $message = getMessage();
                         document.getElementById('updateAddress').value = address;
                         document.getElementById('updateEmail').value = email;
                         document.getElementById('updateDepartment').value = department;
-                        document.getElementById('updateStatus').value = status;
                         document.getElementById('updateModal').style.display = 'flex';
                     }
                     
@@ -946,7 +930,6 @@ $message = getMessage();
                                         <th>Email</th>
                                         <th>Address</th>
                                         <th>Registered</th>
-                                        <th>Teacher Status</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -959,7 +942,6 @@ $message = getMessage();
                                             <td><?php echo htmlspecialchars($teacher['email']); ?></td>
                                             <td><?php echo htmlspecialchars($teacher['address'] ?? ''); ?></td>
                                             <td><?php echo formatDate($teacher['created_at']); ?></td>
-                                            <td><span class="status status-<?php echo ($teacher['status'] === 'active') ? 'active' : 'inactive'; ?>"><?php echo ucfirst($teacher['status'] ?? 'inactive'); ?></span></td>
                                             <td>
                                                 <button type="button" class="btn btn-sm btn-primary" onclick="openUpdateModal(
                                                     <?php echo $teacher['id']; ?>,
@@ -969,8 +951,7 @@ $message = getMessage();
                                                     '<?php echo htmlspecialchars(trim($nameParts[2] ?? '')); ?>',
                                                     '<?php echo htmlspecialchars($teacher['address'] ?? ''); ?>',
                                                     '<?php echo htmlspecialchars($teacher['email'] ?? ''); ?>',
-                                                    '<?php echo htmlspecialchars($teacher['department'] ?? ''); ?>',
-                                                    '<?php echo htmlspecialchars($teacher['status'] ?? 'inactive'); ?>'
+                                                    '<?php echo htmlspecialchars($teacher['department'] ?? ''); ?>'
                                                 )">Update</button>
                                             </td>
                                         </tr>

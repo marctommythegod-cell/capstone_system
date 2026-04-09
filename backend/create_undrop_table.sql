@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS philcst_undrop_records (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    drop_id INT NOT NULL,
+    student_id INT NOT NULL,
+    subject_no VARCHAR(50) NOT NULL,
+    subject_name VARCHAR(255) NOT NULL,
+    teacher_id INT NOT NULL,
+    retrieve_date DATETIME NOT NULL,
+    undrop_remarks LONGTEXT,
+    undrop_certificates VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_student_id (student_id),
+    INDEX idx_subject_no (subject_no),
+    INDEX idx_drop_id (drop_id),
+    UNIQUE KEY unique_drop_record (drop_id),
+    FOREIGN KEY (drop_id) REFERENCES class_card_drops(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+    FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

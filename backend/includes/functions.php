@@ -17,10 +17,10 @@ function getUserName($pdo, $user_id) {
 }
 
 function getUserInfo($pdo, $user_id) {
-    $stmt = $pdo->prepare('SELECT name, department, role FROM users WHERE id = ?');
+    $stmt = $pdo->prepare('SELECT name, department, department_id, role FROM users WHERE id = ?');
     $stmt->execute([$user_id]);
     $result = $stmt->fetch();
-    return $result ? $result : ['name' => 'Unknown', 'department' => '', 'role' => ''];
+    return $result ? $result : ['name' => 'Unknown', 'department' => '', 'department_id' => NULL, 'role' => ''];
 }
 
 function getStudentName($pdo, $student_id) {
@@ -30,9 +30,9 @@ function getStudentName($pdo, $student_id) {
     return $result ? $result['name'] : 'Unknown';
 }
 
-function getSubjectName($pdo, $subject_no) {
-    $stmt = $pdo->prepare('SELECT subject_name FROM subjects WHERE subject_no = ?');
-    $stmt->execute([$subject_no]);
+function getSubjectName($pdo, $subject_code) {
+    $stmt = $pdo->prepare('SELECT subject_name FROM subjects WHERE subject_code = ?');
+    $stmt->execute([$subject_code]);
     $result = $stmt->fetch();
     return $result ? $result['subject_name'] : 'Unknown Subject';
 }
@@ -136,4 +136,37 @@ function renderPaginationControls($pagination_data, $base_url = '') {
     $html .= '</ul></nav>';
     return $html;
 }
+
+// Generate unique 8-digit Student Number
+function generateStudentNumber($pdo) {
+    $max_attempts = 100;
+    for ($attempt = 0; $attempt < $max_attempts; $attempt++) {
+        $student_number = str_pad(mt_rand(10000000, 99999999), 8, '0', STR_PAD_LEFT);
+        
+        $stmt = $pdo->prepare('SELECT id FROM students WHERE student_id = ?');
+        $stmt->execute([$student_number]);
+        
+        if (!$stmt->fetch()) {
+            return $student_number;
+        }
+    }
+    throw new Exception('Could not generate unique student number after ' . $max_attempts . ' attempts.');
+}
+
+// Generate unique 8-digit Teacher Number
+function generateTeacherNumber($pdo) {
+    $max_attempts = 100;
+    for ($attempt = 0; $attempt < $max_attempts; $attempt++) {
+        $teacher_number = str_pad(mt_rand(10000000, 99999999), 8, '0', STR_PAD_LEFT);
+        
+        $stmt = $pdo->prepare('SELECT id FROM users WHERE teacher_id = ? AND role = "teacher"');
+        $stmt->execute([$teacher_number]);
+        
+        if (!$stmt->fetch()) {
+            return $teacher_number;
+        }
+    }
+    throw new Exception('Could not generate unique teacher number after ' . $max_attempts . ' attempts.');
+}
 ?>
+

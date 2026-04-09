@@ -31,11 +31,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
         // Check for empty fields
         if (empty($student_id)) {
-            $errors[] = 'Student ID is required.';
+            $errors[] = 'Student Number is required.';
         } elseif (strlen($student_id) !== 8) {
-            $errors[] = 'Student ID must be exactly 8 digits.';
+            $errors[] = 'Student Number must be exactly 8 digits.';
         } elseif (!preg_match('/^[0-9]{8}$/', $student_id)) {
-            $errors[] = 'Student ID can only contain numbers (0-9).';
+            $errors[] = 'Student Number can only contain numbers (0-9).';
         }
 
         if (empty($lastname)) {
@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $stmt = $pdo->prepare('SELECT id FROM students WHERE student_id = ?');
             $stmt->execute([$student_id]);
             if ($stmt->fetch()) {
-                $errors[] = 'This student ID is already registered. Please use a different ID.';
+                $errors[] = 'This student number is already registered. Please use a different number.';
             }
         }
 
@@ -146,11 +146,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $errors = [];
 
         if (!$id) {
-            $errors[] = 'Invalid student ID.';
+            $errors[] = 'Invalid student record.';
         }
 
         if (empty($student_id)) {
-            $errors[] = 'Student ID is required.';
+            $errors[] = 'Student Number is required.';
         } elseif (strlen($student_id) !== 8) {
             $errors[] = 'Student ID must be exactly 8 digits.';
         } elseif (!preg_match('/^[0-9]{8}$/', $student_id)) {
@@ -425,9 +425,9 @@ $course_stmt = $pdo->prepare('SELECT DISTINCT course FROM students WHERE course 
 $course_stmt->execute();
 $courses = $course_stmt->fetchAll();
 
-// Get all courses organized by category from courses table
+// Get all courses organized by department from department_courses table
 $courses_by_category = [];
-$all_courses_stmt = $pdo->prepare('SELECT category, course_name FROM courses ORDER BY category, course_name');
+$all_courses_stmt = $pdo->prepare('SELECT d.college_name as category, dc.course_name FROM department_courses dc JOIN departments d ON dc.department_id = d.id ORDER BY d.college_name, dc.course_name');
 $all_courses_stmt->execute();
 $all_courses = $all_courses_stmt->fetchAll();
 
@@ -539,8 +539,8 @@ $message = getMessage();
                             <div class="modal-body" style="padding: 40px 32px; background: #f8f6ff; display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
                                 <div style="grid-column: 1 / 2;">
                                     <div class="form-group" style="margin-bottom: 24px;">
-                                        <label for="student_id" style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Student ID</label>
-                                        <input type="text" id="student_id" name="student_id" required placeholder="ex: 00000000" maxlength="8" inputmode="numeric" style="width: 100%; padding: 12px 16px; border: 2px solid #e9d5ff; border-radius: 10px; font-size: 1em; transition: all 0.3s;" onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='#e9d5ff'; validateStudentId()" oninput="validateStudentId()">
+                                        <label for="student_id" style="font-weight: 700; color: #6b7280; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Student Number</label>
+                                        <input type="text" id="student_id" name="student_id" required placeholder="8-digit number (00000000)" maxlength="8" inputmode="numeric" style="width: 100%; padding: 12px 16px; border: 2px solid #e9d5ff; border-radius: 10px; font-size: 1em; transition: all 0.3s;" onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='#e9d5ff'; validateStudentId()" oninput="validateStudentId()">
                                         <small id="student_id_error" style="color: #ef4444; font-size: 0.85em; margin-top: 5px; display: none;"></small>
                                     </div>
 

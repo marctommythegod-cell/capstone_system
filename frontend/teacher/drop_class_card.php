@@ -19,10 +19,13 @@ $stmt = $pdo->prepare('SELECT id, student_id, name, course, year FROM students O
 $stmt->execute();
 $students = $stmt->fetchAll();
 
-// Fetch all subjects
-$stmt = $pdo->prepare('SELECT id, subject_no, subject_name FROM subjects ORDER BY subject_name');
-$stmt->execute();
-$subjects = $stmt->fetchAll();
+// Fetch subjects only for the teacher's department
+$subjects = [];
+if ($user_info['department_id']) {
+    $stmt = $pdo->prepare('SELECT id, subject_code, subject_name FROM subjects WHERE department_id = ? ORDER BY subject_name');
+    $stmt->execute([$user_info['department_id']]);
+    $subjects = $stmt->fetchAll();
+}
 
 // Fetch pending drops
 $stmt = $pdo->prepare('
@@ -39,7 +42,7 @@ $stmt->execute([$user_id]);
 $recent_drops = $stmt->fetchAll();
 
 // Function to get active drop status for a student
-function getActiveDropStatus($pdo, $student_id, $subject_no) {
+function getActiveDropStatus($pdo, $student_id, $subject_code) {
     $stmt = $pdo->prepare('
         SELECT id, status FROM class_card_drops 
         WHERE student_id = ? AND subject_no = ? 
@@ -47,7 +50,7 @@ function getActiveDropStatus($pdo, $student_id, $subject_no) {
         AND cancelled_date IS NULL
         LIMIT 1
     ');
-    $stmt->execute([$student_id, $subject_no]);
+    $stmt->execute([$student_id, $subject_code]);
     return $stmt->fetch();
 }
 
@@ -179,8 +182,8 @@ $message = getMessage();
                                     <select id="subject_id" name="subject_id" required style="display: none;">
                                         <option value="">-- Choose a Subject --</option>
                                         <?php foreach ($subjects as $subject): ?>
-                                            <option value="<?php echo htmlspecialchars($subject['subject_no']); ?>" data-name="<?php echo htmlspecialchars($subject['subject_name']); ?>" data-code="<?php echo htmlspecialchars($subject['subject_no']); ?>" data-full="<?php echo htmlspecialchars($subject['subject_no'] . ' - ' . $subject['subject_name']); ?>" data-search="<?php echo htmlspecialchars(strtolower($subject['subject_no'] . ' ' . $subject['subject_name'])); ?>">
-                                                <?php echo htmlspecialchars($subject['subject_no'] . ' - ' . $subject['subject_name']); ?>
+                                            <option value="<?php echo htmlspecialchars($subject['subject_code']); ?>" data-name="<?php echo htmlspecialchars($subject['subject_name']); ?>" data-code="<?php echo htmlspecialchars($subject['subject_code']); ?>" data-full="<?php echo htmlspecialchars($subject['subject_code'] . ' - ' . $subject['subject_name']); ?>" data-search="<?php echo htmlspecialchars(strtolower($subject['subject_code'] . ' ' . $subject['subject_name'])); ?>">
+                                                <?php echo htmlspecialchars($subject['subject_code'] . ' - ' . $subject['subject_name']); ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
@@ -320,6 +323,41 @@ $message = getMessage();
             document.getElementById('year').value = year;
             document.getElementById('student_search_dropdown').style.display = 'none';
             document.getElementById('student_search_input').value = '';
+            
+            // Fetch subjects for this student's course
+            loadSubjectsForStudent(studentId);
+        }
+        
+        function loadSubjectsForStudent(studentId) {
+            fetch(`../../backend/includes/api.php?action=get_subjects_by_student&student_id=${studentId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.subjects) {
+                        // Clear existing options
+                        const subjectSelect = document.getElementById('subject_id');
+                        const firstOption = subjectSelect.querySelector('option:first-child');
+                        subjectSelect.innerHTML = '';
+                        subjectSelect.appendChild(firstOption);
+                        
+                        // Add new subjects
+                        data.subjects.forEach(subject => {
+                            const option = document.createElement('option');
+                            option.value = subject.subject_code;
+                            option.setAttribute('data-name', subject.subject_name);
+                            option.setAttribute('data-code', subject.subject_code);
+                            option.setAttribute('data-full', subject.subject_code + ' - ' + subject.subject_name);
+                            option.setAttribute('data-search', (subject.subject_code + ' ' + subject.subject_name).toLowerCase());
+                            option.textContent = subject.subject_code + ' - ' + subject.subject_name;
+                            subjectSelect.appendChild(option);
+                        });
+                        
+                        // Reset subject selection
+                        document.getElementById('subject_search_display').value = 'Click to select a subject...';
+                        document.getElementById('subject_search_input').value = '';
+                        initSubjectSearch();
+                    }
+                })
+                .catch(error => console.error('Error loading subjects:', error));
         }
 
         // Toggle student search dropdown

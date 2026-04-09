@@ -62,10 +62,10 @@ if ($action === 'drop_class_card') {
     
     $teacher_id = $_SESSION['user_id'];
     $student_id = intval($_POST['student_id'] ?? 0);
-    $subject_no = trim($_POST['subject_id'] ?? '');
+    $subject_code = trim($_POST['subject_id'] ?? '');
     $remarks = trim($_POST['remarks'] ?? '');
     
-    if (!$student_id || !$subject_no) {
+    if (!$student_id || !$subject_code) {
         setMessage('error', 'Please select both student and subject.');
         redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php');
     }
@@ -78,9 +78,9 @@ if ($action === 'drop_class_card') {
         redirect('/CLASS_CARD_DROPPING_SYSTEM/teacher/drop_class_card.php');
     }
     
-    // Get subject name
-    $stmt = $pdo->prepare('SELECT subject_name FROM subjects WHERE subject_no = ?');
-    $stmt->execute([$subject_no]);
+    // Get subject name using subject_code
+    $stmt = $pdo->prepare('SELECT subject_name FROM subjects WHERE subject_code = ?');
+    $stmt->execute([$subject_code]);
     $subject = $stmt->fetch();
     if (!$subject) {
         setMessage('error', 'Invalid subject.');
@@ -103,7 +103,7 @@ if ($action === 'drop_class_card') {
         AND cancelled_date IS NULL
         LIMIT 1
     ');
-    $stmt->execute([$student_id, $subject_no]);
+    $stmt->execute([$student_id, $subject_code]);
     $existing_drop = $stmt->fetch();
     
     if ($existing_drop) {
@@ -128,7 +128,7 @@ if ($action === 'drop_class_card') {
         $stmt->execute([
             $teacher_id,
             $student_id,
-            $subject_no,
+            $subject_code,
             $subject_name,
             $remarks,
             'Pending',
@@ -1170,6 +1170,77 @@ if ($action === 'get_teacher_drops') {
         echo json_encode(['success' => true, 'drops' => $drops]);
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// Generate unique Student Number
+if ($action === 'generate_student_number') {
+    header('Content-Type: application/json');
+    
+    try {
+        $student_number = generateStudentNumber($pdo);
+        echo json_encode(['success' => true, 'student_number' => $student_number]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// Generate unique Teacher Number
+if ($action === 'generate_teacher_number') {
+    header('Content-Type: application/json');
+    
+    try {
+        $teacher_number = generateTeacherNumber($pdo);
+        echo json_encode(['success' => true, 'teacher_number' => $teacher_number]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// Get subjects by student course
+if ($action === 'get_subjects_by_student') {
+    header('Content-Type: application/json');
+    
+    if ($_SESSION['user_role'] !== 'teacher') {
+        echo json_encode(['success' => false, 'subjects' => []]);
+        exit;
+    }
+    
+    $student_id = intval($_GET['student_id'] ?? 0);
+    
+    if (!$student_id) {
+        echo json_encode(['success' => false, 'subjects' => []]);
+        exit;
+    }
+    
+    try {
+        // Get student's course
+        $stmt = $pdo->prepare('SELECT course FROM students WHERE id = ?');
+        $stmt->execute([$student_id]);
+        $student = $stmt->fetch();
+        
+        if (!$student) {
+            echo json_encode(['success' => false, 'subjects' => []]);
+            exit;
+        }
+        
+        // Get subjects for that course
+        $stmt = $pdo->prepare('
+            SELECT s.id, s.subject_code, s.subject_name, s.department_id, s.course_id
+            FROM subjects s
+            JOIN department_courses dc ON s.course_id = dc.id
+            WHERE dc.course_name = ?
+            ORDER BY s.subject_code
+        ');
+        $stmt->execute([$student['course']]);
+        $subjects = $stmt->fetchAll();
+        
+        echo json_encode(['success' => true, 'subjects' => $subjects]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'subjects' => [], 'message' => $e->getMessage()]);
     }
     exit;
 }

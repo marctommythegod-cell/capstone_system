@@ -137,7 +137,7 @@ $stmt = $pdo->prepare('SELECT id, student_id, name FROM students WHERE status = 
 $stmt->execute();
 $all_students = $stmt->fetchAll();
 
-$stmt = $pdo->prepare('SELECT subject_no, subject_name FROM subjects ORDER BY subject_name ASC');
+$stmt = $pdo->prepare('SELECT subject_code as subject_no, subject_name FROM subjects ORDER BY subject_name ASC');
 $stmt->execute();
 $all_subjects = $stmt->fetchAll();
 
