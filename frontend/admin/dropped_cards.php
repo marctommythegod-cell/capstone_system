@@ -23,10 +23,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $undrop_remarks = trim($_POST['undrop_remarks'] ?? '');
     $undrop_certificates = trim($_POST['undrop_certificates'] ?? '');
     try {
-        // Get drop details with student and teacher info in one optimized query
+        // Get drop details
         $stmt = $pdo->prepare('
             SELECT ccd.*, 
-                   s.student_id, s.name as student_name,
+                   s.id as student_pk, s.student_id, s.name as student_name, s.email as student_email,
                    u.name as teacher_name, u.email as teacher_email
             FROM class_card_drops ccd
             JOIN students s ON ccd.student_id = s.id
@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $stmt = $pdo->prepare('UPDATE class_card_drops SET status = ? WHERE id = ?');
         $stmt->execute(['Undropped', $drop_id]);
 
-        // Insert undrop record
+        // Insert undrop record - use ccd.student_id (the FK to students.id)
         $stmt = $pdo->prepare('
             INSERT INTO philcst_undrop_records 
             (drop_id, student_id, subject_no, subject_name, teacher_id, retrieve_date, undrop_remarks, undrop_certificates)
@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         ');
         $stmt->execute([
             $drop_id,
-            $drop['student_id'],
+            $drop['student_pk'],
             $drop['subject_no'],
             $drop['subject_name'],
             $drop['teacher_id'],
@@ -61,29 +61,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $undrop_certificates
         ]);
 
-        // Allow script to continue after headers are sent (async email)
-        if (function_exists('fastcgi_finish_request')) {
-            fastcgi_finish_request();
+        // Send email notifications
+        $emailNotifier = new EmailNotifier();
+        $emailData = [
+            'student_id' => $drop['student_id'],
+            'student_name' => $drop['student_name'],
+            'teacher_name' => $drop['teacher_name'],
+            'teacher_email' => $drop['teacher_email'],
+            'subject_no' => $drop['subject_no'],
+            'subject_name' => $drop['subject_name'],
+            'drop_date' => $drop['drop_date'],
+            'retrieve_date' => date('Y-m-d H:i:s'),
+            'undrop_remarks' => $undrop_remarks,
+            'undrop_certificates' => $undrop_certificates
+        ];
+        
+        // Send email to student
+        if ($drop['student_email']) {
+            error_log("Sending undrop email to student: " . $drop['student_email']);
+            $emailNotifier->notifyStudentApproved($drop['student_email'], $emailData);
         }
-
-        // Send email notification to teacher asynchronously
+        
+        // Send email to teacher
         if ($drop['teacher_email']) {
             error_log("Sending undrop email to teacher: " . $drop['teacher_email']);
-            $emailNotifier = new EmailNotifier();
-            $emailData = [
-                'student_id' => $drop['student_id'],
-                'student_name' => $drop['student_name'],
-                'subject_no' => $drop['subject_no'],
-                'subject_name' => $drop['subject_name'],
-                'drop_date' => $drop['drop_date'],
-                'retrieve_date' => date('Y-m-d H:i:s'),
-                'undrop_remarks' => $undrop_remarks,
-                'undrop_certificates' => $undrop_certificates
-            ];
             $emailNotifier->notifyTeacherUndropped($drop['teacher_email'], $emailData);
         }
 
-        setMessage('success', 'Class card has been undropped. The teacher is being notified.');
+        setMessage('success', 'Class card has been undropped. Notification emails have been sent.');
     } catch (Exception $e) {
         error_log("Exception in undrop action: " . $e->getMessage());
         setMessage('error', 'Error undropping class card: ' . $e->getMessage());

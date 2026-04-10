@@ -185,7 +185,7 @@ if ($action === 'walk_in_drop') {
         }
         
         // Fetch subject
-        $stmt = $pdo->prepare('SELECT subject_no, subject_name FROM subjects WHERE subject_no = ?');
+        $stmt = $pdo->prepare('SELECT subject_code, subject_name FROM subjects WHERE subject_code = ?');
         $stmt->execute([$subject_no]);
         $subject = $stmt->fetch();
         
@@ -511,25 +511,54 @@ if ($action === 'bulk_undrop_drops') {
                     continue;
                 }
                 
+                // Verify that the student still exists
+                $stmt = $pdo->prepare('SELECT id FROM students WHERE id = ?');
+                $stmt->execute([$drop['student_id']]);
+                if (!$stmt->fetch()) {
+                    error_log("Student ID " . $drop['student_id'] . " not found for drop $drop_id");
+                    $errorCount++;
+                    continue;
+                }
+                
+                // Verify that the teacher still exists
+                $stmt = $pdo->prepare('SELECT id FROM users WHERE id = ?');
+                $stmt->execute([$drop['teacher_id']]);
+                if (!$stmt->fetch()) {
+                    error_log("Teacher ID " . $drop['teacher_id'] . " not found for drop $drop_id");
+                    $errorCount++;
+                    continue;
+                }
+                
                 // Update status to Undropped
                 $stmt = $pdo->prepare('UPDATE class_card_drops SET status = ? WHERE id = ?');
                 $stmt->execute(['Undropped', $drop_id]);
                 
                 // Insert undrop record into separate philcst_undrop_records table
-                $stmt = $pdo->prepare('
-                    INSERT INTO philcst_undrop_records 
-                    (drop_id, student_id, subject_no, subject_name, teacher_id, retrieve_date, undrop_remarks, undrop_certificates)
-                    VALUES (?, ?, ?, ?, ?, NOW(), ?, ?)
-                ');
-                $stmt->execute([
-                    $drop_id,
-                    $drop['student_id'],
-                    $drop['subject_no'],
-                    $drop['subject_name'],
-                    $drop['teacher_id'],
-                    'Bulk undrop operation',
-                    'Bulk operation'
-                ]);
+                try {
+                    $stmt = $pdo->prepare('
+                        INSERT INTO philcst_undrop_records 
+                        (drop_id, student_id, subject_no, subject_name, teacher_id, retrieve_date, undrop_remarks, undrop_certificates)
+                        VALUES (?, ?, ?, ?, ?, NOW(), ?, ?)
+                    ');
+                    $stmt->execute([
+                        $drop_id,
+                        $drop['student_id'],
+                        $drop['subject_no'],
+                        $drop['subject_name'],
+                        $drop['teacher_id'],
+                        'Bulk undrop operation',
+                        'Bulk operation'
+                    ]);
+                } catch (PDOException $fkException) {
+                    // Handle foreign key constraint violations
+                    if (strpos($fkException->getMessage(), '1452') !== false || 
+                        strpos($fkException->getMessage(), 'FOREIGN KEY') !== false) {
+                        error_log("Foreign key constraint failed for drop $drop_id (student: " . $drop['student_id'] . ", teacher: " . $drop['teacher_id'] . ")");
+                        $errorCount++;
+                        continue;
+                    }
+                    throw $fkException;
+                }
                 
                 // Get teacher info for email
                 $stmt = $pdo->prepare('SELECT name, email FROM users WHERE id = ?');
